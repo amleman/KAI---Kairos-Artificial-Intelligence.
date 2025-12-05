@@ -3,6 +3,8 @@ from flask_cors import CORS
 import sqlite3
 import hashlib
 from datetime import datetime
+from motor_generador import GeneradorHorarios
+import pandas as pd
 
 app = Flask(__name__)
 CORS(app)
@@ -92,6 +94,44 @@ def login():
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+'''----------------------- Endpoint para generador de horarios ----------------------'''
+@app.post("/generar_horario")
+def generar_horario():
+    data = request.get_json()
+    usuario_id = data.get("usuario") # O el carnet, según como lo guardes en React
+    
+    if not usuario_id:
+        return jsonify({"error": "Usuario requerido"}), 400
+
+    try:
+        # 1. Obtener cursos aprobados de la BD
+        conn = sqlite3.connect(Usuarios)
+        cursor = conn.cursor()
+        
+        # OJO: Asegúrate de tener una tabla 'cursos_aprobados' o similar.
+        # Si no la tienes, créala o usa un CSV temporal para probar.
+        # Ejemplo: cursor.execute("SELECT codigo FROM cursos_aprobados WHERE usuario = ?", (usuario_id,))
+        # aprobados = [row[0] for row in cursor.fetchall()]
+        
+        # MOCK TEMPORAL (Para que te funcione YA, mientras llenas la BD):
+        aprobados = ['0006','0039','0005','0017','0019','0101', '0103', '0147', '0960', '0040'] 
+
+        # 2. Llamar al Motor
+        # Asegúrate de tener el archivo 'cursos_oferta_limpio.csv' (el que limpiamos antes)
+        motor = GeneradorHorarios('./Data/pensum_sistemas.csv', './Data/cursos_oferta_limpio.csv')
+        resultados = motor.generar(aprobados)
+        
+        conn.close()
+        
+        return jsonify({"horarios": resultados}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
+
 
 if __name__ == "__main__":
     init_db()  # Crear la base de datos al iniciar

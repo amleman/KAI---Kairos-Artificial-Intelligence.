@@ -19,7 +19,7 @@ const Login = () => {
             })
         });
 
-        const data = await response.json();
+        //const data = await response.json();
 
         if (response.ok) {
             navigate("/dashboard");
