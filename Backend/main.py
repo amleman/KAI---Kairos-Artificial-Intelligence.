@@ -1,22 +1,27 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import sqlite3
 import hashlib
-from datetime import datetime
+import os
 from motor_generador import GeneradorHorarios
 import pandas as pd
 
 app = Flask(__name__)
-CORS(app)
+app.config["PROPAGATE_EXCEPTIONS"] = True
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+DB = "usuarios.db"
 
 
-Usuarios = "usuarios.db"
-
-# Crea la tabla de usuarios si no existe con SQLite
+# -----------------------------------------------------------
+# INIT DATABASE
+# -----------------------------------------------------------
 def init_db():
-    conn = sqlite3.connect(Usuarios)
+    conn = sqlite3.connect(DB)
     cursor = conn.cursor()
-    cursor.execute('''
+
+    # Usuarios
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario TEXT UNIQUE NOT NULL,
@@ -24,14 +29,43 @@ def init_db():
             password TEXT NOT NULL,
             fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
+    """)
+
+    # Info usuario
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios_info (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT,
+            carne TEXT,
+            fecha_nacimiento TEXT,
+            carrera TEXT
+        )
+    """)
+
+    # Cursos aprobados
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cursos_aprobados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            carne TEXT,
+            codigo TEXT,
+            nota REAL DEFAULT NULL
+        )
+    """)
+
     conn.commit()
     conn.close()
 
-# Función para hashear contraseñas
+
+# -----------------------------------------------------------
+# PASSWORD HASH
+# -----------------------------------------------------------
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+
+# -----------------------------------------------------------
+# REGISTER
+# -----------------------------------------------------------
 @app.post("/register")
 def register():
     data = request.get_json()
@@ -43,96 +77,197 @@ def register():
         return jsonify({"error": "Todos los campos son obligatorios"}), 400
 
     try:
-        conn = sqlite3.connect(Usuarios)
+        conn = sqlite3.connect(DB)
         cursor = conn.cursor()
-        
-        # Hashear la contraseña
-        hashed_password = hash_password(password)
-        
         cursor.execute(
             "INSERT INTO usuarios (usuario, email, password) VALUES (?, ?, ?)",
-            (usuario, email, hashed_password)
+            (usuario, email, hash_password(password))
         )
         conn.commit()
         conn.close()
-        
-        return jsonify({"message": "Usuario registrado exitosamente"}), 201
-    
-    except sqlite3.IntegrityError:
-        return jsonify({"error": "El usuario o email ya existe"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
+        return jsonify({"message": "Usuario registrado exitosamente"}), 201
+
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Usuario o email ya existe"}), 400
+
+
+# -----------------------------------------------------------
+# LOGIN
+# -----------------------------------------------------------
 @app.post("/login")
 def login():
     data = request.get_json()
     usuario = data.get("usuario")
     password = data.get("password")
 
-    if not usuario or not password:
-        return jsonify({"error": "Usuario y contraseña requeridos"}), 400
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM usuarios WHERE usuario = ? AND password = ?",
+        (usuario, hash_password(password))
+    )
+    user = cursor.fetchone()
+    conn.close()
 
-    try:
-        conn = sqlite3.connect(Usuarios)
-        cursor = conn.cursor()
-        
-        # Hashear la contraseña ingresada
-        hashed_password = hash_password(password)
-        
-        # Buscar usuario
+    if user:
+        return jsonify({"message": "Login correcto"}), 200
+
+    return jsonify({"error": "Credenciales incorrectas"}), 400
+
+
+# -----------------------------------------------------------
+# GUARDAR INFO DEL ESTUDIANTE
+# -----------------------------------------------------------
+@app.post("/guardar_usuario_info")
+def guardar_usuario_info():
+    data = request.get_json()
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO usuarios_info (nombre, carne, fecha_nacimiento, carrera)
+        VALUES (?, ?, ?, ?)
+    """, (data["nombre"], data["carne"], data["fechaNacimiento"], data["carrera"]))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Guardado"}), 200
+
+
+# -----------------------------------------------------------
+# GUARDAR CURSOS APROBADOS (SIN NOTA)
+# -----------------------------------------------------------
+@app.post("/guardar_aprobados")
+def guardar_aprobados():
+    data = request.get_json()
+
+    carne = data.get("carne")
+    aprobados = data.get("aprobados", [])
+
+    print("📥 RECIBIDO:", carne, aprobados)
+
+    if not carne:
+        return jsonify({"error": "carne requerido"}), 400
+
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+
+    # Limpio previos
+    cursor.execute("DELETE FROM cursos_aprobados WHERE carne = ?", (carne,))
+
+    # Insertar siempre como STRING
+    for codigo in aprobados:
+        if not codigo:
+            continue  # evitar None o vacío
+
+        codigo_str = str(codigo).zfill(4)  # Ej: "12" → "0012"
+
         cursor.execute(
-            "SELECT * FROM usuarios WHERE usuario = ? AND password = ?",
-            (usuario, hashed_password)
+            "INSERT INTO cursos_aprobados (carne, codigo) VALUES (?, ?)",
+            (carne, codigo_str)
         )
-        user = cursor.fetchone()
-        conn.close()
-        
-        if user:
-            return jsonify({"message": "Login correcto"}), 200
-        else:
-            return jsonify({"error": "Credenciales incorrectas"}), 400
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Aprobados guardados"}), 200
 
 
-'''----------------------- Endpoint para generador de horarios ----------------------'''
+# -----------------------------------------------------------
+# GUARDAR NOTAS EN CURSOS APROBADOS
+# -----------------------------------------------------------
+@app.post("/guardar_notas")
+def guardar_notas():
+    data = request.get_json()
+    carne = data["carne"]
+    notas = data["notas"]  # [{codigo, nota}]
+
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+
+    for item in notas:
+        cursor.execute("""
+            UPDATE cursos_aprobados 
+            SET nota = ?
+            WHERE carne = ? AND codigo = ?
+        """, (item["nota"], carne, item["codigo"]))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Notas guardadas"}), 200
+
+
+# -----------------------------------------------------------
+# OBTENER CURSOS APROBADOS + INFO COMPLETA (para tabs)
+# -----------------------------------------------------------
+@app.get("/aprobados/<carne>")
+def obtener_aprobados(carne):
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo, nota FROM cursos_aprobados WHERE carne = ?", (carne,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Cargar CSV
+    df = pd.read_csv("./data/pensum_sistemas.csv")
+
+    salida = []
+
+    for codigo, nota in rows:
+        curso = df[df["codigo"] == codigo].to_dict(orient="records")[0]
+
+        salida.append({
+            "codigo": codigo,
+            "nombre": curso["nombre_completo"],
+            "creditos": curso["creditos"],
+            "nota": nota,
+            "obligatorio": curso.get("obligatorio", ""),
+            "pre_requisitos": curso.get("pre_requisitos", "")
+        })
+
+    return jsonify(salida), 200
+
+
+# -----------------------------------------------------------
+# GENERADOR DE HORARIO (sin mock)
+# -----------------------------------------------------------
 @app.post("/generar_horario")
 def generar_horario():
     data = request.get_json()
-    usuario_id = data.get("usuario") # O el carnet, según como lo guardes en React
-    
-    if not usuario_id:
-        return jsonify({"error": "Usuario requerido"}), 400
+    carne = data["usuario"]
 
-    try:
-        # 1. Obtener cursos aprobados de la BD
-        conn = sqlite3.connect(Usuarios)
-        cursor = conn.cursor()
-        
-        # OJO: Asegúrate de tener una tabla 'cursos_aprobados' o similar.
-        # Si no la tienes, créala o usa un CSV temporal para probar.
-        # Ejemplo: cursor.execute("SELECT codigo FROM cursos_aprobados WHERE usuario = ?", (usuario_id,))
-        # aprobados = [row[0] for row in cursor.fetchall()]
-        
-        # MOCK TEMPORAL (Para que te funcione YA, mientras llenas la BD):
-        aprobados = ['0006','0039','0005','0017','0019','0101', '0103', '0147', '0960', '0040'] 
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT codigo FROM cursos_aprobados WHERE carne = ?", (carne,))
+    aprobados = [row[0] for row in cursor.fetchall()]
+    conn.close()
 
-        # 2. Llamar al Motor
-        # Asegúrate de tener el archivo 'cursos_oferta_limpio.csv' (el que limpiamos antes)
-        motor = GeneradorHorarios('./Data/pensum_sistemas.csv', './Data/cursos_oferta_limpio.csv')
-        resultados = motor.generar(aprobados)
-        
-        conn.close()
-        
-        return jsonify({"horarios": resultados}), 200
+    motor = GeneradorHorarios(
+        "./data/pensum_sistemas.csv",
+        "./data/cursos_oferta_limpio.csv"
+    )
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-    
+    resultados = motor.generar(aprobados)
+    return jsonify({"horarios": resultados}), 200
 
 
+# -----------------------------------------------------------
+# RETORNAR PENSUM CSV
+# -----------------------------------------------------------
+@app.get("/pensum")
+def obtener_pensum():
+    ruta = os.path.join("data", "pensum_sistemas.csv")
+    if not os.path.exists(ruta):
+        return jsonify({"error": "Archivo no encontrado"}), 404
+    return send_file(ruta, mimetype="text/csv")
+
+
+# -----------------------------------------------------------
+# MAIN
+# -----------------------------------------------------------
 if __name__ == "__main__":
-    init_db()  # Crear la base de datos al iniciar
+    init_db()
     app.run(debug=True, port=8000)
