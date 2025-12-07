@@ -19,9 +19,25 @@ const Login = () => {
             })
         });
 
-        //const data = await response.json();
-
         if (response.ok) {
+            const data = await response.json();
+            
+            // Guardar el username del usuario en localStorage
+            localStorage.setItem("usuario", data.usuario);
+            
+            // Si el usuario tiene información completa, guardarla también
+            if (data.tiene_info && data.carne) {
+                localStorage.setItem("userData", JSON.stringify({
+                    nombre: data.nombre,
+                    carne: data.carne,
+                    fechaNacimiento: data.fechaNacimiento,
+                    carrera: data.carrera
+                }));
+            } else {
+                // Limpiar userData si no tiene info completa
+                localStorage.removeItem("userData");
+            }
+            
             navigate("/dashboard");
         } else {
             setError("Usuario o contraseña incorrectos");
