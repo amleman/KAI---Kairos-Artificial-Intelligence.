@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import SemaforoCarga from "./pages/SemaforoCarga";
 import OptimizadorPromedio from "./pages/OptimizadorPromedio";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ResultadoHorario from "./pages/ResultadoHorario";
 
 function App() {
   return (
@@ -35,6 +36,10 @@ function App() {
               <OptimizadorPromedio />
             </ProtectedRoute>
           } 
+        />
+        <Route
+          path="/resultado-horario"
+          element={<ResultadoHorario />}
         />
       </Routes>
     </BrowserRouter>

@@ -1,25 +1,73 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2 } from "lucide-react";
+import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useNavigate } from 'react-router-dom';
 
 const SemaforoCarga = () => {
+
+  // 1. Obtener ID del usuario para crear una clave única en el navegador
+  const getUserData = () => {
+    try {
+      return JSON.parse(localStorage.getItem("userData") || "{}");
+    } catch { return {}; }
+  };
+  const userData = getUserData();
+  // Clave única: si entra Juan, guarda en "progreso_Juan", si entra Pedro, "progreso_Pedro"
+  const STORAGE_KEY = `sioha_progreso_${userData.carne || "invitado"}`;
+
+  // 2. Función auxiliar para leer del LocalStorage al iniciar
+  // Si existe dato guardado, lo usa. Si no, usa el valor por defecto (defaultValue)
+  const cargarEstado = (key, defaultValue) => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Verificamos si la llave específica existe en lo guardado
+        return parsed[key] !== undefined ? parsed[key] : defaultValue;
+      }
+    } catch (e) {
+      console.error("Error cargando estado:", e);
+    }
+    return defaultValue;
+  };
+
   const [cursosDisponibles, setCursosDisponibles] = useState([]);
-  const [seccionesSeleccionadas, setSeccionesSeleccionadas] = useState({}); // {codigo: {seccion, horario, etc}}
-  const [cursoExpandido, setCursoExpandido] = useState(null);
-  const [resultado, setResultado] = useState(null);
+  const [cursosSeleccionados, setCursosSeleccionados] = useState(() => cargarEstado('cursosSeleccionados', {}));
+  const [resultado, setResultado] = useState(() => cargarEstado('resultado', null));
   const [loading, setLoading] = useState(false);
+  const [loadingHorario, setLoadingHorario] = useState(false);
   const [filtroNivel, setFiltroNivel] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
-  const [mensajeConflicto, setMensajeConflicto] = useState(null);
+  const [mensajeError, setMensajeError] = useState(null);
+  const navigate = useNavigate();
+  
+  // Estado para la respuesta del horario generado
+  const [horarioGenerado, setHorarioGenerado] = useState(() => cargarEstado('horarioGenerado', null));
   const [mostrarFiltrosAvanzados, setMostrarFiltrosAvanzados] = useState(false);
-  const [filtrosAvanzados, setFiltrosAvanzados] = useState({
-    horaInicio: "",
-    horaFin: "",
+  
+  // Filtros para enviar al backend
+  const [filtrosAvanzados, setFiltrosAvanzados] = useState(() => cargarEstado('filtrosAvanzados', {
+    horaInicioLV: "",
+    horaFinLV: "",
+    horaInicioSabado: "",
+    horaFinSabado: "",
     catedratico: "",
     modalidad: "todos",
     dias: []
-  });
+  }));
+
+  // Este efecto vigila las variables. Si cambian, actualiza el LocalStorage.
+  useEffect(() => {
+    const estadoAGuardar = {
+      cursosSeleccionados,
+      resultado,
+      horarioGenerado,
+      filtrosAvanzados
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoAGuardar));
+  }, [cursosSeleccionados, resultado, horarioGenerado, filtrosAvanzados, STORAGE_KEY]);
+
 
   useEffect(() => {
     cargarCursosClasificados();
@@ -41,126 +89,49 @@ const SemaforoCarga = () => {
     }
   };
 
-  // Verificar si hay conflicto de horario
-  const tieneConflictoHorario = (nuevaSeccion) => {
-    for (const codigo in seccionesSeleccionadas) {
-      const seccionExistente = seccionesSeleccionadas[codigo];
-      
-      // Verificar si los días se solapan
-      const diasComunes = nuevaSeccion.dias.filter(dia => 
-        seccionExistente.dias.includes(dia)
-      );
-      
-      if (diasComunes.length > 0) {
-        // Verificar si las horas se solapan
-        const inicio1 = seccionExistente.inicio_min;
-        const fin1 = seccionExistente.final_min;
-        const inicio2 = nuevaSeccion.inicio_min;
-        const fin2 = nuevaSeccion.final_min;
-        
-        if ((inicio2 < fin1 && fin2 > inicio1)) {
-          return {
-            conflicto: true,
-            curso: seccionExistente.nombre,
-            seccion: seccionExistente.seccion
-          };
-        }
-      }
-    }
-    return { conflicto: false };
-  };
-
-  // Seleccionar/deseleccionar sección
-  const toggleSeccion = (curso, seccion) => {
+  // Seleccionar/deseleccionar Curso (Nivel General)
+  const toggleCurso = (curso) => {
     const codigo = curso.codigo;
     
     // Si ya está seleccionada, deseleccionar
-    if (seccionesSeleccionadas[codigo]) {
-      const nuevasSelecciones = { ...seccionesSeleccionadas };
+    if (cursosSeleccionados[codigo]) {
+      const nuevasSelecciones = { ...cursosSeleccionados };
       delete nuevasSelecciones[codigo];
-      setSeccionesSeleccionadas(nuevasSelecciones);
-      setMensajeConflicto(null);
+      setCursosSeleccionados(nuevasSelecciones);
       return;
     }
     
-    // Verificar conflicto de horario
-    const conflicto = tieneConflictoHorario(seccion);
-    if (conflicto.conflicto) {
-      setMensajeConflicto({
-        tipo: 'conflicto',
-        curso: curso.nombre,
-        seccion: seccion.seccion,
-        conflictoCon: conflicto.curso,
-        seccionConflicto: conflicto.seccion
-      });
-      return;
-    }
-    
-    // Agregar selección
-    setSeccionesSeleccionadas({
-      ...seccionesSeleccionadas,
+    // Agregar selección (Solo datos del curso, sin secciones específicas)
+    setCursosSeleccionados({
+      ...cursosSeleccionados,
       [codigo]: {
-        ...seccion,
         codigo: codigo,
         nombre: curso.nombre,
         nivel: curso.nivel
       }
     });
     
-    // Limpiar mensaje de conflicto
-    setMensajeConflicto(null);
-    
-    // Cerrar expansión
-    setCursoExpandido(null);
+    // Limpiar mensaje de error si existía
+    setMensajeError(null);
+    // Reiniciar resultados si cambia la selección
+    setResultado(null);
+    setHorarioGenerado(null);
   };
 
-  const aplicarFiltrosAvanzados = (secciones) => {
-    return secciones.filter(seccion => {
-      // Filtro de horario
-      if (filtrosAvanzados.horaInicio && filtrosAvanzados.horaFin) {
-        const horaInicio = parseInt(filtrosAvanzados.horaInicio.replace(':', ''));
-        const horaFin = parseInt(filtrosAvanzados.horaFin.replace(':', ''));
-        const seccionInicio = parseInt(seccion.horario_inicio.replace(':', ''));
-        const seccionFin = parseInt(seccion.horario_fin.replace(':', ''));
-        
-        if (seccionInicio < horaInicio || seccionFin > horaFin) return false;
-      }
-      
-      // Filtro de catedrático a evitar
-      if (filtrosAvanzados.catedratico && 
-          seccion.catedratico.toLowerCase().includes(filtrosAvanzados.catedratico.toLowerCase())) {
-        return false;
-      }
-      
-      // Filtro de modalidad
-      if (filtrosAvanzados.modalidad !== "todos" && 
-          seccion.modalidad.toLowerCase() !== filtrosAvanzados.modalidad.toLowerCase()) {
-        return false;
-      }
-      
-      // Filtro de días
-      if (filtrosAvanzados.dias.length > 0) {
-        const tieneDiaDeseado = filtrosAvanzados.dias.some(dia => seccion.dias.includes(dia));
-        if (!tieneDiaDeseado) return false;
-      }
-      
-      return true;
-    });
-  };
 
+  // Funcion para enviar los datos al analizador de carga
   const analizarCarga = async () => {
-    if (Object.keys(seccionesSeleccionadas).length === 0) {
-      setMensajeConflicto({
-        tipo: 'error',
-        mensaje: 'Debes seleccionar al menos un curso con su sección'
-      });
+    if (Object.keys(cursosSeleccionados).length === 0) {
+      setMensajeError('Debes seleccionar al menos un curso.');
       return;
     }
 
     setLoading(true);
-    setMensajeConflicto(null);
+    setMensajeError(null);
+    setHorarioGenerado(null);
+
     try {
-      const codigos = Object.keys(seccionesSeleccionadas);
+      const codigos = Object.keys(cursosSeleccionados);
       const response = await fetch("http://127.0.0.1:8000/analizar_semaforo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,26 +141,108 @@ const SemaforoCarga = () => {
       setResultado(data);
     } catch (error) {
       console.error("Error analizando carga:", error);
-      setMensajeConflicto({
-        tipo: 'error',
-        mensaje: 'Error al analizar la carga. Intenta nuevamente.'
-      });
+      setMensajeError('Error al analizar la carga. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Función auxiliar para convertir "HH:MM" a minutos
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  const generarHorario = async () => {
+    setLoadingHorario(true);
+    setMensajeError(null); // Limpiamos errores previos
+    setHorarioGenerado(null);
+    try {
+      const codigos = Object.keys(cursosSeleccionados);
+      
+      // Preparar payload
+      const payload = {
+        cursos: codigos,
+        filtros: {
+          // Filtros Lunes a Viernes (Default 7:00 - 21:00)
+          hora_inicio_lv: timeToMinutes(filtrosAvanzados.horaInicioLV) || 420,
+          hora_fin_lv: timeToMinutes(filtrosAvanzados.horaFinLV) || 1260,
+          
+          // Filtros Sábado (Default 7:00 - 21:00)
+          hora_inicio_sabado: timeToMinutes(filtrosAvanzados.horaInicioSabado) || 420,
+          hora_fin_sabado: timeToMinutes(filtrosAvanzados.horaFinSabado) || 1260,
+          catedratico: filtrosAvanzados.catedratico || "",
+          modalidad: filtrosAvanzados.modalidad === "todos" ? "TODAS" : filtrosAvanzados.modalidad.toUpperCase()
+        }
+      };
+
+      const response = await fetch("http://127.0.0.1:8000/generar_horario_custom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      // VERIFICACIÓN DE ERRORES HTTP
+      if (!response.ok) {
+        // Intentamos leer el mensaje del backend si existe, o usamos uno por defecto
+        const errorData = await response.json().catch(() => ({}));
+        
+        if (response.status === 500) {
+           throw new Error("No se encontraron combinaciones válidas. Es probable que tus filtros (Horarios o Catedrático) sean muy estrictos y eliminen todas las secciones disponibles. Intenta relajar las restricciones.");
+        }
+        
+        throw new Error(errorData.error || errorData.detail || `Error del servidor: ${response.status}`);
+      }
+      
+      const data = await response.json();
+
+
+      
+      // Validación adicional por si el backend devuelve 200 pero con lista vacía
+      if (!data.horarios || data.horarios.length === 0) {
+         throw new Error("No se pudo generar ningún horario con los filtros actuales. Intenta seleccionar rangos de hora más amplios.");
+      } else {
+        const storageKey = `sioha_progreso_${userData.carne}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+                horarios: data.horarios,
+                fecha: new Date().toISOString()
+            }));
+      }
+
+
+
+      setHorarioGenerado(data);
+      
+    } catch (error) {
+      console.error("Error generando horario:", error);
+      setMensajeError(error.message);
+    } finally {
+      setLoadingHorario(false);
+    }
+  };
+
+  const irAVerHorario = () => {
+    if (horarioGenerado && horarioGenerado.horarios) {
+      // Enviamos el objeto completo a la nueva ruta mediante el 'state' de history
+      navigate('/resultado-horario', { 
+        state: { datosHorario: horarioGenerado } 
+      });
+    }
+  };
+
   const limpiarSeleccion = () => {
-    setSeccionesSeleccionadas({});
+    setCursosSeleccionados({});
     setResultado(null);
-    setCursoExpandido(null);
-    setMensajeConflicto(null);
+    setHorarioGenerado(null);
+    setMensajeError(null);
     setFiltrosAvanzados({
-      horaInicio: "",
-      horaFin: "",
+      horaInicioLV: "",
+      horaFinLV: "",
+      horaInicioSabado: "",
+      horaFinSabado: "",
       catedratico: "",
-      modalidad: "todos",
-      dias: []
+      modalidad: "todos"
     });
     setBusqueda("");
     setFiltroNivel("todos");
@@ -217,8 +270,8 @@ const SemaforoCarga = () => {
   };
 
   const cursosFiltrados = cursosDisponibles.filter(curso => {
-    // Si el curso ya tiene una sección seleccionada, no mostrarlo
-    if (seccionesSeleccionadas[curso.codigo]) return false;
+    // Si el curso ya está seleccionado, no mostrarlo en la lista de disponibles
+    if (cursosSeleccionados[curso.codigo]) return false;
     
     const coincideBusqueda = curso.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
                              curso.codigo.includes(busqueda);
@@ -258,49 +311,40 @@ const SemaforoCarga = () => {
                 <TrafficCone className="text-blue-600" size={28} />
                 Semáforo de Carga Académica
               </h1>
-              <p className="text-gray-600 text-sm">Analiza la dificultad de tu carga académica y evita conflictos de horario</p>
+              <p className="text-gray-600 text-sm">Selecciona tus cursos, analiza la dificultad y genera tu horario automáticamente.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              {/* Cursos Seleccionados */}
-              {Object.keys(seccionesSeleccionadas).length > 0 && (
+              
+              {/* Cursos Seleccionados (Antes Secciones Seleccionadas) */}
+              {Object.keys(cursosSeleccionados).length > 0 && (
                 <div className="bg-white rounded-lg shadow-lg p-4">
                   <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <CheckCircle className="text-green-600" size={20} />
-                    Secciones Seleccionadas
-                    <span className="text-sm font-normal text-gray-600">({Object.keys(seccionesSeleccionadas).length})</span>
+                    Cursos Seleccionados
+                    <span className="text-sm font-normal text-gray-600">({Object.keys(cursosSeleccionados).length})</span>
                   </h2>
                   <div className="space-y-2">
-                    {Object.values(seccionesSeleccionadas).map((sel) => (
-                      <div key={sel.codigo} className="border-2 border-blue-500 rounded-lg p-3 bg-blue-50 hover:bg-blue-100 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="font-mono text-xs font-semibold">{sel.codigo}</span>
-                              <span className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getNivelColor(sel.nivel)}`}>
-                                {getNivelTexto(sel.nivel)}
-                              </span>
-                              <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                                Sec. {sel.seccion}
-                              </span>
-                            </div>
-                            <p className="font-semibold text-sm text-gray-800 mb-1.5">{sel.nombre}</p>
-                            <div className="grid grid-cols-2 gap-1.5 text-xs text-gray-600">
-                              <div>🕒 {sel.horario_inicio} - {sel.horario_fin}</div>
-                              <div>📅 {sel.dias.join(', ')}</div>
-                              <div>👨‍🏫 {sel.catedratico}</div>
-                              <div>📍 {sel.modalidad}</div>
-                            </div>
+                    {Object.values(cursosSeleccionados).map((curso) => (
+                      <div key={curso.codigo} className="border-2 border-blue-500 rounded-lg p-3 bg-blue-50 hover:bg-blue-100 transition-colors flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="font-mono text-xs font-semibold text-blue-900">{curso.codigo}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
+                              {getNivelTexto(curso.nivel)}
+                            </span>
                           </div>
-                          <button
-                            onClick={() => toggleSeccion({ codigo: sel.codigo, nombre: sel.nombre, nivel: sel.nivel }, sel)}
-                            className="ml-3 text-red-500 hover:text-red-700 font-semibold text-lg"
-                          >
-                            ✕
-                          </button>
+                          <p className="font-semibold text-sm text-gray-800">{curso.nombre}</p>
                         </div>
+                        <button
+                          onClick={() => toggleCurso(curso)}
+                          className="ml-3 p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors"
+                          title="Eliminar curso"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -344,150 +388,139 @@ const SemaforoCarga = () => {
                   </div>
                 </div>
 
-                {/* Filtros Avanzados */}
+                {/* Filtros Avanzados (Para generación de horario) */}
                 <button
                   onClick={() => setMostrarFiltrosAvanzados(!mostrarFiltrosAvanzados)}
                   className="mb-4 text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
                 >
-                  <svg className={`w-4 h-4 transition-transform ${mostrarFiltrosAvanzados ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                  {mostrarFiltrosAvanzados ? 'Ocultar' : 'Mostrar'} Filtros Avanzados de Secciones
+                  <Calendar size={16} />
+                  {mostrarFiltrosAvanzados ? 'Ocultar' : 'Configurar'} Filtros para Generación de Horario
                 </button>
 
                 {mostrarFiltrosAvanzados && (
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Horario (desde)
-                        </label>
-                        <input
-                          type="time"
-                          value={filtrosAvanzados.horaInicio}
-                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaInicio: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        />
+                  <div className="bg-blue-50 rounded-lg p-4 mb-4 space-y-4 border border-blue-100 animate-fade-in">
+                    <p className="text-xs text-blue-800 font-semibold mb-2">
+                      Estos filtros se usarán únicamente al generar el horario automático.
+                    </p>
+                    
+                    {/* Sección 1: Filtros de Hora Divididos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Lunes a Viernes */}
+                      <div className="space-y-3 p-3 bg-white/50 rounded-lg border border-blue-100">
+                        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                          Lunes a Viernes
+                        </h3>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Inicio (desde)</label>
+                          <input
+                            type="time"
+                            value={filtrosAvanzados.horaInicioLV}
+                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaInicioLV: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Fin (hasta)</label>
+                          <input
+                            type="time"
+                            value={filtrosAvanzados.horaFinLV}
+                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaFinLV: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Horario (hasta)
-                        </label>
-                        <input
-                          type="time"
-                          value={filtrosAvanzados.horaFin}
-                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaFin: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                        />
+
+                      {/* Sábado */}
+                      <div className="space-y-3 p-3 bg-white/50 rounded-lg border border-blue-100">
+                        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          Sábado
+                        </h3>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Inicio (desde)</label>
+                          <input
+                            type="time"
+                            value={filtrosAvanzados.horaInicioSabado}
+                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaInicioSabado: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Fin (hasta)</label>
+                          <input
+                            type="time"
+                            value={filtrosAvanzados.horaFinSabado}
+                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaFinSabado: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Catedrático a Evitar
-                      </label>
-                      <input
-                        type="text"
-                        value={filtrosAvanzados.catedratico}
-                        onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, catedratico: e.target.value})}
-                        placeholder="Nombre del catedrático..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      />
-                    </div>
+                    {/* Sección 2: Otros Filtros */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-blue-200 pt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Catedrático a Buscar</label>
+                        <input
+                          type="text"
+                          value={filtrosAvanzados.catedratico}
+                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, catedratico: e.target.value})}
+                          placeholder="Apellido del catedrático..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Modalidad
-                      </label>
-                      <select
-                        value={filtrosAvanzados.modalidad}
-                        onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, modalidad: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      >
-                        <option value="todos">Todas</option>
-                        <option value="presencial">Presencial</option>
-                        <option value="virtual">Virtual</option>
-                        <option value="híbrida">Híbrida</option>
-                      </select>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Modalidad</label>
+                        <select
+                          value={filtrosAvanzados.modalidad}
+                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, modalidad: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="todos">Cualquiera</option>
+                          <option value="presencial">Presencial</option>
+                          <option value="virtual">Virtual</option>
+                          <option value="híbrida">Híbrida</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Lista de Cursos */}
+                {/* Lista de Cursos Disponibles */}
                 <div className="max-h-[500px] overflow-y-auto space-y-2">
                   {cursosFiltrados.map((curso) => (
-                    <div key={curso.codigo}>
-                      <div
-                        className="p-4 border-2 rounded-lg cursor-pointer hover:border-blue-300 transition-all"
-                        onClick={() => setCursoExpandido(cursoExpandido === curso.codigo ? null : curso.codigo)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono text-sm font-semibold">{curso.codigo}</span>
-                              <span className={`px-2 py-1 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
-                                {getNivelTexto(curso.nivel)}
-                              </span>
-                              <span className="text-xs text-gray-500">{curso.total_secciones} secciones</span>
-                            </div>
-                            <p className="text-gray-800 mt-1">{curso.nombre}</p>
+                    <div key={curso.codigo} className="p-4 border rounded-lg bg-white hover:shadow-sm transition-all">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-sm font-semibold text-gray-600">{curso.codigo}</span>
+                            <span className={`px-2 py-1 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
+                              {getNivelTexto(curso.nivel)}
+                            </span>
                           </div>
-                          <svg 
-                            className={`w-5 h-5 transition-transform ${cursoExpandido === curso.codigo ? 'rotate-180' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                          <p className="text-gray-800 mt-1 font-medium">{curso.nombre}</p>
                         </div>
+                        
+                        <button 
+                          onClick={() => toggleCurso(curso)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Seleccionar
+                        </button>
                       </div>
-
-                      {/* Secciones Expandidas */}
-                      {cursoExpandido === curso.codigo && (
-                        <div className="mt-2 ml-4 space-y-2 border-l-2 border-blue-200 pl-4">
-                          {aplicarFiltrosAvanzados(curso.secciones).map((seccion) => (
-                            <div
-                              key={seccion.seccion}
-                              onClick={() => toggleSeccion(curso, seccion)}
-                              className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-all"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className="font-semibold text-blue-600">Sección {seccion.seccion}</span>
-                                    <span className="px-2 py-1 rounded text-xs bg-gray-200 text-gray-700">
-                                      {seccion.modalidad}
-                                    </span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                                    <div>🕒 {seccion.horario_inicio} - {seccion.horario_fin}</div>
-                                    <div>📅 {seccion.dias.join(', ')}</div>
-                                    <div className="col-span-2">👨‍🏫 {seccion.catedratico}</div>
-                                    <div>🏢 {seccion.edificio} - {seccion.salon}</div>
-                                  </div>
-                                </div>
-                                <button className="text-blue-600 hover:text-blue-800 font-semibold px-3 py-1 rounded border border-blue-600 hover:bg-blue-100">
-                                  Seleccionar
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {aplicarFiltrosAvanzados(curso.secciones).length === 0 && (
-                            <p className="text-gray-500 text-sm italic p-3">
-                              No hay secciones que cumplan con los filtros avanzados
-                            </p>
-                          )}
-                        </div>
-                      )}
                     </div>
                   ))}
+                  {cursosFiltrados.length === 0 && (
+                     <p className="text-center text-gray-500 py-4">No se encontraron cursos con los filtros actuales.</p>
+                  )}
                 </div>
 
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={analizarCarga}
-                    disabled={Object.keys(seccionesSeleccionadas).length === 0 || loading}
+                    disabled={Object.keys(cursosSeleccionados).length === 0 || loading}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                   >
                     {loading ? (
@@ -498,7 +531,7 @@ const SemaforoCarga = () => {
                     ) : (
                       <>
                         <TrendingUp size={18} />
-                        Analizar Carga ({Object.keys(seccionesSeleccionadas).length})
+                        Analizar Carga ({Object.keys(cursosSeleccionados).length})
                       </>
                     )}
                   </button>
@@ -547,7 +580,6 @@ const SemaforoCarga = () => {
                               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
                               borderRadius: '8px',
                               border: '1px solid #e5e7eb',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                             }}
                           />
                         </PieChart>
@@ -575,7 +607,6 @@ const SemaforoCarga = () => {
                               backgroundColor: 'rgba(255, 255, 255, 0.95)', 
                               borderRadius: '8px',
                               border: '1px solid #e5e7eb',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                             }}
                           />
                           <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -593,49 +624,25 @@ const SemaforoCarga = () => {
             </div>
 
             {/* Panel de Resultado */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-lg p-4 sticky top-6">
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white rounded-lg shadow-lg p-4 top-6">
                 <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
                   <BarChart3 className="text-blue-600" size={20} />
                   Resultado del Análisis
                 </h2>
 
-                {mensajeConflicto ? (
-                  <div className="space-y-3">
-                    <div className={`rounded-lg p-3 border-l-4 ${
-                      mensajeConflicto.tipo === 'conflicto' ? 'bg-orange-50 border-orange-500' :
-                      'bg-red-50 border-red-500'
-                    }`}>
-                      {mensajeConflicto.tipo === 'conflicto' ? (
-                        <div>
-                          <h3 className="font-bold text-orange-800 mb-1.5 text-sm">⚠️ Conflicto de Horario</h3>
-                          <p className="text-xs text-gray-700 leading-relaxed">
-                            <strong>{mensajeConflicto.curso}</strong> (Sec. {mensajeConflicto.seccion}) 
-                            tiene conflicto con <strong>{mensajeConflicto.conflictoCon}</strong> (Sec. {mensajeConflicto.seccionConflicto})
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1.5">
-                            Deselecciona uno de los cursos o elige otra sección.
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
-                          <p className="text-xs text-gray-700">
-                            {mensajeConflicto.mensaje}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {mensajeError ? (
+                   <div className="rounded-lg p-3 border-l-4 bg-red-50 border-red-500">
+                      <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
+                      <p className="text-xs text-gray-700">{mensajeError}</p>
+                   </div>
                 ) : !resultado ? (
                   <div className="text-center py-8">
                     <div className="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
+                      <TrendingUp className="w-7 h-7 text-gray-400" />
                     </div>
                     <p className="text-gray-500 text-sm">
-                      Selecciona secciones y haz clic en "Analizar Carga"
+                      Selecciona cursos y haz clic en "Analizar Carga"
                     </p>
                   </div>
                 ) : (
@@ -667,27 +674,62 @@ const SemaforoCarga = () => {
                         </span>
                       </div>
                       <div className="flex justify-between items-center pb-2 border-b text-sm">
-                        <span className="text-gray-600">Cursos Fáciles:</span>
-                        <span className="font-bold text-green-600">
-                          {resultado.cursos_por_nivel[1] || 0}
-                        </span>
+                         <span className="text-gray-600">Total Cursos:</span>
+                         <span className="font-bold text-blue-600">
+                            {Object.keys(cursosSeleccionados).length}
+                         </span>
                       </div>
-                      <div className="flex justify-between items-center pb-2 border-b text-sm">
-                        <span className="text-gray-600">Cursos Medios:</span>
-                        <span className="font-bold text-yellow-600">
-                          {resultado.cursos_por_nivel[2] || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center pb-2 border-b text-sm">
-                        <span className="text-gray-600">Cursos Difíciles:</span>
-                        <span className="font-bold text-red-600">
-                          {resultado.cursos_por_nivel[3] || 0}
-                        </span>
-                      </div>
+                    </div>
+
+                    {/* Botón Generar Horario - Solo visible si hay resultado */}
+                    <div className="pt-4 mt-2 border-t border-gray-100">
+                      <button
+                        onClick={generarHorario}
+                        disabled={loadingHorario}
+                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                      >
+                         {loadingHorario ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Generando...
+                            </>
+                         ) : (
+                            <>
+                              <Clock size={16} />
+                              Generar Horario
+                            </>
+                         )}
+                      </button>
+                      <p className="text-xs text-center text-gray-500 mt-2">
+                        Usará los filtros configurados en la sección de selección.
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
+
+              {/* Nueva Sección: Horario Generado */}
+              {horarioGenerado && (
+                <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-green-100 animate-fade-in">
+                   <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                      <Calendar className="text-green-600" size={20} />
+                      Horario Generado
+                   </h2>
+                   <div className="bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
+                      <p className="text-sm text-green-800 font-medium">
+                         ¡Se ha encontrado una combinación de horarios válida!
+                      </p>
+                   </div>
+                   <button 
+                      onClick={irAVerHorario}
+                      className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2"
+                   >
+                      <Eye size={20} />
+                      Ver Horario Completo
+                   </button>
+                </div>
+              )}
+
             </div>
           </div>
         </div>

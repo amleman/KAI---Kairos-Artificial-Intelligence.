@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Papa from "papaparse";
 import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTriangle, BookCheck, TrendingUp, GraduationCap, List, User, CreditCard, Cake, Briefcase, LogOut } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [loadingOptimizado, setLoadingOptimizado] = useState(false);
   /* ----------------------- Estados globales ----------------------- */
   // Inicializar desde localStorage directamente
   const getUserDataFromStorage = () => {
@@ -32,6 +35,12 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(getInitialShowForm);
   const [usuarioData, setUsuarioData] = useState(getUserDataFromStorage);
 
+
+  // Para verificar si existe horario custom
+  const [existeCustom, setExisteCustom] = useState(false);
+  // verifica que exista horario IA
+  const [existeOptimizado, setExisteOptimizado] = useState(false);
+
   const [tab, setTab] = useState(() => {
     // Si hay userData, default a aprobados, sino a pensum
     const userData = getUserDataFromStorage();
@@ -43,6 +52,31 @@ const Dashboard = () => {
   const [aprobadosDB, setAprobadosDB] = useState([]); // Cursos aprobados desde la DB
   
   const isInitialMount = useRef(true);
+
+  // --- EFECTO PARA VERIFICAR SI EXISTE HORARIO GUARDADO ---
+  useEffect(() => {
+    if (tab === "horario" && usuarioData.carne) {
+      const keyCustom = `sioha_progreso_${usuarioData.carne}`;
+      const savedCustom = localStorage.getItem(keyCustom);
+      
+      if (savedCustom) {
+        try {
+          const parsed = JSON.parse(savedCustom);
+          // Verificamos si tiene datos reales
+          if (parsed.horarioGenerado) {
+            setExisteCustom(true);
+          } else {
+            setExisteCustom(false);
+          }
+        } catch (e) {
+          console.error("Error leyendo storage:", e);
+          setExisteCustom(false);
+        }
+      } else {
+        setExisteCustom(false);
+      }
+    }
+  }, [tab, usuarioData.carne]); // Se ejecuta al cambiar de pestaña
 
   /* ----------------------- Cargar aprobados desde DB con info completa ----------------------- */
   const cargarAprobadosDB = useCallback(async () => {
@@ -128,12 +162,7 @@ const Dashboard = () => {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
-            console.log("CSV CRUDO:", results.data);
-
             const normalizado = results.data.map((c) => normalizarCurso(c));
-
-            console.log("CSV NORMALIZADO:", normalizado);
-
             setPensum(normalizado);
           },
         });
@@ -231,6 +260,63 @@ const Dashboard = () => {
     numero: index + 1,
     cursos: pensum.filter((c) => c.semestre === sem),
   }));
+
+
+  /* ----------------------- FUNCIÓN PARA GENERAR HORARIO OPTIMIZADO (IA) ----------------------- */
+  const handleGenerarOptimizado = async () => {
+    setLoadingOptimizado(true);
+    try {
+      // 1. Llamar al backend
+      const response = await fetch('http://127.0.0.1:8000/generar_horario', { // Endpoint del motor genético puro
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: usuarioData.carne }), 
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 2. GUARDAR EN LOCALSTORAGE DIFERENTE
+        const storageKey = `sioha_optimizado_${usuarioData.carne}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+           horarios: data.horarios,
+           fecha: new Date().toISOString()
+        }));
+
+        // 3. Navegar indicando el TIPO
+        navigate('/resultado-horario', { 
+            state: { 
+                tipo: 'optimizado', // <--- ESTO ES CLAVE
+                datosHorario: { horarios: data.horarios }
+            } 
+        });
+      } else {
+        alert("Error: " + (data.error || "No se pudo generar"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error de conexión");
+    } finally {
+      setLoadingOptimizado(false);
+    }
+  };
+
+
+  // --- Efecto para verificar si existe horario IA guardado ---
+  useEffect(() => {
+    if (tab === "horario" && usuarioData.carne) {
+      // Nota la diferencia en la clave: _optimizado_
+      const keyOptimizado = `sioha_optimizado_${usuarioData.carne}`; 
+      const savedOpt = localStorage.getItem(keyOptimizado);
+      
+      if (savedOpt) {
+        setExisteOptimizado(true); // Si existe el archivo, mostramos el botón
+      } else {
+        setExisteOptimizado(false);
+      }
+    }
+  }, [tab, usuarioData.carne]);
+
 
   return (
     <>
@@ -373,10 +459,12 @@ const Dashboard = () => {
                         ? "bg-blue-600 text-white" 
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
-                    onClick={() => setTab("horario")}
+                    onClick={() => {
+                      setTab("horario");
+                    }}
                   >
                     <Calendar size={16} />
-                    Ver Horario
+                    Ver Horarios
                   </button>
                 </div>
               </div>
@@ -389,6 +477,11 @@ const Dashboard = () => {
                   <GraduationCap className="text-blue-600" size={28} />
                   Pensum - Ingeniería en Sistemas
                 </h2>
+
+                <p>Aquí encontraras los cursos de tu carrera por semestre,
+                  selecciona los cursos que ya has aprobado y guarda los cambios.</p>
+
+                <br></br>
 
                 <div className="space-y-6">
 
@@ -575,6 +668,104 @@ const Dashboard = () => {
                       </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {/* ----------------------- TAB: VER TIPOS DE HORARIOS ----------------------- */}
+            {tab === "horario" && (
+              <div className="animate-fade-in space-y-8">
+                <div className="text-left mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <Calendar className="text-blue-600" />
+                    Gestión de Horarios
+                  </h2>
+                  <p className="text-gray-500">
+                    Selecciona cómo deseas generar tu horario para el próximo semestre.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  {/* OPCIÓN 1: HORARIO INTELIGENTE (IA) */}
+                  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100 hover:shadow-xl transition-shadow">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">Horario Inteligente</h3>
+                          <p className="text-blue-100 text-sm">IA + Optimización de Pensum</p>
+                        </div>
+                        {/* Icono Sparkles (necesitas importarlo de lucide-react) */}
+                        {/* <Sparkles size={32} className="text-blue-200" /> */}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-600 mb-6 text-sm">
+                        El sistema analizará tu historial académico, prerrequisitos y promedio para sugerirte la 
+                        <strong> ruta óptima de graduación</strong> sin choques.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                          onClick={handleGenerarOptimizado}
+                          disabled={loadingOptimizado}
+                          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex justify-center items-center gap-2 shadow-md disabled:bg-gray-400"
+                        >
+                          {/* {loadingOptimizado ? <Loader2 className="animate-spin" /> : <Play size={18} />} */}
+                          {loadingOptimizado ? "Generando..." : "Generar Automáticamente"}
+                        </button>
+
+                        {existeOptimizado && (
+                          <button 
+                            onClick={() => navigate('/resultado-horario', { state: { tipo: 'optimizado' } })}
+                            className="w-full bg-white text-blue-700 border border-blue-200 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex justify-center items-center gap-2"
+                          >
+                            <Eye size={18} />
+                            Ver Último Generado
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* OPCIÓN 2: HORARIO PERSONALIZADO (SEMÁFORO) */}
+                  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-green-100 hover:shadow-xl transition-shadow">
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">Horario Personalizado</h3>
+                          <p className="text-green-100 text-sm">Control Manual + Semáforo</p>
+                        </div>
+                        {/* <List size={32} className="text-green-200" /> */}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-600 mb-6 text-sm">
+                        Selecciona manualmente los cursos que deseas llevar. El <strong>Semáforo de Carga</strong> te alertará sobre la dificultad.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                            onClick={() => navigate('/semaforo')}
+                            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 shadow-md"
+                        >
+                            <Calendar size={18} />
+                            Ir al Semáforo / Crear
+                        </button>
+
+                        {existeCustom && (
+                          <button 
+                            onClick={() => navigate('/resultado-horario', { state: { tipo: 'custom' } })}
+                            className="w-full bg-white text-green-700 border border-green-200 py-3 rounded-lg font-bold hover:bg-green-50 transition-colors flex justify-center items-center gap-2"
+                          >
+                            <Eye size={18} />
+                            Ver Último Manual
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             )}
           </>

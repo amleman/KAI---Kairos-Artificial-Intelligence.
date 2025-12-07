@@ -3,7 +3,10 @@ from flask_cors import CORS
 import sqlite3
 import hashlib
 import os
+import json
+from datetime import datetime
 from motor_generador import GeneradorHorarios
+from motor_custom import GeneradorHorarioCustom
 from clustering_semaforo import crear_analizador, analizar_carga
 from optimizador_promedio import crear_optimizador, calcular_notas_objetivo
 import pandas as pd
@@ -52,6 +55,18 @@ def init_db():
             carne TEXT,
             codigo TEXT,
             nota REAL DEFAULT NULL
+        )
+    """)
+    
+    # Horarios elegidos
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS horarios_guardados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario TEXT,
+            nombre_horario TEXT,
+            data_json TEXT,
+            fecha_guardado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(usuario) REFERENCES usuarios(usuario) ON DELETE CASCADE
         )
     """)
 
@@ -322,7 +337,34 @@ def obtener_aprobados(carne):
 
 
 # -----------------------------------------------------------
-# GENERADOR DE HORARIO (sin mock)
+# Guardar HORARIO FINAL
+# -----------------------------------------------------------
+@app.post("/guardar_horario_final")
+def guardar_horario():
+    data = request.get_json()
+    usuario = data.get("usuario")
+    horario_json = data.get("horario") # El array de cursos
+    nombre = data.get("nombre", "Mi Horario")
+
+    try:
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        # Convertimos la lista/dict a String para guardarlo en TEXT
+        json_string = json.dumps(horario_json)
+        
+        cursor.execute(
+            "INSERT INTO horarios_guardados (usuario, nombre_horario, data_json) VALUES (?, ?, ?)",
+            (usuario, nombre, json_string)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Horario guardado exitosamente"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# -----------------------------------------------------------
+# GENERADOR DE HORARIO OPTIMIZADO
 # -----------------------------------------------------------
 @app.post("/generar_horario")
 def generar_horario():
@@ -336,12 +378,87 @@ def generar_horario():
     conn.close()
 
     motor = GeneradorHorarios(
-        "./data/pensum_sistemas.csv",
-        "./data/cursos_oferta_limpio.csv"
+        "./Data/pensum_sistemas.csv",
+        "./Data/cursos_oferta_limpio.csv"
     )
 
     resultados = motor.generar(aprobados)
     return jsonify({"horarios": resultados}), 200
+
+
+# -----------------------------------------------------------
+# GENERADOR DE HORARIO CUSTOM
+# -----------------------------------------------------------
+@app.post("/generar_horario_custom")
+def generar_horario_custom_endpoint():
+    """
+    Recibe: {
+        "cursos": ["0103", "0147"], 
+        "filtros": {
+            "hora_inicio_lv": 420,
+            "hora_fin_lv": 1200,
+            "hora_inicio_sabado": 2345,
+            "hora_fin_sabado": 1200,
+            "catedratico": "Garrido",
+            "modalidad": "TODAS"
+        }
+    }
+    """
+    data = request.get_json()
+    codigos_deseados = data.get("cursos", [])
+    filtros = data.get("filtros", {})
+    
+    if not codigos_deseados:
+        return jsonify({"error": "No seleccionaste ningún curso"}), 400
+
+    try:
+        # Instanciar el motor custom (asegúrate de tener el csv de oferta limpio)
+        motor = GeneradorHorarioCustom('./Data/cursos_oferta_limpio.csv')
+        
+        # Ejecutar generación
+        horarios = motor.generar(codigos_deseados, filtros)
+        
+        if not horarios:
+            return jsonify({"mensaje": "No se encontraron combinaciones válidas con esos filtros. Intenta relajar las restricciones."}), 404
+        
+        return jsonify({"horarios": horarios}), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# -----------------------------------------------------------
+# Guardar HORARIO PREFERIDO EN DB
+# -----------------------------------------------------------
+@app.post("/guardar_horario_final")
+def guardar_horario_final():
+    data = request.get_json()
+    usuario = data.get("usuario")
+    horario_seleccionado = data.get("horario") # Este es el array de la opción elegida
+    nombre_personalizado = data.get("nombre", f"Horario Guardado {datetime.now().strftime('%d/%m %H:%M')}")
+
+    if not usuario or not horario_seleccionado:
+        return jsonify({"error": "Faltan datos del usuario o el horario"}), 400
+
+    try:
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        
+        # Convertimos la lista de objetos JS a String para SQLite
+        json_string = json.dumps(horario_seleccionado)
+        
+        cursor.execute(
+            "INSERT INTO horarios_guardados (usuario, nombre_horario, data_json) VALUES (?, ?, ?)",
+            (usuario, nombre_personalizado, json_string)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"message": "¡Horario guardado en tu perfil!"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # -----------------------------------------------------------
@@ -364,12 +481,11 @@ analizador_carga = None
 
 @app.get("/cursos_clasificados/<carne>")
 def obtener_cursos_clasificados(carne):
-    # Retorna cursos clasificados con secciones y horarios
     global analizador_carga
     if analizador_carga is None:
         analizador_carga = crear_analizador("./Data/pensum_sistemas.csv")
     
-    # Obtener cursos aprobados del usuario
+    # 1. Obtener cursos aprobados
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
     cursor.execute("SELECT codigo FROM cursos_aprobados WHERE carne = ?", (carne,))
@@ -378,27 +494,31 @@ def obtener_cursos_clasificados(carne):
     
     aprobados = [str(codigo).strip().zfill(4) for codigo in aprobados_raw]
     
-    # Obtener cursos clasificados
+    # 2. Obtener todos los cursos clasificados (data general del curso)
     todos_cursos = analizador_carga.obtener_todos_cursos_clasificados()
     
-    # Cargar pensum con prerrequisitos
+    # 3. Cargar pensum para validar prerrequisitos
     df_pensum = pd.read_csv("./Data/pensum_sistemas.csv")
     df_pensum['codigo'] = df_pensum['codigo'].astype(str).str.zfill(4)
     
-    # Cargar oferta de cursos con secciones
+    # 4. Cargar oferta SOLO para verificar disponibilidad (Optimización)
     df_oferta = pd.read_csv("./Data/cursos_oferta_limpio.csv")
-    df_oferta['Codigo'] = df_oferta['Codigo'].astype(str).str.zfill(4)
+    codigos_en_oferta = set(df_oferta['Codigo'].astype(str).str.zfill(4).unique())
     
-    # Filtrar cursos disponibles
-    cursos_con_secciones = []
+    cursos_disponibles = []
+    
     for curso in todos_cursos:
         codigo = curso['codigo']
         
-        # Excluir aprobados
+        # Filtro A: Si ya lo aprobó, saltar
         if codigo in aprobados:
             continue
+
+        # Filtro B: Si el curso NO se está impartiendo este semestre, saltar
+        if codigo not in codigos_en_oferta:
+            continue
         
-        # Verificar prerrequisitos
+        # Filtro C: Verificar prerrequisitos
         curso_pensum = df_pensum[df_pensum['codigo'] == codigo]
         puede_llevar = True
         
@@ -406,47 +526,12 @@ def obtener_cursos_clasificados(carne):
             prereq = curso_pensum.iloc[0]['pre_requisitos']
             if pd.notna(prereq) and prereq != 'N/A' and str(prereq).strip():
                 prerequisitos = [p.strip().zfill(4) for p in str(prereq).split(',')]
-                # Verificar si cumple con TODOS los prerrequisitos
-                puede_llevar = all(prereq in aprobados for prereq in prerequisitos if prereq)
+                puede_llevar = all(p in aprobados for p in prerequisitos if p)
         
-        # Si no puede llevar el curso, no mostrarlo
-        if not puede_llevar:
-            continue
-        
-        # Obtener secciones de oferta
-        secciones_oferta = df_oferta[df_oferta['Codigo'] == codigo]
-        
-        secciones = []
-        if not secciones_oferta.empty:
-            for _, seccion in secciones_oferta.iterrows():
-                # Parsear días
-                try:
-                    dias_lista = eval(seccion['Dias_Lista']) if pd.notna(seccion['Dias_Lista']) else []
-                except:
-                    dias_lista = []
-                
-                secciones.append({
-                    'seccion': str(seccion['Seccion']),
-                    'modalidad': str(seccion['Modalidad']),
-                    'horario_inicio': str(seccion['Inicio']),
-                    'horario_fin': str(seccion['Final']),
-                    'dias': dias_lista,
-                    'catedratico': str(seccion['Catedratico']),
-                    'edificio': str(seccion['Edificio']),
-                    'salon': str(seccion['Salon']),
-                    'inicio_min': int(seccion['Inicio_Min']),
-                    'final_min': int(seccion['Final_Min'])
-                })
-        
-        # Incluir curso incluso si no tiene secciones
-        curso_completo = {
-            **curso,
-            'secciones': secciones,
-            'total_secciones': len(secciones)
-        }
-        cursos_con_secciones.append(curso_completo)
+        if puede_llevar:
+            cursos_disponibles.append(curso)
     
-    return jsonify(cursos_con_secciones), 200
+    return jsonify(cursos_disponibles), 200
 
 
 @app.post("/analizar_semaforo")
