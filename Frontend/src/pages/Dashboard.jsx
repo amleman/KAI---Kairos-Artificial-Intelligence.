@@ -41,11 +41,7 @@ const Dashboard = () => {
   // verifica que exista horario IA
   const [existeOptimizado, setExisteOptimizado] = useState(false);
 
-  const [tab, setTab] = useState(() => {
-    // Si hay userData, default a aprobados, sino a pensum
-    const userData = getUserDataFromStorage();
-    return userData.carne ? "aprobados" : "pensum";
-  });
+  const [tab, setTab] = useState("aprobados");
 
   const [pensum, setPensum] = useState([]);
   const [aprobados, setAprobados] = useState([]);
@@ -478,10 +474,7 @@ const Dashboard = () => {
 
               <button
                 className="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-800 transition-all shadow-lg"
-                onClick={async () => {
-                  localStorage.setItem("userData", JSON.stringify(usuarioData));
-                  setShowForm(false);
-                }}
+                onClick={handleGuardarUsuario}
               >
                 Guardar y Continuar
               </button>
