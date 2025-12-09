@@ -57,7 +57,8 @@ class AnalizadorCargaAcademica:
             
             # Feature 4: Puntaje de palabras clave de dificultad (MÁS AGRESIVO)
             palabras_muy_dificil = ['COMPILADOR', 'ARQUITECTURA', 'SISTEMAS OPERATIVOS',
-                                    'INTELIGENCIA ARTIFICIAL', 'REDES', 'SOFTWARE AVANZADO']
+                                    'INTELIGENCIA ARTIFICIAL', 'REDES', 'SOFTWARE AVANZADO',
+                                    'ORGANIZACIÓN COMPUTACIONAL', 'ORGANIZACION COMPUTACIONAL']
             
             palabras_dificil = ['MATEMÁTICA', 'MATEMATICA', 'FÍSICA', 'FISICA',
                                'PROGRAMACIÓN', 'PROGRAMACION', 'ALGORITMOS', 

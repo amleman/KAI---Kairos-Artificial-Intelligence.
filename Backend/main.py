@@ -48,13 +48,12 @@ def init_db():
         )
     """)
 
-    # Cursos aprobados
+    # Cursos aprobados - NUEVA ESTRUCTURA
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cursos_aprobados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            carne TEXT,
-            codigo TEXT,
-            nota REAL DEFAULT NULL
+            carne TEXT UNIQUE,
+            cursos_data TEXT
         )
     """)
     
@@ -213,17 +212,13 @@ def obtener_usuario_info(carne):
 
 
 # -----------------------------------------------------------
-# GUARDAR CURSOS APROBADOS (SIN NOTA)
+# GUARDAR CURSOS APROBADOS CON NOTAS
 # -----------------------------------------------------------
 @app.post("/guardar_aprobados")
 def guardar_aprobados():
     data = request.get_json()
-
     carne = data.get("carne")
-    aprobados = data.get("aprobados", [])
-
-    print(f"[GUARDAR_APROBADOS] Carne: {carne}, Total cursos: {len(aprobados)}")
-    print(f"[GUARDAR_APROBADOS] Códigos recibidos: {aprobados}")
+    nuevos_cursos = data.get("cursos", [])  # [{codigo, nombre, creditos, nota}]
 
     if not carne:
         return jsonify({"error": "carne requerido"}), 400
@@ -231,109 +226,70 @@ def guardar_aprobados():
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
 
-    # Limpio previos
-    cursor.execute("DELETE FROM cursos_aprobados WHERE carne = ?", (carne,))
-    print(f"[GUARDAR_APROBADOS] Eliminados cursos previos para carne: {carne}")
-
-    # Insertar siempre como STRING
-    insertados = 0
-    for codigo in aprobados:
-        if not codigo:
-            continue  # evitar None o vacío
-
-        codigo_str = str(codigo).strip()  # Mantener formato original del CSV
-
-        cursor.execute(
-            "INSERT INTO cursos_aprobados (carne, codigo) VALUES (?, ?)",
-            (carne, codigo_str)
-        )
-        insertados += 1
-
+    # Obtener cursos existentes
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+    row = cursor.fetchone()
+    
+    cursos_existentes = []
+    if row and row[0]:
+        cursos_existentes = json.loads(row[0])
+    
+    # Crear diccionario con códigos existentes
+    cursos_dict = {c["codigo"]: c for c in cursos_existentes}
+    
+    # Agregar/actualizar nuevos cursos (mantener toda la info)
+    for curso in nuevos_cursos:
+        cursos_dict[curso["codigo"]] = {
+            "codigo": curso["codigo"],
+            "nombre": curso.get("nombre", ""),
+            "creditos": curso.get("creditos", 3),
+            "nota": curso.get("nota")
+        }
+    
+    # Convertir a lista
+    cursos_finales = list(cursos_dict.values())
+    cursos_json = json.dumps(cursos_finales)
+    
+    # Guardar o actualizar
+    if row:
+        cursor.execute("UPDATE cursos_aprobados SET cursos_data = ? WHERE carne = ?", (cursos_json, carne))
+    else:
+        cursor.execute("INSERT INTO cursos_aprobados (carne, cursos_data) VALUES (?, ?)", (carne, cursos_json))
+    
     conn.commit()
     conn.close()
 
-    print(f"[GUARDAR_APROBADOS] Insertados {insertados} cursos para carne: {carne}")
-    return jsonify({"message": "Aprobados guardados"}), 200
+    return jsonify({"message": "Cursos guardados correctamente"}), 200
 
 
 # -----------------------------------------------------------
-# GUARDAR NOTAS EN CURSOS APROBADOS
-# -----------------------------------------------------------
-@app.post("/guardar_notas")
-def guardar_notas():
-    data = request.get_json()
-    carne = data["carne"]
-    notas = data["notas"]  # [{codigo, nota}]
-
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-
-    for item in notas:
-        cursor.execute("""
-            UPDATE cursos_aprobados 
-            SET nota = ?
-            WHERE carne = ? AND codigo = ?
-        """, (item["nota"], carne, item["codigo"]))
-
-    conn.commit()
-    conn.close()
-
-    return jsonify({"message": "Notas guardadas"}), 200
-
-
-# -----------------------------------------------------------
-# OBTENER CURSOS APROBADOS + INFO COMPLETA (para tabs)
+# OBTENER CURSOS APROBADOS + INFO COMPLETA
 # -----------------------------------------------------------
 @app.get("/aprobados/<carne>")
 def obtener_aprobados(carne):
-    
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
     
-    # Verificar si la columna nota existe
-    cursor.execute("PRAGMA table_info(cursos_aprobados)")
-    columns = [col[1] for col in cursor.fetchall()]
-    has_nota = "nota" in columns
-    
-    if has_nota:
-        cursor.execute("SELECT codigo, nota FROM cursos_aprobados WHERE carne = ?", (carne,))
-    else:
-        cursor.execute("SELECT codigo FROM cursos_aprobados WHERE carne = ?", (carne,))
-    
-    rows = cursor.fetchall()
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+    row = cursor.fetchone()
     conn.close()
-
-    # Cargar CSV
-    df = pd.read_csv("./data/pensum_sistemas.csv")
     
-    # Convertir columna codigo a string con padding
-    df['codigo'] = df['codigo'].astype(str).str.zfill(4)
+    if not row or not row[0]:
+        return jsonify([]), 200
     
-
-    salida = []
-
-    for row in rows:
-        codigo = row[0]
-        nota = row[1] if has_nota and len(row) > 1 else None
-        
-        curso_match = df[df["codigo"] == codigo]
-        
-        if curso_match.empty:
-            continue
-            
-        curso = curso_match.to_dict(orient="records")[0]
-
-        # Limpiar NaN y convertir a valores válidos
-        salida.append({
-            "codigo": str(codigo),
-            "nombre": str(curso["nombre_completo"]) if pd.notna(curso["nombre_completo"]) else "",
-            "creditos": int(curso["creditos"]) if pd.notna(curso["creditos"]) else 0,
-            "nota": float(nota) if nota is not None and pd.notna(nota) else None,
-            "obligatorio": str(curso.get("obligatorio", "")) if pd.notna(curso.get("obligatorio")) else "",
-            "pre_requisitos": str(curso.get("pre_requisitos", "")) if pd.notna(curso.get("pre_requisitos")) else ""
+    cursos = json.loads(row[0])
+    
+    # Retornar directamente los datos guardados (ya tienen nombre, créditos, nota)
+    resultado = []
+    for curso in cursos:
+        resultado.append({
+            "codigo": curso.get("codigo", ""),
+            "nombre": curso.get("nombre", "Nombre no encontrado"),
+            "creditos": curso.get("creditos", 3),
+            "nota": curso.get("nota", None)
         })
-
-    return jsonify(salida), 200
+    
+    return jsonify(resultado), 200
 
 
 # -----------------------------------------------------------
@@ -373,9 +329,19 @@ def generar_horario():
 
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
-    cursor.execute("SELECT codigo FROM cursos_aprobados WHERE carne = ?", (carne,))
-    aprobados = [row[0] for row in cursor.fetchall()]
+    
+    # Obtener cursos aprobados desde la nueva estructura JSON
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+    row = cursor.fetchone()
     conn.close()
+    
+    aprobados = []
+    if row and row[0]:
+        try:
+            cursos_json = json.loads(row[0])
+            aprobados = [curso["codigo"] for curso in cursos_json]
+        except json.JSONDecodeError:
+            aprobados = []
 
     motor = GeneradorHorarios(
         "./Data/pensum_sistemas.csv",
@@ -488,11 +454,14 @@ def obtener_cursos_clasificados(carne):
     # 1. Obtener cursos aprobados
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
-    cursor.execute("SELECT codigo FROM cursos_aprobados WHERE carne = ?", (carne,))
-    aprobados_raw = [row[0] for row in cursor.fetchall()]
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+    row = cursor.fetchone()
     conn.close()
     
-    aprobados = [str(codigo).strip().zfill(4) for codigo in aprobados_raw]
+    aprobados = []
+    if row and row[0]:
+        cursos_data = json.loads(row[0])
+        aprobados = [str(c["codigo"]).strip().zfill(4) for c in cursos_data]
     
     # 2. Obtener todos los cursos clasificados (data general del curso)
     todos_cursos = analizador_carga.obtener_todos_cursos_clasificados()

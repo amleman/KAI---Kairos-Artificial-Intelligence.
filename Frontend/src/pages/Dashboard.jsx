@@ -51,6 +51,13 @@ const Dashboard = () => {
   const [aprobados, setAprobados] = useState([]);
   const [aprobadosDB, setAprobadosDB] = useState([]); // Cursos aprobados desde la DB
   
+  // Estados para modal de notas
+  const [showModalNotas, setShowModalNotas] = useState(false);
+  const [cursosNuevos, setCursosNuevos] = useState([]);
+  const [notasTemp, setNotasTemp] = useState({});
+  const [errorNotas, setErrorNotas] = useState(""); // Para mostrar errores en el modal
+  const [mensajeExito, setMensajeExito] = useState(""); // Para mostrar mensaje de éxito
+  
   const isInitialMount = useRef(true);
 
   // --- EFECTO PARA VERIFICAR SI EXISTE HORARIO GUARDADO ---
@@ -124,12 +131,14 @@ const Dashboard = () => {
     });
 
     if (response.ok) {
-      alert("Información guardada correctamente");
+      setMensajeExito("Información guardada correctamente");
+      setTimeout(() => setMensajeExito(""), 3000);
       // Guardar en localStorage para futuras sesiones
       localStorage.setItem("userData", JSON.stringify(usuarioData));
       setShowForm(false);
     } else {
-      alert("Error al guardar la información");
+      setMensajeExito("Error al guardar la información");
+      setTimeout(() => setMensajeExito(""), 3000);
     }
   };
 
@@ -192,14 +201,16 @@ const Dashboard = () => {
 
   /* ----------------------- Cargar aprobadosDB al montar el componente ----------------------- */
   useEffect(() => {
-    if (usuarioData.carne && !showForm && isInitialMount.current) {
-      isInitialMount.current = false;
-      // Usar setTimeout para evitar cascading renders
-      setTimeout(() => {
+    if (usuarioData.carne && !showForm) {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+      }
+      // Cargar cuando se cambia a la pestaña de aprobados
+      if (tab === "aprobados") {
         cargarAprobadosDB();
-      }, 0);
+      }
     }
-  }, [usuarioData.carne, showForm, cargarAprobadosDB]);
+  }, [usuarioData.carne, showForm, tab, cargarAprobadosDB]);
 
   /* ----------------------- Verificar prerrequisitos ----------------------- */
   const puedeLlevar = (curso) => {
@@ -224,21 +235,83 @@ const Dashboard = () => {
 
   /* ----------------------- Guardar aprobados ----------------------- */
   const guardarAprobados = async () => {
+    // 1. Obtener cursos que ya tienen nota en DB
+    const response = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`);
+    const cursosConNota = response.ok ? await response.json() : [];
+    
+    const codigosConNota = cursosConNota.map(c => c.codigo);
+    
+    // 2. Identificar cursos nuevos (sin nota en DB)
+    const nuevos = aprobados.filter(codigo => !codigosConNota.includes(codigo));
+    
+    // 3. Si hay cursos nuevos, mostrar modal para ingresar notas
+    if (nuevos.length > 0) {
+      // Buscar info de cursos nuevos en el pensum
+      const cursosNuevosInfo = nuevos.map(codigo => {
+        const curso = pensum.find(c => c.codigo === codigo);
+        return {
+          codigo,
+          nombre: curso ? curso.nombre_completo : "Curso",
+          creditos: curso ? curso.creditos : 3
+        };
+      });
+      
+      setCursosNuevos(cursosNuevosInfo);
+      setNotasTemp({});
+      setShowModalNotas(true);
+    } else {
+      // No hay cursos nuevos, guardar directo
+      await guardarEnDB([]);
+    }
+  };
+
+  /* ----------------------- Guardar en DB (con o sin notas) ----------------------- */
+  const guardarEnDB = async (cursosConNotas) => {
     const response = await fetch("http://127.0.0.1:8000/guardar_aprobados", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         carne: usuarioData.carne,
-        aprobados,
+        cursos: cursosConNotas,
       }),
     });
 
-    const data = await response.json();
     if (response.ok) {
-      alert("Aprobados guardados");
+      setShowModalNotas(false);
+      setMensajeExito("Cursos guardados correctamente");
+      setTimeout(() => setMensajeExito(""), 3000);
+      cargarAprobadosDB();
     } else {
-      alert("Error: " + data.error);
+      const data = await response.json();
+      setErrorNotas(data.error || "Error al guardar los cursos");
+      setTimeout(() => setErrorNotas(""), 3000);
     }
+  };
+
+  /* ----------------------- Confirmar notas en modal ----------------------- */
+  const confirmarNotas = () => {
+    // Validar que todas las notas estén ingresadas
+    const todasLasNotas = cursosNuevos.every(curso => 
+      notasTemp[curso.codigo] && 
+      notasTemp[curso.codigo] >= 0 && 
+      notasTemp[curso.codigo] <= 100
+    );
+    
+    if (!todasLasNotas) {
+      setErrorNotas("Por favor completa todas las notas (0-100)");
+      setTimeout(() => setErrorNotas(""), 3000);
+      return;
+    }
+    
+    // Crear array con cursos, notas Y nombres
+    const cursosConNotas = cursosNuevos.map(curso => ({
+      codigo: curso.codigo,
+      nombre: curso.nombre,
+      creditos: curso.creditos,
+      nota: parseFloat(notasTemp[curso.codigo])
+    }));
+    
+    guardarEnDB(cursosConNotas);
   };
 
   /* ----------------------- Agrupar cursos por semestre ----------------------- */
@@ -291,11 +364,13 @@ const Dashboard = () => {
             } 
         });
       } else {
-        alert("Error: " + (data.error || "No se pudo generar"));
+        setMensajeExito("Error: " + (data.error || "No se pudo generar"));
+        setTimeout(() => setMensajeExito(""), 3000);
       }
     } catch (error) {
       console.error(error);
-      alert("Error de conexión");
+      setMensajeExito("Error de conexión");
+      setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoadingOptimizado(false);
     }
@@ -321,6 +396,17 @@ const Dashboard = () => {
   return (
     <>
       {!showForm && <Navbar />}
+      
+      {/* Toast de éxito */}
+      {mensajeExito && (
+        <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-in">
+          <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+            <span className="text-green-500 font-bold text-sm">✓</span>
+          </div>
+          <span className="font-medium">{mensajeExito}</span>
+        </div>
+      )}
+      
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <div className="max-w-7xl mx-auto">
 
@@ -626,7 +712,7 @@ const Dashboard = () => {
                               <p className="text-purple-600 text-xs font-medium">Progreso</p>
                             </div>
                             <p className="text-3xl font-bold text-gray-800">
-                              {pensum.length > 0 ? Math.round((aprobadosDB.length / pensum.length) * 100) : 0}%
+                              {Math.min(Math.round((aprobadosDB.reduce((sum, c) => sum + (parseInt(c.creditos) || 0), 0) / 300) * 100), 100)}%
                             </p>
                           </div>
                         </div>
@@ -640,26 +726,22 @@ const Dashboard = () => {
                             <List className="text-gray-600" size={20} />
                             Listado de Cursos
                           </h3>
-                          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto">
                             {aprobadosDB.map((curso) => (
                               <div
                                 key={curso.codigo}
                                 className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border-l-4 border-green-500 hover:shadow-md transition-shadow"
                               >
-                                <div className="flex justify-between items-center">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3">
-                                      <span className="px-2.5 py-1 bg-green-600 text-white rounded-md text-xs font-semibold">
-                                        {curso.codigo}
-                                      </span>
-                                      <h4 className="font-bold text-gray-800 text-sm">{curso.nombre}</h4>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <span className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold">
-                                      {curso.creditos} créditos
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 bg-green-600 text-white rounded text-xs font-bold">
+                                      {curso.codigo}
+                                    </span>
+                                    <span className="bg-green-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
+                                      {curso.creditos} creditos
                                     </span>
                                   </div>
+                                  <h4 className="font-semibold text-gray-800 text-xs line-clamp-2 min-h-[2rem]">{curso.nombre}</h4>
                                 </div>
                               </div>
                             ))}
@@ -673,13 +755,13 @@ const Dashboard = () => {
 
             {/* ----------------------- TAB: VER TIPOS DE HORARIOS ----------------------- */}
             {tab === "horario" && (
-              <div className="animate-fade-in space-y-8">
-                <div className="text-left mb-6">
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <div className="text-left mb-8">
                   <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                     <Calendar className="text-blue-600" />
                     Gestión de Horarios
                   </h2>
-                  <p className="text-gray-500">
+                  <p className="text-gray-600 text-sm mt-1">
                     Selecciona cómo deseas generar tu horario para el próximo semestre.
                   </p>
                 </div>
@@ -770,6 +852,71 @@ const Dashboard = () => {
             )}
           </>
         )}
+        
+        {/* ----------------------- MODAL DE NOTAS ----------------------- */}
+        {showModalNotas && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
+                <h3 className="text-lg font-bold mb-1">Ingresa las Notas de tus Cursos</h3>
+                <p className="text-blue-100 text-xs">Solo necesitamos las notas de los cursos nuevos</p>
+              </div>
+              
+              <div className="p-4 space-y-3">
+                {errorNotas && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-lg text-xs font-medium">
+                    {errorNotas}
+                  </div>
+                )}
+                {cursosNuevos.map((curso) => (
+                  <div key={curso.codigo} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-semibold shrink-0">
+                          {curso.codigo}
+                        </span>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-semibold shrink-0">
+                          {curso.creditos} cred
+                        </span>
+                        <h4 className="font-semibold text-gray-800 text-xs truncate">{curso.nombre}</h4>
+                      </div>
+                    </div>
+                    
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="Nota (0-100)"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={notasTemp[curso.codigo] || ""}
+                      onChange={(e) => setNotasTemp({
+                        ...notasTemp,
+                        [curso.codigo]: e.target.value
+                      })}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="p-4 bg-gray-50 border-t flex gap-2">
+                <button
+                  onClick={() => setShowModalNotas(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarNotas}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition-colors shadow-lg"
+                >
+                  Guardar Notas
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         </div>
       </div>
     </>

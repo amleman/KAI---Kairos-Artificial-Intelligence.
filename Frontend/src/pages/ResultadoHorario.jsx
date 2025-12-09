@@ -57,6 +57,7 @@ const ResultadoHorario = () => {
     const [opcionSeleccionada, setOpcionSeleccionada] = useState(0);
     const [vista, setVista] = useState("calendario");
     const [guardando, setGuardando] = useState(false);
+    const [mensajeExito, setMensajeExito] = useState("");
 
     useEffect(() => {
         if (!datos) navigate("/semaforo");
@@ -120,7 +121,8 @@ const ResultadoHorario = () => {
         const usuarioActual = localStorage.getItem("usuario"); 
         
         if (!usuarioActual) {
-        alert("Error: No se detectó usuario logueado.");
+        setMensajeExito("Error: No se detectó usuario logueado.");
+        setTimeout(() => setMensajeExito(""), 3000);
         return;
         }
 
@@ -143,15 +145,18 @@ const ResultadoHorario = () => {
         const result = await response.json();
 
         if (response.ok) {
-            alert("✅ " + result.message);
+            setMensajeExito("✅ " + result.message);
+            setTimeout(() => setMensajeExito(""), 3000);
             // Opcional: Redirigir al dashboard
             // navigate("/dashboard");
         } else {
-            alert("❌ Error al guardar: " + result.error);
+            setMensajeExito("❌ Error al guardar: " + result.error);
+            setTimeout(() => setMensajeExito(""), 3000);
         }
         } catch (error) {
         console.error(error);
-        alert("Error de conexión con el servidor.");
+        setMensajeExito("Error de conexión con el servidor.");
+        setTimeout(() => setMensajeExito(""), 3000);
         } finally {
         setGuardando(false);
         }
@@ -160,6 +165,17 @@ const ResultadoHorario = () => {
     return (
         <>
         <Navbar />
+        
+        {/* Toast de notificación */}
+        {mensajeExito && (
+            <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-in">
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <span className="text-green-500 font-bold text-sm">✓</span>
+            </div>
+            <span className="font-medium">{mensajeExito}</span>
+            </div>
+        )}
+        
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
             <div className="max-w-7xl mx-auto">
             

@@ -23,6 +23,7 @@ def inicializar_base_datos():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios_info (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario TEXT UNIQUE,
             nombre TEXT,
             carne TEXT UNIQUE,
             fecha_nacimiento TEXT,
@@ -30,9 +31,19 @@ def inicializar_base_datos():
         )
     """)
 
-    # Tabla de cursos aprobados
+    # Tabla de cursos aprobados - NUEVA ESTRUCTURA
+    # Una fila por usuario, lista de cursos en formato texto
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cursos_aprobados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            carne TEXT UNIQUE,
+            cursos_data TEXT
+        )
+    """)
+    
+    # Tabla temporal para migración (si ya existe la vieja estructura)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cursos_aprobados_old (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             carne TEXT,
             codigo TEXT,

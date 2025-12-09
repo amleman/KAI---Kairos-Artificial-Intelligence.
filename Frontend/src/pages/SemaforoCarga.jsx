@@ -326,25 +326,27 @@ const SemaforoCarga = () => {
                     Cursos Seleccionados
                     <span className="text-sm font-normal text-gray-600">({Object.keys(cursosSeleccionados).length})</span>
                   </h2>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {Object.values(cursosSeleccionados).map((curso) => (
-                      <div key={curso.codigo} className="border-2 border-blue-500 rounded-lg p-3 bg-blue-50 hover:bg-blue-100 transition-colors flex justify-between items-center">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="font-mono text-xs font-semibold text-blue-900">{curso.codigo}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
-                              {getNivelTexto(curso.nivel)}
-                            </span>
+                      <div key={curso.codigo} className="border-2 border-blue-500 rounded-lg p-2 bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="font-mono text-xs font-semibold text-blue-900">{curso.codigo}</span>
+                              <span className={`px-1 py-0.5 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
+                                {getNivelTexto(curso.nivel)}
+                              </span>
+                            </div>
+                            <p className="font-semibold text-xs text-gray-800 line-clamp-2">{curso.nombre}</p>
                           </div>
-                          <p className="font-semibold text-sm text-gray-800">{curso.nombre}</p>
+                          <button
+                            onClick={() => toggleCurso(curso)}
+                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-100 rounded transition-colors shrink-0"
+                            title="Eliminar curso"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => toggleCurso(curso)}
-                          className="ml-3 p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full transition-colors"
-                          title="Eliminar curso"
-                        >
-                          <Trash2 size={18} />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -489,31 +491,33 @@ const SemaforoCarga = () => {
                 )}
 
                 {/* Lista de Cursos Disponibles */}
-                <div className="max-h-[500px] overflow-y-auto space-y-2">
-                  {cursosFiltrados.map((curso) => (
-                    <div key={curso.codigo} className="p-4 border rounded-lg bg-white hover:shadow-sm transition-all">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-sm font-semibold text-gray-600">{curso.codigo}</span>
-                            <span className={`px-2 py-1 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
-                              {getNivelTexto(curso.nivel)}
-                            </span>
+                <div className="max-h-[500px] overflow-y-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {cursosFiltrados.map((curso) => (
+                      <div key={curso.codigo} className="p-2 border rounded-lg bg-white hover:shadow-sm transition-all">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="font-mono text-xs font-semibold text-gray-600">{curso.codigo}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getNivelColor(curso.nivel)}`}>
+                                {getNivelTexto(curso.nivel)}
+                              </span>
+                            </div>
+                            <p className="text-gray-800 text-xs font-medium line-clamp-2">{curso.nombre}</p>
                           </div>
-                          <p className="text-gray-800 mt-1 font-medium">{curso.nombre}</p>
+                          
+                          <button 
+                            onClick={() => toggleCurso(curso)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0"
+                          >
+                            Seleccionar
+                          </button>
                         </div>
-                        
-                        <button 
-                          onClick={() => toggleCurso(curso)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Seleccionar
-                        </button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   {cursosFiltrados.length === 0 && (
-                     <p className="text-center text-gray-500 py-4">No se encontraron cursos con los filtros actuales.</p>
+                     <p className="text-center text-gray-500 py-4 text-sm">No se encontraron cursos con los filtros actuales.</p>
                   )}
                 </div>
 
@@ -624,112 +628,113 @@ const SemaforoCarga = () => {
             </div>
 
             {/* Panel de Resultado */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white rounded-lg shadow-lg p-4 top-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <BarChart3 className="text-blue-600" size={20} />
-                  Resultado del Análisis
-                </h2>
+            <div className="lg:col-span-1">
+              <div className="sticky top-6 space-y-4">
+                <div className="bg-white rounded-lg shadow-lg p-4">
+                  <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <BarChart3 className="text-blue-600" size={20} />
+                    Resultado del Análisis
+                  </h2>
 
-                {mensajeError ? (
-                   <div className="rounded-lg p-3 border-l-4 bg-red-50 border-red-500">
-                      <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
-                      <p className="text-xs text-gray-700">{mensajeError}</p>
-                   </div>
-                ) : !resultado ? (
-                  <div className="text-center py-8">
-                    <div className="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                      <TrendingUp className="w-7 h-7 text-gray-400" />
+                  {mensajeError ? (
+                    <div className="rounded-lg p-3 border-l-4 bg-red-50 border-red-500">
+                        <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
+                        <p className="text-xs text-gray-700">{mensajeError}</p>
                     </div>
-                    <p className="text-gray-500 text-sm">
-                      Selecciona cursos y haz clic en "Analizar Carga"
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 mb-3">
-                        <div className={`w-20 h-20 rounded-full ${getSemaforoColor(resultado.semaforo)} shadow-lg animate-pulse`}></div>
+                  ) : !resultado ? (
+                    <div className="text-center py-8">
+                      <div className="w-14 h-14 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                        <TrendingUp className="w-7 h-7 text-gray-400" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-800 capitalize">
-                        {resultado.semaforo}
-                      </h3>
-                    </div>
-
-                    <div className={`rounded-lg p-3 border-l-4 ${
-                      resultado.semaforo === 'rojo' ? 'bg-red-50 border-red-500' :
-                      resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
-                      'bg-green-50 border-green-500'
-                    }`}>
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        {resultado.mensaje}
+                      <p className="text-gray-500 text-sm">
+                        Selecciona cursos y haz clic en "Analizar Carga"
                       </p>
                     </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center pb-2 border-b text-sm">
-                        <span className="text-gray-600">Nivel Promedio:</span>
-                        <span className="font-bold text-gray-800">
-                          {resultado.nivel_promedio.toFixed(2)}
-                        </span>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 mb-3">
+                          <div className={`w-20 h-20 rounded-full ${getSemaforoColor(resultado.semaforo)} shadow-lg animate-pulse`}></div>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 capitalize">
+                          {resultado.semaforo}
+                        </h3>
                       </div>
-                      <div className="flex justify-between items-center pb-2 border-b text-sm">
-                         <span className="text-gray-600">Total Cursos:</span>
-                         <span className="font-bold text-blue-600">
-                            {Object.keys(cursosSeleccionados).length}
-                         </span>
+
+                      <div className={`rounded-lg p-3 border-l-4 ${
+                        resultado.semaforo === 'rojo' ? 'bg-red-50 border-red-500' :
+                        resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
+                        'bg-green-50 border-green-500'
+                      }`}>
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                          {resultado.mensaje}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center pb-2 border-b text-sm">
+                          <span className="text-gray-600">Nivel Promedio:</span>
+                          <span className="font-bold text-gray-800">
+                            {resultado.nivel_promedio.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center pb-2 border-b text-sm">
+                          <span className="text-gray-600">Total Cursos:</span>
+                          <span className="font-bold text-blue-600">
+                              {Object.keys(cursosSeleccionados).length}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Botón Generar Horario - Solo visible si hay resultado */}
+                      <div className="pt-4 mt-2 border-t border-gray-100">
+                        <button
+                          onClick={generarHorario}
+                          disabled={loadingHorario}
+                          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                        >
+                          {loadingHorario ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                Generando...
+                              </>
+                          ) : (
+                              <>
+                                <Clock size={16} />
+                                Generar Horario
+                              </>
+                          )}
+                        </button>
+                        <p className="text-xs text-center text-gray-500 mt-2">
+                          Usará los filtros configurados en la sección de selección.
+                        </p>
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    {/* Botón Generar Horario - Solo visible si hay resultado */}
-                    <div className="pt-4 mt-2 border-t border-gray-100">
-                      <button
-                        onClick={generarHorario}
-                        disabled={loadingHorario}
-                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                      >
-                         {loadingHorario ? (
-                            <>
-                              <Loader2 size={16} className="animate-spin" />
-                              Generando...
-                            </>
-                         ) : (
-                            <>
-                              <Clock size={16} />
-                              Generar Horario
-                            </>
-                         )}
-                      </button>
-                      <p className="text-xs text-center text-gray-500 mt-2">
-                        Usará los filtros configurados en la sección de selección.
-                      </p>
+                {/* Nueva Sección: Horario Generado */}
+                {horarioGenerado && (
+                  <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-green-100 animate-fade-in">
+                    <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <Calendar className="text-green-600" size={20} />
+                        Horario Generado
+                    </h2>
+                    <div className="bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
+                        <p className="text-sm text-green-800 font-medium">
+                          ¡Se ha encontrado una combinación de horarios válida!
+                        </p>
                     </div>
+                    <button 
+                        onClick={irAVerHorario}
+                        className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2"
+                    >
+                        <Eye size={20} />
+                        Ver Horario Completo
+                    </button>
                   </div>
                 )}
               </div>
-
-              {/* Nueva Sección: Horario Generado */}
-              {horarioGenerado && (
-                <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-green-100 animate-fade-in">
-                   <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                      <Calendar className="text-green-600" size={20} />
-                      Horario Generado
-                   </h2>
-                   <div className="bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
-                      <p className="text-sm text-green-800 font-medium">
-                         ¡Se ha encontrado una combinación de horarios válida!
-                      </p>
-                   </div>
-                   <button 
-                      onClick={irAVerHorario}
-                      className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2"
-                   >
-                      <Eye size={20} />
-                      Ver Horario Completo
-                   </button>
-                </div>
-              )}
-
             </div>
           </div>
         </div>

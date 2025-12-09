@@ -4,21 +4,56 @@ import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle,
 import Navbar from "../components/Navbar";
 
 const OptimizadorPromedio = () => {
+  // Obtener datos del usuario para crear clave única
+  const getUserData = () => {
+    try {
+      return JSON.parse(localStorage.getItem("userData") || "{}");
+    } catch { return {}; }
+  };
+  const userData = getUserData();
+  const STORAGE_KEY = `sioha_optimizador_${userData.carne || "invitado"}`;
+
+  // Función auxiliar para cargar estado desde localStorage
+  const cargarEstado = (key, defaultValue) => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed[key] !== undefined ? parsed[key] : defaultValue;
+      }
+    } catch (e) {
+      console.error("Error cargando estado:", e);
+    }
+    return defaultValue;
+  };
+
   const [cursosAprobados, setCursosAprobados] = useState([]);
-  const [cursosActuales, setCursosActuales] = useState([""]);
-  const [promedioObjetivo, setPromedioObjetivo] = useState("");
-  const [resultado, setResultado] = useState(null);
-  const [promedioActual, setPromedioActual] = useState(null);
-  const [escenarios, setEscenarios] = useState(null);
+  const [cursosActuales, setCursosActuales] = useState(() => cargarEstado('cursosActuales', [""]));
+  const [promedioObjetivo, setPromedioObjetivo] = useState(() => cargarEstado('promedioObjetivo', ""));
+  const [resultado, setResultado] = useState(() => cargarEstado('resultado', null));
+  const [promedioActual, setPromedioActual] = useState(() => cargarEstado('promedioActual', null));
+  const [escenarios, setEscenarios] = useState(() => cargarEstado('escenarios', null));
   const [loading, setLoading] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState("calculadora");
+  const [vistaActiva, setVistaActiva] = useState(() => cargarEstado('vistaActiva', "calculadora"));
+  const [mensajeExito, setMensajeExito] = useState("");
   
-  // Estados para búsqueda
+  // Estados para búsqueda de cursos actuales
   const [pensum, setPensum] = useState([]);
-  const [busquedaAprobados, setBusquedaAprobados] = useState("");
   const [busquedaActuales, setBusquedaActuales] = useState("");
-  const [resultadosBusquedaAprobados, setResultadosBusquedaAprobados] = useState([]);
   const [resultadosBusquedaActuales, setResultadosBusquedaActuales] = useState([]);
+
+  // Efecto para guardar estado en localStorage cuando cambie
+  useEffect(() => {
+    const estadoAGuardar = {
+      cursosActuales,
+      promedioObjetivo,
+      resultado,
+      promedioActual,
+      escenarios,
+      vistaActiva
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoAGuardar));
+  }, [cursosActuales, promedioObjetivo, resultado, promedioActual, escenarios, vistaActiva, STORAGE_KEY]);
 
   // Cargar datos al iniciar
   useEffect(() => {
@@ -80,22 +115,6 @@ const OptimizadorPromedio = () => {
     }
   };
 
-  // Búsqueda de cursos aprobados
-  useEffect(() => {
-    if (busquedaAprobados.trim() === "") {
-      setResultadosBusquedaAprobados([]);
-      return;
-    }
-
-    const busqueda = busquedaAprobados.toLowerCase();
-    const resultados = pensum.filter(curso => 
-      curso.codigo.toLowerCase().includes(busqueda) ||
-      curso.nombre.toLowerCase().includes(busqueda)
-    ).slice(0, 5);
-    
-    setResultadosBusquedaAprobados(resultados);
-  }, [busquedaAprobados, pensum]);
-
   // Búsqueda de cursos actuales
   useEffect(() => {
     if (busquedaActuales.trim() === "") {
@@ -132,55 +151,6 @@ const OptimizadorPromedio = () => {
     setResultadosBusquedaActuales(resultados);
   }, [busquedaActuales, pensum, cursosAprobados]);
 
-  // Agregar curso desde búsqueda
-  const agregarCursoAprobadoDesdeBusqueda = (curso) => {
-    const yaExiste = cursosAprobados.some(c => c.codigo === curso.codigo);
-    if (!yaExiste) {
-      setCursosAprobados([...cursosAprobados, { ...curso, nota: "" }]);
-    }
-    setBusquedaAprobados("");
-    setResultadosBusquedaAprobados([]);
-  };
-
-  // Eliminar curso aprobado
-  const eliminarCursoAprobado = (index) => {
-    const nuevos = cursosAprobados.filter((_, i) => i !== index);
-    setCursosAprobados(nuevos.length > 0 ? nuevos : [{ codigo: "", nombre: "", nota: "", creditos: 0 }]);
-  };
-
-  // Actualizar curso aprobado
-  const actualizarCursoAprobado = async (index, field, value) => {
-    const nuevos = [...cursosAprobados];
-    nuevos[index][field] = value;
-    setCursosAprobados(nuevos);
-
-    // Si se actualiza la nota, guardarla en la DB
-    if (field === "nota" && value && nuevos[index].codigo) {
-      const userDataGuardado = localStorage.getItem("userData");
-      if (userDataGuardado) {
-        try {
-          const userData = JSON.parse(userDataGuardado);
-          if (userData.carne) {
-            await fetch("http://127.0.0.1:8000/guardar_notas", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                carne: userData.carne,
-                notas: [{
-                  codigo: nuevos[index].codigo,
-                  nota: parseFloat(value)
-                }]
-              })
-            });
-            console.log("Nota guardada en DB:", nuevos[index].codigo, value);
-          }
-        } catch (error) {
-          console.error("Error guardando nota:", error);
-        }
-      }
-    }
-  };
-
   // Agregar curso actual desde búsqueda
   const agregarCursoActualDesdeBusqueda = (curso) => {
     const yaExiste = cursosActuales.includes(curso.codigo);
@@ -189,7 +159,8 @@ const OptimizadorPromedio = () => {
     if (!yaExiste && !yaAprobado) {
       setCursosActuales([...cursosActuales.filter(c => c !== ""), curso.codigo]);
     } else if (yaAprobado) {
-      alert("Este curso ya está en tus cursos aprobados");
+      setMensajeExito("Este curso ya está en tus cursos aprobados");
+      setTimeout(() => setMensajeExito(""), 3000);
     }
     setBusquedaActuales("");
     setResultadosBusquedaActuales([]);
@@ -206,7 +177,8 @@ const OptimizadorPromedio = () => {
     const aprobadosValidos = cursosAprobados.filter(c => c.codigo && c.nota);
     
     if (aprobadosValidos.length === 0) {
-      alert("Debes agregar al menos un curso aprobado con nota");
+      setMensajeExito("Debes agregar al menos un curso aprobado con nota");
+      setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
 
@@ -226,7 +198,8 @@ const OptimizadorPromedio = () => {
       setPromedioActual(data);
     } catch (error) {
       console.error("Error calculando promedio:", error);
-      alert("Error al calcular el promedio actual");
+      setMensajeExito("Error al calcular el promedio actual");
+      setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoading(false);
     }
@@ -238,17 +211,20 @@ const OptimizadorPromedio = () => {
     const actualesValidos = cursosActuales.filter(c => c.trim() !== "");
 
     if (aprobadosValidos.length === 0) {
-      alert("Debes agregar al menos un curso aprobado con nota");
+      setMensajeExito("Debes agregar al menos un curso aprobado con nota");
+      setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
 
     if (actualesValidos.length === 0) {
-      alert("Debes agregar al menos un curso actual");
+      setMensajeExito("Debes agregar al menos un curso actual");
+      setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
 
     if (!promedioObjetivo || parseFloat(promedioObjetivo) < 0 || parseFloat(promedioObjetivo) > 100) {
-      alert("Ingresa un promedio objetivo válido (0-100)");
+      setMensajeExito("Ingresa un promedio objetivo válido (0-100)");
+      setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
 
@@ -270,7 +246,8 @@ const OptimizadorPromedio = () => {
       setResultado(data);
     } catch (error) {
       console.error("Error calculando notas:", error);
-      alert("Error al calcular las notas necesarias");
+      setMensajeExito("Error al calcular las notas necesarias");
+      setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoading(false);
     }
@@ -282,7 +259,8 @@ const OptimizadorPromedio = () => {
     const actualesValidos = cursosActuales.filter(c => c.trim() !== "");
 
     if (aprobadosValidos.length === 0 || actualesValidos.length === 0) {
-      alert("Debes agregar cursos aprobados y actuales");
+      setMensajeExito("Debes agregar cursos aprobados y actuales");
+      setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
 
@@ -303,7 +281,8 @@ const OptimizadorPromedio = () => {
       setEscenarios(data);
     } catch (error) {
       console.error("Error simulando escenarios:", error);
-      alert("Error al simular escenarios");
+      setMensajeExito("Error al simular escenarios");
+      setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoading(false);
     }
@@ -359,6 +338,17 @@ const OptimizadorPromedio = () => {
   return (
     <>
       <Navbar />
+      
+      {/* Toast de notificación */}
+      {mensajeExito && (
+        <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-in">
+          <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+            <span className="text-green-500 font-bold text-sm">✓</span>
+          </div>
+          <span className="font-medium">{mensajeExito}</span>
+        </div>
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-6">
         <div className="max-w-7xl mx-auto">
         {/* ----------------------- HEADER ----------------------- */}
@@ -408,7 +398,7 @@ const OptimizadorPromedio = () => {
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <BookMarked className="text-purple-600" size={20} />
-                  Cursos Aprobados
+                  Cursos Aprobados (Solo Lectura)
                 </h2>
                 <button
                   onClick={calcularPromedioActual}
@@ -429,67 +419,37 @@ const OptimizadorPromedio = () => {
                 </button>
               </div>
 
-              {/* Búsqueda */}
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Buscar por código o nombre..."
-                  value={busquedaAprobados}
-                  onChange={(e) => setBusquedaAprobados(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-                {resultadosBusquedaAprobados.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {resultadosBusquedaAprobados.map((curso) => (
-                      <div
-                        key={curso.codigo}
-                        onClick={() => agregarCursoAprobadoDesdeBusqueda(curso)}
-                        className="px-4 py-2 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
-                      >
-                        <div className="font-semibold">{curso.codigo} - {curso.nombre}</div>
-                        <div className="text-sm text-gray-600">{curso.creditos} créditos</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                 {cursosAprobados.map((curso, index) => (
-                  <div key={index} className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-200 hover:shadow-md transition-shadow">
-                    <div className="flex gap-3 items-start">
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-800 text-sm">
-                          {curso.codigo} {curso.nombre && `- ${curso.nombre}`}
-                        </div>
-                        <div className="text-xs text-gray-600">
-                          {curso.creditos} créditos
-                        </div>
+                  <div key={index} className="bg-gradient-to-r from-purple-50 to-pink-50 p-2 rounded-lg border border-purple-200">
+                    <div className="mb-1.5">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="px-1.5 py-0.5 bg-purple-600 text-white rounded text-xs font-bold">
+                          {curso.codigo}
+                        </span>
+                        <span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
+                          {curso.creditos} cred
+                        </span>
                       </div>
-                      <input
-                        type="number"
-                        placeholder="Nota"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={curso.nota}
-                        onChange={(e) => actualizarCursoAprobado(index, "nota", e.target.value)}
-                        className="w-20 px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                      />
-                      <button
-                        onClick={() => eliminarCursoAprobado(index)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="font-semibold text-gray-800 text-xs line-clamp-2 min-h-[2rem]">
+                        {curso.nombre}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">Nota:</span>
+                      <div className="px-2 py-0.5 bg-white border-2 border-purple-300 rounded font-bold text-purple-700 text-sm">
+                        {curso.nota || "N/A"}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
               {cursosAprobados.length === 0 && (
-                <div className="text-center text-gray-500 py-4">
-                  No hay cursos aprobados cargados
+                <div className="text-center text-gray-500 py-8">
+                  <BookMarked className="mx-auto mb-2 text-gray-400" size={32} />
+                  <p className="text-sm">No hay cursos aprobados cargados</p>
+                  <p className="text-xs text-gray-400 mt-1">Ve al Dashboard para agregar tus cursos</p>
                 </div>
               )}
             </div>
@@ -526,25 +486,36 @@ const OptimizadorPromedio = () => {
                 )}
               </div>
 
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                 {cursosActuales.filter(c => c !== "").map((codigo, index) => {
                   const curso = pensum.find(c => c.codigo === codigo);
                   return (
-                    <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200 flex justify-between items-center hover:shadow-md transition-shadow">
-                      <div>
-                        <div className="font-semibold text-gray-800 text-sm">
-                          {codigo} {curso && `- ${curso.nombre}`}
+                    <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="px-1.5 py-0.5 bg-blue-600 text-white rounded text-xs font-bold">
+                              {codigo}
+                            </span>
+                            {curso && (
+                              <span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                                {curso.creditos} cred
+                              </span>
+                            )}
+                          </div>
+                          {curso && (
+                            <div className="font-semibold text-gray-800 text-xs line-clamp-2">
+                              {curso.nombre}
+                            </div>
+                          )}
                         </div>
-                        {curso && (
-                          <div className="text-xs text-gray-600">{curso.creditos} créditos</div>
-                        )}
+                        <button
+                          onClick={() => eliminarCursoActual(index)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors shrink-0"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => eliminarCursoActual(index)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
                     </div>
                   );
                 })}
