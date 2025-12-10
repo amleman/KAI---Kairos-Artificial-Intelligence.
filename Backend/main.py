@@ -4,6 +4,7 @@ import sqlite3
 import hashlib
 import os
 import json
+import re
 from datetime import datetime
 from motor_generador import GeneradorHorarios
 from motor_custom import GeneradorHorarioCustom
@@ -11,11 +12,195 @@ from clustering_semaforo import crear_analizador, analizar_carga
 from optimizador_promedio import crear_optimizador, calcular_notas_objetivo
 import pandas as pd
 
+# OCR dependencies (optional but required for carga de imágenes)
+try:
+    from PIL import Image
+    import pytesseract
+except ImportError:  # Gracefully handle missing optional deps
+    Image = None
+    pytesseract = None
+
 app = Flask(__name__)
 app.config["PROPAGATE_EXCEPTIONS"] = True
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 DB = "usuarios.db"
+
+# Cache de pensum para cruzar créditos/nombres con los códigos reconocidos por OCR
+def cargar_pensum_lookup():
+    try:
+        df = pd.read_csv("./Data/pensum_sistemas.csv")
+        lookup = {}
+        for _, row in df.iterrows():
+            codigo = str(row.get("codigo", "")).zfill(4)
+            lookup[codigo] = {
+                "nombre": str(row.get("nombre_completo", row.get("nombre", ""))),
+                "creditos": int(row.get("creditos", 3)),
+            }
+        return lookup
+    except Exception:
+        return {}
+
+PENSUM_LOOKUP = cargar_pensum_lookup()
+
+
+def merge_cursos_en_db(carne: str, nuevos_cursos: list):
+    """Actualiza o inserta cursos aprobados, devolviendo la lista final."""
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+    row = cursor.fetchone()
+    cursos_existentes = json.loads(row[0]) if row and row[0] else []
+
+    cursos_dict = {c.get("codigo"): c for c in cursos_existentes if c.get("codigo")}
+    for curso in nuevos_cursos:
+        codigo = curso.get("codigo")
+        if not codigo:
+            continue
+        cursos_dict[codigo] = {
+            "codigo": codigo,
+            "nombre": curso.get("nombre", ""),
+            "creditos": curso.get("creditos", 3),
+            "nota": curso.get("nota"),
+        }
+
+    cursos_finales = list(cursos_dict.values())
+    cursos_json = json.dumps(cursos_finales)
+
+    if row:
+        cursor.execute("UPDATE cursos_aprobados SET cursos_data = ? WHERE carne = ?", (cursos_json, carne))
+    else:
+        cursor.execute("INSERT INTO cursos_aprobados (carne, cursos_data) VALUES (?, ?)", (carne, cursos_json))
+
+    conn.commit()
+    conn.close()
+    return cursos_finales
+
+
+def interpretar_nota(nota_token: str):
+    if nota_token is None:
+        return None
+    texto = str(nota_token).strip()
+    if not texto:
+        return None
+    if "APRO" in texto.upper():  # Aprobado sin nota numérica
+        return None
+    try:
+        return float(texto.replace(",", "."))
+    except ValueError:
+        return None
+
+
+def extraer_curso_desde_linea(linea: str):
+    """Parsea una línea OCR intentando extraer código, nombre, créditos y nota.
+    Se usa un regex ancho para atrapar variaciones y se hace fallback a un parse por tokens.
+    """
+    linea_norm = re.sub(r"[^0-9A-Za-zÁÉÍÓÚÜÑáéíóúüñ\.,\-\s]", " ", linea)
+    linea_norm = re.sub(r"\s+", " ", linea_norm).strip()
+    if not linea_norm:
+        return None
+
+    patron = re.compile(
+        r"(?P<codigo>\d{3,4})\s+"
+        r"(?P<nombre>[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s\.\-]+?)\s+"
+        r"(?P<creditos>\d{1,2})\s+"
+        r"(?P<fecha>\d{4}-\d{2}|\d{2}[/-]\d{4}|\d{4})\s+"
+        r"(?P<nota>(?:\d{1,3}(?:[\.,]\d+)?|Aprobado|APROBADO|aprobado))",
+        re.UNICODE,
+    )
+
+    m = patron.search(linea_norm)
+    if m:
+        codigo = m.group("codigo").zfill(4)
+        nombre = m.group("nombre").strip()
+        creditos = int(m.group("creditos")) if m.group("creditos").isdigit() else PENSUM_LOOKUP.get(codigo, {}).get("creditos", 3)
+        nota_valor = interpretar_nota(m.group("nota"))
+        return {
+            "codigo": codigo,
+            "nombre": nombre or PENSUM_LOOKUP.get(codigo, {}).get("nombre", ""),
+            "creditos": creditos,
+            "nota": nota_valor,
+        }
+
+    # Fallback por tokens si el regex no atrapó la estructura completa
+    tokens = linea_norm.split(" ")
+    if not tokens:
+        return None
+
+    codigo_token = tokens[0]
+    if not re.fullmatch(r"\d{3,4}", codigo_token):
+        return None
+
+    codigo = codigo_token.zfill(4)
+
+    credito_idx = None
+    for idx, token in enumerate(tokens[1:], start=1):
+        if re.fullmatch(r"\d{1,2}", token):
+            credito_idx = idx
+            break
+
+    if credito_idx is None:
+        return None
+
+    nombre = " ".join(tokens[1:credito_idx]).strip()
+    resto = tokens[credito_idx + 1 :]
+
+    nota_token = None
+    for token in reversed(resto):
+        if re.fullmatch(r"\d{1,3}(?:[\.,]\d+)?", token) or re.search(r"APROBAD", token, re.IGNORECASE):
+            nota_token = token
+            break
+
+    if nota_token is None:
+        return None
+
+    creditos = int(tokens[credito_idx]) if tokens[credito_idx].isdigit() else PENSUM_LOOKUP.get(codigo, {}).get("creditos", 3)
+    nombre_final = nombre if nombre else PENSUM_LOOKUP.get(codigo, {}).get("nombre", "")
+
+    return {
+        "codigo": codigo,
+        "nombre": nombre_final,
+        "creditos": creditos,
+        "nota": interpretar_nota(nota_token),
+    }
+
+
+def extraer_cursos_desde_imagen(file_storage):
+    if pytesseract is None or Image is None:
+        raise RuntimeError("OCR no disponible. Instala Pillow y pytesseract y configura el binario de Tesseract.")
+
+    imagen = Image.open(file_storage.stream).convert("RGB")
+
+    # OCR en modo lineal (psm 6) funciona mejor con tablas horizontales
+    texto_raw = pytesseract.image_to_string(imagen, lang="spa", config="--psm 6")
+
+    cursos = []
+
+    # 1) Intentar con las líneas directas del string
+    for linea in texto_raw.splitlines():
+        linea_limpia = re.sub(r"[|;\t]", " ", linea)
+        curso = extraer_curso_desde_linea(linea_limpia)
+        if curso:
+            cursos.append(curso)
+
+    # 2) Si no hubo resultados, usar image_to_data para recuperar líneas con coordenadas
+    if not cursos:
+        data = pytesseract.image_to_data(imagen, lang="spa", output_type=pytesseract.Output.DICT, config="--psm 6")
+        line_map = {}
+        for text, line_num in zip(data.get("text", []), data.get("line_num", [])):
+            if not text.strip():
+                continue
+            line_map.setdefault(line_num, []).append(text)
+
+        for parts in line_map.values():
+            linea_completa = " ".join(parts)
+            linea_limpia = re.sub(r"[|;\t]", " ", linea_completa)
+            curso = extraer_curso_desde_linea(linea_limpia)
+            if curso:
+                cursos.append(curso)
+
+    return cursos, texto_raw
 
 
 # -----------------------------------------------------------
@@ -223,42 +408,7 @@ def guardar_aprobados():
     if not carne:
         return jsonify({"error": "carne requerido"}), 400
 
-    conn = sqlite3.connect(DB)
-    cursor = conn.cursor()
-
-    # Obtener cursos existentes
-    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
-    row = cursor.fetchone()
-    
-    cursos_existentes = []
-    if row and row[0]:
-        cursos_existentes = json.loads(row[0])
-    
-    # Crear diccionario con códigos existentes
-    cursos_dict = {c["codigo"]: c for c in cursos_existentes}
-    
-    # Agregar/actualizar nuevos cursos (mantener toda la info)
-    for curso in nuevos_cursos:
-        cursos_dict[curso["codigo"]] = {
-            "codigo": curso["codigo"],
-            "nombre": curso.get("nombre", ""),
-            "creditos": curso.get("creditos", 3),
-            "nota": curso.get("nota")
-        }
-    
-    # Convertir a lista
-    cursos_finales = list(cursos_dict.values())
-    cursos_json = json.dumps(cursos_finales)
-    
-    # Guardar o actualizar
-    if row:
-        cursor.execute("UPDATE cursos_aprobados SET cursos_data = ? WHERE carne = ?", (cursos_json, carne))
-    else:
-        cursor.execute("INSERT INTO cursos_aprobados (carne, cursos_data) VALUES (?, ?)", (carne, cursos_json))
-    
-    conn.commit()
-    conn.close()
-
+    merge_cursos_en_db(carne, nuevos_cursos)
     return jsonify({"message": "Cursos guardados correctamente"}), 200
 
 
@@ -290,6 +440,59 @@ def obtener_aprobados(carne):
         })
     
     return jsonify(resultado), 200
+
+
+# -----------------------------------------------------------
+# CARGAR CURSOS APROBADOS DESDE IMÁGENES (OCR)
+# -----------------------------------------------------------
+@app.post("/cargar_aprobados_imagenes")
+def cargar_aprobados_imagenes():
+    carne = request.form.get("carne")
+    imagenes = request.files.getlist("imagenes")
+
+    if not carne:
+        return jsonify({"error": "carne requerido"}), 400
+    if not imagenes:
+        return jsonify({"error": "Debes adjuntar al menos una imagen"}), 400
+    if pytesseract is None or Image is None:
+        return jsonify({"error": "OCR no disponible. Instala Pillow y pytesseract y asegúrate de tener el binario de Tesseract en el PATH."}), 500
+
+    cursos_extraidos = []
+    errores = []
+
+    for img in imagenes:
+        try:
+            cursos_img, texto_raw = extraer_cursos_desde_imagen(img)
+            if cursos_img:
+                cursos_extraidos.extend(cursos_img)
+            else:
+                errores.append(f"{img.filename}: no se reconoció el formato esperado. Asegúrate de usar el cuadro de columnas Código, Nombre, Créditos, Fecha, Nota, Observaciones. Texto detectado: '{texto_raw[:200]}'")
+        except Exception as e:
+            errores.append(f"{img.filename}: {str(e)}")
+
+    if not cursos_extraidos:
+        return jsonify({"error": "No se encontraron cursos en las imágenes", "detalles": errores}), 400
+
+    # Dedupe por código priorizando la nota más alta si viniera repetido
+    dedup = {}
+    for curso in cursos_extraidos:
+        codigo = curso.get("codigo")
+        if not codigo:
+            continue
+        existente = dedup.get(codigo)
+        nota_actual = curso.get("nota") if curso.get("nota") is not None else -1
+        nota_existente = existente.get("nota") if existente and existente.get("nota") is not None else -1
+        if existente is None or nota_actual > nota_existente:
+            dedup[codigo] = curso
+
+    cursos_finales = list(dedup.values())
+    merge_cursos_en_db(carne, cursos_finales)
+
+    return jsonify({
+        "message": f"Se procesaron {len(cursos_finales)} curso(s) desde las imágenes",
+        "cursos": cursos_finales,
+        "advertencias": errores,
+    }), 200
 
 
 # -----------------------------------------------------------

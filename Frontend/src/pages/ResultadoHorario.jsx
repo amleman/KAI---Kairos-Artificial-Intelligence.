@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, MapPin, User, Monitor, AlertCircle, LayoutGrid, List, Save } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, MapPin, User, Monitor, AlertCircle, LayoutGrid, List, Save, FileDown } from "lucide-react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import Navbar from "../components/Navbar";
 
 const ResultadoHorario = () => {
@@ -58,6 +60,7 @@ const ResultadoHorario = () => {
     const [vista, setVista] = useState("calendario");
     const [guardando, setGuardando] = useState(false);
     const [mensajeExito, setMensajeExito] = useState("");
+    const captureRef = useRef(null);
 
     useEffect(() => {
         if (!datos) navigate("/semaforo");
@@ -114,6 +117,50 @@ const ResultadoHorario = () => {
         const top = (inicioMin - HORA_INICIO_DIA) * PIXELES_POR_MINUTO;
         const height = (finMin - inicioMin) * PIXELES_POR_MINUTO;
         return { top: `${top}px`, height: `${height}px` };
+    };
+
+    const handleDescargarPDF = async () => {
+        if (!cursoActuales.length) {
+            setMensajeExito("No hay cursos para exportar.");
+            setTimeout(() => setMensajeExito(""), 2500);
+            return;
+        }
+
+        if (!captureRef.current) {
+            setMensajeExito("No se pudo capturar la vista.");
+            setTimeout(() => setMensajeExito(""), 2500);
+            return;
+        }
+
+        try {
+            const canvas = await html2canvas(captureRef.current, {
+                scale: 2, // mejor nitidez
+                useCORS: true,
+                windowWidth: captureRef.current.scrollWidth,
+                windowHeight: captureRef.current.scrollHeight,
+            });
+
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: "a4" });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            const imgWidth = pageWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            // Si la imagen es más alta que la página, escala para que quepa
+            const finalWidth = imgHeight > pageHeight ? (pageHeight * canvas.width) / canvas.height : imgWidth;
+            const finalHeight = imgHeight > pageHeight ? pageHeight : imgHeight;
+            const offsetX = (pageWidth - finalWidth) / 2;
+            const offsetY = 10; // pequeño margen superior
+
+            pdf.addImage(imgData, "PNG", offsetX, offsetY, finalWidth, finalHeight, undefined, "FAST");
+            pdf.save(`horario_opcion_${opcionSeleccionada + 1}.pdf`);
+        } catch (err) {
+            console.error(err);
+            setMensajeExito("No se pudo generar el PDF.");
+            setTimeout(() => setMensajeExito(""), 3000);
+        }
     };
 
     const handleGuardarHorario = async () => {
@@ -179,65 +226,66 @@ const ResultadoHorario = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
             <div className="max-w-7xl mx-auto">
             
-            {/* HEADER */}
-            <div className="flex items-center gap-4 mb-8">
-                <button 
-                onClick={() => navigate(-1)}
-                className="p-2 rounded-full bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 shadow-md transition-all"
-                >
-                <ArrowLeft size={24} />
-                </button>
-                <div>
-                <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                    <Calendar className="text-indigo-600" />
-                    {tipoHorario === 'optimizado' ? 'Horario Sugerido (IA)' : 'Horario Personalizado'}
-                </h1>
-                <p className="text-gray-600 text-sm">
-                    Se encontraron {horariosDisponibles.length} combinaciones posibles
-                </p>
-                </div>
-            </div>
-
-            {/* CONTROLES */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="flex flex-wrap gap-2">
-                {horariosDisponibles.map((_, index) => (
-                    <button
-                    key={index}
-                    onClick={() => setOpcionSeleccionada(index)}
-                    className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm border ${
-                        opcionSeleccionada === index
-                        ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
-                    }`}
+            <div className="space-y-6">
+                {/* HEADER */}
+                <div className="flex items-center gap-4">
+                    <button 
+                    onClick={() => navigate(-1)}
+                    className="p-2 rounded-full bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600 shadow-md transition-all"
                     >
-                    Opción {index + 1}
+                    <ArrowLeft size={24} />
                     </button>
-                ))}
+                    <div>
+                    <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                        <Calendar className="text-indigo-600" />
+                        {tipoHorario === 'optimizado' ? 'Horario Sugerido (IA)' : 'Horario Personalizado'}
+                    </h1>
+                    <p className="text-gray-600 text-sm">
+                        Se encontraron {horariosDisponibles.length} combinaciones posibles
+                    </p>
+                    </div>
                 </div>
 
-                <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 flex">
-                <button
-                    onClick={() => setVista("calendario")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    vista === "calendario" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                >
-                    <LayoutGrid size={16} /> Calendario
-                </button>
-                <button
-                    onClick={() => setVista("lista")}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    vista === "lista" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                >
-                    <List size={16} /> Lista
-                </button>
-                </div>
-            </div>
+                {/* CONTROLES */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-wrap gap-2">
+                    {horariosDisponibles.map((_, index) => (
+                        <button
+                        key={index}
+                        onClick={() => setOpcionSeleccionada(index)}
+                        className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm border ${
+                            opcionSeleccionada === index
+                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
+                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
+                        }`}
+                        >
+                        Opción {index + 1}
+                        </button>
+                    ))}
+                    </div>
 
-            {/* CONTENEDOR PRINCIPAL */}
-            <div className="bg-white rounded-xl shadow-xl border border-indigo-50 overflow-hidden">
+                    <div className="bg-white p-1 rounded-lg shadow-sm border border-gray-200 flex">
+                    <button
+                        onClick={() => setVista("calendario")}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        vista === "calendario" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                    >
+                        <LayoutGrid size={16} /> Calendario
+                    </button>
+                    <button
+                        onClick={() => setVista("lista")}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        vista === "lista" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                    >
+                        <List size={16} /> Lista
+                    </button>
+                    </div>
+                </div>
+
+                {/* CONTENEDOR PRINCIPAL */}
+                <div className="bg-white rounded-xl shadow-xl border border-indigo-50 overflow-hidden">
                 <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-gray-800">
@@ -247,21 +295,31 @@ const ResultadoHorario = () => {
                     {cursoActuales.length} Cursos
                     </span>
                 </div>
-                <button 
-                    onClick={handleGuardarHorario} // <--- AGREGAR ESTO
-                    disabled={guardando}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                        guardando 
-                        ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
-                    }`}
-                >
-                    <Save size={18} />
-                    Guardar Horario
-                </button>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={handleDescargarPDF}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"
+                    >
+                        <FileDown size={18} />
+                        Descargar PDF
+                    </button>
+                    <button 
+                        onClick={handleGuardarHorario}
+                        disabled={guardando}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                            guardando 
+                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                        }`}
+                    >
+                        <Save size={18} />
+                        Guardar Horario
+                    </button>
+                </div>
                 </div>
 
-                <div className="p-6">
+                <div ref={captureRef} className="p-6">
+                <div className="text-2xl font-bold text-gray-800 mb-5 text-center">Opción {opcionSeleccionada + 1}</div>
                 {vista === "calendario" ? (
                     // ---------------------------------------------------
                     // VISTA TIPO CALENDARIO CORREGIDA
@@ -446,6 +504,7 @@ const ResultadoHorario = () => {
                     </div>
                 )}
                 </div>
+            </div>
             </div>
             </div>
         </div>

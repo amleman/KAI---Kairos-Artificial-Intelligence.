@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Papa from "papaparse";
-import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTriangle, BookCheck, TrendingUp, GraduationCap, List, User, CreditCard, Cake, Briefcase, LogOut , Menu, X} from "lucide-react";
+import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTriangle, BookCheck, TrendingUp, GraduationCap, List, User, CreditCard, Cake, Briefcase, LogOut , Menu, X, UploadCloud, Images} from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import formatoCursos from "../assets/formato_cursos.svg";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -46,6 +47,10 @@ const Dashboard = () => {
   const [pensum, setPensum] = useState([]);
   const [aprobados, setAprobados] = useState([]);
   const [aprobadosDB, setAprobadosDB] = useState([]); // Cursos aprobados desde la DB
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
+  const [errorUpload, setErrorUpload] = useState("");
+  const [procesandoImagenes, setProcesandoImagenes] = useState(false);
   
   // Estados para modal de notas
   const [showModalNotas, setShowModalNotas] = useState(false);
@@ -55,6 +60,7 @@ const Dashboard = () => {
   const [mensajeExito, setMensajeExito] = useState(""); // Para mostrar mensaje de éxito
   
   const isInitialMount = useRef(true);
+  const inputImagenesRef = useRef(null);
 
   // --- EFECTO PARA VERIFICAR SI EXISTE HORARIO GUARDADO ---
   useEffect(() => {
@@ -157,6 +163,55 @@ const Dashboard = () => {
           },
         });
       });
+  };
+
+  /* ----------------------- Carga de imágenes aprobadas (OCR) ----------------------- */
+  const handleSeleccionImagenes = (event) => {
+    const files = Array.from(event.target.files || []);
+    setImagenesSeleccionadas(files);
+  };
+
+  const procesarImagenesAprobados = async () => {
+    setErrorUpload("");
+
+    if (!usuarioData.carne) {
+      setErrorUpload("Debes tener un carné registrado antes de procesar imágenes.");
+      return;
+    }
+
+    if (!imagenesSeleccionadas.length) {
+      setErrorUpload("Primero selecciona al menos una imagen.");
+      return;
+    }
+
+    setProcesandoImagenes(true);
+    const formData = new FormData();
+    formData.append("carne", usuarioData.carne);
+    imagenesSeleccionadas.forEach((img) => formData.append("imagenes", img));
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/cargar_aprobados_imagenes", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMensajeExito(data.message || "Cursos procesados desde imágenes");
+        setShowUploadModal(false);
+        setImagenesSeleccionadas([]);
+        cargarAprobadosDB();
+      } else {
+        setErrorUpload(data.error || "No se pudieron procesar las imágenes");
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorUpload("Error de conexión con el servidor");
+    } finally {
+      setProcesandoImagenes(false);
+      setTimeout(() => setErrorUpload(""), 4000);
+    }
   };
 
   /* ----------------------- Cargar cursos aprobados desde DB ----------------------- */
@@ -535,6 +590,22 @@ const Dashboard = () => {
                 </p>
                 <br></br>
 
+                <div className="flex flex-col sm:flex-row gap-3 mt-2 mb-6">
+                  <button
+                    onClick={() => {
+                      setShowUploadModal(true);
+                      setErrorUpload("");
+                    }}
+                    className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-md"
+                  >
+                    <UploadCloud size={18} />
+                    Cargar cursos aprobados con imágenes
+                  </button>
+                  <div className="flex-1 text-sm text-gray-600 bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-3">
+                    Envía las capturas con el formato indicado para que la IA extraiga código, nombre y nota sin contar los "Aprobado" en tu promedio.
+                  </div>
+                </div>
+
                 <div className="space-y-6">
 
                 {pensumPorSemestre.map((sem) => (
@@ -777,6 +848,93 @@ const Dashboard = () => {
               </div>
             )}
 
+          </div>
+        )}
+
+        {showUploadModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start justify-between p-6 border-b">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">Carga de cursos con imágenes</h3>
+                  <p className="text-gray-600 mt-2 text-sm">
+                    Las imágenes serán analizadas con IA para extraer código, nombre y nota. Deben usar el siguiente formato:
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowUploadModal(false)}
+                  className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+                  aria-label="Cerrar modal de carga"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-indigo-700 font-semibold">
+                      <Images size={18} />
+                      <span>Formato esperado</span>
+                    </div>
+                    <p className="text-gray-600 text-sm">
+                      Columnas visibles de Código, Nombre, Créditos, Fecha de Aprobado, Nota y Observaciones. No importa si la fila de encabezado está recortada o si hay cursos repetidos: los deduplicamos automáticamente.
+                    </p>
+                    <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                      <li>Solo se aceptan imágenes (PNG, JPG, JPEG).</li>
+                      <li>Las notas con texto "Aprobado" no se usan para calcular promedio.</li>
+                      <li>Imágenes fuera de este formato devolverán un error.</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center">
+                    <img src={formatoCursos} alt="Ejemplo de formato válido" className="w-full h-full max-h-80 object-contain p-3" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                  <input
+                    ref={inputImagenesRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleSeleccionImagenes}
+                  />
+                  <button
+                    onClick={() => inputImagenesRef.current?.click()}
+                    className="flex-1 sm:flex-none px-4 py-3 bg-indigo-100 text-indigo-800 font-semibold rounded-lg hover:bg-indigo-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Images size={18} /> Seleccionar imágenes
+                  </button>
+                  <button
+                    onClick={procesarImagenesAprobados}
+                    disabled={procesandoImagenes}
+                    className="flex-1 sm:flex-none px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    <UploadCloud size={18} /> {procesandoImagenes ? "Procesando..." : "Procesar"}
+                  </button>
+                </div>
+
+                {!!imagenesSeleccionadas.length && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm text-gray-700">
+                    <p className="font-semibold mb-2">Imágenes seleccionadas:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {imagenesSeleccionadas.map((file) => (
+                        <span key={file.name} className="bg-white border border-slate-200 px-3 py-1 rounded-full text-xs">
+                          {file.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {errorUpload && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+                    {errorUpload}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
