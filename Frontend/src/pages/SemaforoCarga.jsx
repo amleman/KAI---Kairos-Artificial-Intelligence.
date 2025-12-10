@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye } from "lucide-react";
+import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye,
+  X, AlertTriangle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from 'react-router-dom';
 
@@ -40,6 +41,8 @@ const SemaforoCarga = () => {
   const [filtroNivel, setFiltroNivel] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
   const [mensajeError, setMensajeError] = useState(null);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalMensaje, setErrorModalMensaje] = useState("");
   const navigate = useNavigate();
   
   // Estado para la respuesta del horario generado
@@ -160,6 +163,8 @@ const SemaforoCarga = () => {
     setHorarioGenerado(null);
     try {
       const codigos = Object.keys(cursosSeleccionados);
+
+      console.log(codigos)
       
       // Preparar payload
       const payload = {
@@ -185,14 +190,15 @@ const SemaforoCarga = () => {
       
       // VERIFICACIÓN DE ERRORES HTTP
       if (!response.ok) {
-        // Intentamos leer el mensaje del backend si existe, o usamos uno por defecto
-        const errorData = await response.json().catch(() => ({}));
-        
         if (response.status === 500) {
            throw new Error("No se encontraron combinaciones válidas. Es probable que tus filtros (Horarios o Catedrático) sean muy estrictos y eliminen todas las secciones disponibles. Intenta relajar las restricciones.");
         }
-        
-        throw new Error(errorData.error || errorData.detail || `Error del servidor: ${response.status}`);
+        if (response.status === 404) {
+           throw new Error("No existen combinaciones posibles con los filtros dados.");
+        }
+        // Fallback genérico
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error del servidor: ${response.status}`);
       }
       
       const data = await response.json();
@@ -216,7 +222,8 @@ const SemaforoCarga = () => {
       
     } catch (error) {
       console.error("Error generando horario:", error);
-      setMensajeError(error.message);
+      setErrorModalMensaje(error.message);
+      setErrorModalOpen(true);
     } finally {
       setLoadingHorario(false);
     }
@@ -739,6 +746,39 @@ const SemaforoCarga = () => {
           </div>
         </div>
       </div>
+      {/* MODAL DE ERROR */}
+      {errorModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all scale-100">
+            {/* Cabecera del Modal */}
+            <div className="bg-red-50 p-6 flex flex-col items-center text-center border-b border-red-100">
+              <div className="bg-red-100 p-3 rounded-full mb-4">
+                <AlertTriangle className="text-red-600 w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">
+                No se pudo generar el horario
+              </h3>
+            </div>
+            
+            {/* Cuerpo del Mensaje */}
+            <div className="p-6">
+              <p className="text-gray-600 text-center text-sm leading-relaxed">
+                {errorModalMensaje}
+              </p>
+            </div>
+
+            {/* Pie / Botón */}
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-center">
+              <button
+                onClick={() => setErrorModalOpen(false)}
+                className="w-full sm:w-auto px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              >
+                Entendido, ajustaré los filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

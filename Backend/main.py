@@ -582,7 +582,9 @@ def calcular_promedio_actual_endpoint():
     data = request.get_json()
     cursos_aprobados = data.get("cursos_aprobados", [])
     
-    resultado = optimizador_promedio.calcular_promedio_actual(cursos_aprobados)
+    ultimos_6_cursos = cursos_aprobados[-6:]
+    
+    resultado = optimizador_promedio.calcular_promedio_actual(ultimos_6_cursos)
     return jsonify(resultado), 200
 
 

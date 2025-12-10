@@ -113,6 +113,6 @@ class GeneradorHorarios:
             if firma not in firmas_vistas and self.calcular_fitness(indiv) == 1000:
                 resultados_unicos.append(indiv)
                 firmas_vistas.add(firma)
-            if len(resultados_unicos) >= 3:
+            if len(resultados_unicos) >= 4:
                 break
         return resultados_unicos

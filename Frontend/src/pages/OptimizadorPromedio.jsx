@@ -719,7 +719,7 @@ const OptimizadorPromedio = () => {
               {/* Promedio Actual */}
               {promedioActual && (
                 <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                  <h3 className="font-semibold text-gray-800 mb-1.5 text-sm">Promedio Actual</h3>
+                  <h3 className="font-semibold text-gray-800 mb-1.5 text-sm">Promedio Actual (últimos 6 cursos)</h3>
                   <p className="text-2xl font-bold text-blue-600">{promedioActual.promedio}</p>
                   <div className="mt-2 text-xs text-gray-600 space-y-0.5">
                     <p>Créditos: {promedioActual.creditos_totales}</p>
