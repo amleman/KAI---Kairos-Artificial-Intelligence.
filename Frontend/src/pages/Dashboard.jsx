@@ -96,21 +96,6 @@ const Dashboard = () => {
     }
   }, [usuarioData.carne]);
 
-  /* ----------------------- Cerrar sesión ----------------------- */
-  const handleCerrarSesion = () => {
-    localStorage.removeItem("usuario");
-    localStorage.removeItem("userData");
-    window.location.href = "/";
-  };
-
-  /* ----------------------- Cambiar estado del form ----------------------- */
-  const handleFormChange = (e) => {
-    setUsuarioData({
-      ...usuarioData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   /* ----------------------- Guardar usuario ----------------------- */
   const handleGuardarUsuario = async () => {
     const usuarioGuardado = localStorage.getItem("usuario");
@@ -279,6 +264,7 @@ const Dashboard = () => {
       cargarAprobadosDB();
     } else {
       const data = await response.json();
+      console.log(errorNotas)
       setErrorNotas(data.error || "Error al guardar los cursos");
       setTimeout(() => setErrorNotas(""), 3000);
     }
@@ -516,6 +502,7 @@ const Dashboard = () => {
                         setMobileMenuOpen(false);
                         if (id === "aprobados") cargarAprobadosDB();
                         if (id === "pensum") cargarPensum();
+                        console.log(Icon)
                       }}
                       className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium transition-all ${
                         tab === id
@@ -527,6 +514,7 @@ const Dashboard = () => {
                       <span className="hidden sm:inline">{label}</span>
                       <span className="sm:hidden">{label}</span>
                     </button>
+                    
                   ))}
                 </div>
               </div>
@@ -534,19 +522,35 @@ const Dashboard = () => {
 
             {/* ====================== CONTENIDO DE CADA PESTAÑA ====================== */}
 
-            {/* PENSUM */}
+            {/* ----------------------- TAB: VER PENSUM ----------------------- */}
             {tab === "pensum" && (
-              <div className="space-y-8">
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+                  <GraduationCap className="text-blue-600" size={28} />
+                  Pensum - Ingeniería en Sistemas
+                </h2>
+                <p className="text-gray-600 text-sm mt-1">
+                  Aquí encontraras los cursos de tu carrera por semestre,
+                  selecciona los cursos que ya has aprobado y guarda los cambios.
+                </p>
+                <br></br>
+
+                <div className="space-y-6">
+
                 {pensumPorSemestre.map((sem) => (
-                  <div key={sem.nombre} className="bg-white rounded-2xl shadow-xl p-6">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                      <span className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                  <div key={sem.nombre} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
                         {sem.numero}
                       </span>
                       {sem.nombre} Semestre
                     </h3>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {sem.cursos.length === 0 && (
+                        <p className="text-gray-500 col-span-4 text-center py-4">No hay cursos cargados.</p>
+                      )}
+
                       {sem.cursos.map((curso) => {
                         const aprobado = aprobados.includes(curso.codigo);
                         const permitido = puedeLlevar(curso);
@@ -554,33 +558,35 @@ const Dashboard = () => {
                         return (
                           <div
                             key={curso.codigo}
-                            onClick={() => permitido && toggleAprobado(curso.codigo)}
-                            className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
+                            className={`p-3 rounded-lg border-2 transition-all ${
                               aprobado
-                                ? "bg-green-50 border-green-500 shadow-lg"
+                                ? "bg-green-50 border-green-500 shadow-md"
                                 : permitido
-                                ? "bg-white border-gray-300 hover:border-blue-500 hover:shadow-md"
-                                : "bg-red-50 border-red-300 opacity-70 cursor-not-allowed"
+                                ? "bg-white border-gray-300 hover:border-blue-400 hover:shadow-md cursor-pointer"
+                                : "bg-red-50 border-red-300 opacity-60 cursor-not-allowed"
                             }`}
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <span className={`px-3 py-1 rounded text-xs font-bold ${
-                                aprobado ? "bg-green-600 text-white" : "bg-blue-100 text-blue-800"
+                            <div className="flex justify-between items-start mb-1.5">
+                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                aprobado ? "bg-green-200 text-green-800" :
+                                permitido ? "bg-blue-100 text-blue-800" :
+                                "bg-red-200 text-red-800"
                               }`}>
                                 {curso.codigo}
                               </span>
-                              {aprobado && <CheckCircle2 className="text-green-600" size={20} />}
+                              {aprobado && <CheckCircle2 className="text-green-600" size={16} />}
                             </div>
-                            <h4 className="font-bold text-sm text-gray-800 line-clamp-2 mb-2">
-                              {curso.nombre_completo}
-                            </h4>
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                              <Award size={14} />
-                              <span>{curso.creditos} créditos</span>
+                            <h4 className="font-bold text-xs text-gray-800 mb-1.5 line-clamp-2">{curso.nombre_completo}</h4>
+                            <div className="flex items-center justify-between text-xs text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <Award size={12} />
+                                {curso.creditos} créditos
+                              </span>
                             </div>
                             {!permitido && (
-                              <p className="text-xs text-red-700 mt-3 font-medium flex items-center gap-1">
-                                <AlertTriangle size={14} />
+                              <p className="text-xs text-red-700 mt-2 font-medium flex items-center gap-1">
+                                <AlertTriangle size={12} />
                                 Falta prerrequisito
                               </p>
                             )}
@@ -590,14 +596,25 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ))}
+                </div>
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="mt-6 flex gap-3">
                   <button
                     onClick={guardarAprobados}
-                    className="flex-1 bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-3 text-lg"
+                    className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Save size={22} />
+                    <Save size={18} />
                     Guardar Aprobados
+                  </button>
+                  <button
+                    onClick={() => {
+                      cargarAprobadosDB();
+                      setTab("aprobados");
+                    }}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  >
+                    <Eye size={18} />
+                    Ver Aprobados
                   </button>
                 </div>
               </div>
@@ -606,33 +623,46 @@ const Dashboard = () => {
             {/* APROBADOS */}
             {tab === "aprobados" && (
               <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="bg-blue-50 rounded-2xl p-6 text-center border-l-4 border-blue-600">
-                    <BookOpen className="text-blue-600 mx-auto mb-2" size={32} />
-                    <p className="text-blue-600 font-medium">Cursos</p>
-                    <p className="text-4xl font-bold text-gray-800">{aprobadosDB.length}</p>
+                <div className="grid grid-cols-3 sm:grid-cols-3 gap-6">
+                  
+                  {/* 1. Cursos (Horizontal) */}
+                  <div className="bg-blue-50 rounded-2xl p-6 border-l-4 border-blue-600 flex items-center justify-center gap-4">
+                    <BookOpen className="text-blue-600" size={38} />
+                    <div className="text-left">
+                      <p className="text-blue-600 font-medium">Cursos</p>
+                      <p className="text-3xl font-bold text-gray-800">{aprobadosDB.length}</p>
+                    </div>
                   </div>
-                  <div className="bg-green-50 rounded-2xl p-6 text-center border-l-4 border-green-600">
-                    <BookCheck className="text-green-600 mx-auto mb-2" size={32} />
-                    <p className="text-green-600 font-medium">Créditos</p>
-                    <p className="text-4xl font-bold text-gray-800">
-                      {aprobadosDB.reduce((a, c) => a + (parseInt(c.creditos) || 0), 0)}
-                    </p>
+
+                  {/* 2. Créditos (Horizontal) */}
+                  <div className="bg-green-50 rounded-2xl p-6 border-l-4 border-green-600 flex items-center justify-center gap-4">
+                    <BookCheck className="text-green-600" size={38} />
+                    <div className="text-left">
+                      <p className="text-green-600 font-medium">Créditos</p>
+                      <p className="text-3xl font-bold text-gray-800">
+                        {aprobadosDB.reduce((a, c) => a + (parseInt(c.creditos) || 0), 0)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-purple-50 rounded-2xl p-6 text-center border-l-4 border-purple-600">
-                    <TrendingUp className="text-purple-600 mx-auto mb-2" size={32} />
-                    <p className="text-purple-600 font-medium">Progreso</p>
-                    <p className="text-4xl font-bold text-gray-800">
-                      {Math.round((aprobadosDB.reduce((a, c) => a + (parseInt(c.creditos) || 0), 0) / 300) * 100)}%
-                    </p>
+
+                  {/* 3. Progreso (Horizontal) */}
+                  <div className="bg-purple-50 rounded-2xl p-6 border-l-4 border-purple-600 flex items-center justify-center gap-4">
+                    <TrendingUp className="text-purple-600" size={38} />
+                    <div className="text-left">
+                      <p className="text-purple-600 font-medium">Progreso</p>
+                      <p className="text-3xl font-bold text-gray-800">
+                        {Math.round((aprobadosDB.reduce((a, c) => a + (parseInt(c.creditos) || 0), 0) / 300) * 100)}%
+                      </p>
+                    </div>
                   </div>
+
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl p-6">
                   <h3 className="text-2xl font-bold mb-6">Tus cursos aprobados</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {aprobadosDB.map((c) => (
-                      <div key={c.codigo} className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border-l-4 border-green-600">
+                      <div key={c.codigo} className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border-l-4 border-green-600">
                         <div className="flex justify-between items-start mb-2">
                           <span className="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">
                             {c.codigo}
@@ -649,68 +679,104 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* HORARIOS */}
+            {/* ----------------------- TAB: VER TIPOS DE HORARIOS ----------------------- */}
             {tab === "horario" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Horario Inteligente */}
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
-                    <h3 className="text-2xl font-bold">Horario Inteligente (IA)</h3>
-                    <p className="mt-2 opacity-90">Optimizado automáticamente según tu avance</p>
-                  </div>
-                  <div className="p-8 space-y-6">
-                    <p className="text-gray-700">
-                      La IA generará el mejor horario posible sin choques y con la ruta más rápida a graduarte.
-                    </p>
-                    <button
-                      onClick={handleGenerarOptimizado}
-                      disabled={loadingOptimizado}
-                      className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-60 flex items-center justify-center gap-3"
-                    >
-                      {loadingOptimizado ? "Generando..." : "Generar con IA"}
-                    </button>
-                    {existeOptimizado && (
-                      <button
-                        onClick={() => navigate('/resultado-horario', { state: { tipo: 'optimizado' } })}
-                        className="w-full border-2 border-blue-600 text-blue-600 py-4 rounded-xl font-bold hover:bg-blue-50 flex items-center justify-center gap-3"
-                      >
-                        <Eye size={20} />
-                        Ver último generado
-                      </button>
-                    )}
-                  </div>
+              <div className="bg-white rounded-lg shadow-lg p-8">
+                <div className="text-left mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <Calendar className="text-blue-600" />
+                    Gestión de Horarios
+                  </h2>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Selecciona cómo deseas generar tu horario para el próximo semestre.
+                  </p>
                 </div>
 
-                {/* Horario Manual */}
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-green-600 to-emerald-700 p-8 text-white">
-                    <h3 className="text-2xl font-bold">Horario Personalizado</h3>
-                    <p className="mt-2 opacity-90">Tú eliges los cursos</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  {/* OPCIÓN 1: HORARIO INTELIGENTE (IA) */}
+                  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100 hover:shadow-xl transition-shadow">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">Horario Inteligente</h3>
+                          <p className="text-blue-100 text-sm">IA + Optimización de Pensum</p>
+                        </div>
+                        {/* Icono Sparkles (necesitas importarlo de lucide-react) */}
+                        {/* <Sparkles size={32} className="text-blue-200" /> */}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-600 mb-6 text-sm">
+                        El sistema analizará tu historial académico, prerrequisitos y promedio para sugerirte la 
+                        <strong> ruta óptima de graduación</strong> sin choques.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                          onClick={handleGenerarOptimizado}
+                          disabled={loadingOptimizado}
+                          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex justify-center items-center gap-2 shadow-md disabled:bg-gray-400"
+                        >
+                          {/* {loadingOptimizado ? <Loader2 className="animate-spin" /> : <Play size={18} />} */}
+                          {loadingOptimizado ? "Generando..." : "Generar Automáticamente"}
+                        </button>
+
+                        {existeOptimizado && (
+                          <button 
+                            onClick={() => navigate('/resultado-horario', { state: { tipo: 'optimizado' } })}
+                            className="w-full bg-white text-blue-700 border border-blue-200 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex justify-center items-center gap-2"
+                          >
+                            <Eye size={18} />
+                            Ver Último Generado
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-8 space-y-6">
-                    <p className="text-gray-700">
-                      Usa el semáforo para crear tu horario manual con alertas de carga y choques.
-                    </p>
-                    <button
-                      onClick={() => navigate('/semaforo')}
-                      className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-3"
-                    >
-                      <Calendar size={20} />
-                      Ir al Semáforo
-                    </button>
-                    {existeCustom && (
-                      <button
-                        onClick={() => navigate('/resultado-horario', { state: { tipo: 'custom' } })}
-                        className="w-full border-2 border-green-600 text-green-600 py-4 rounded-xl font-bold hover:bg-green-50 flex items-center justify-center gap-3"
-                      >
-                        <Eye size={20} />
-                        Ver último manual
-                      </button>
-                    )}
+
+                  {/* OPCIÓN 2: HORARIO PERSONALIZADO (SEMÁFORO) */}
+                  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-green-100 hover:shadow-xl transition-shadow">
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">Horario Personalizado</h3>
+                          <p className="text-green-100 text-sm">Control Manual + Semáforo</p>
+                        </div>
+                        {/* <List size={32} className="text-green-200" /> */}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-gray-600 mb-6 text-sm">
+                        Selecciona manualmente los cursos que deseas llevar. El <strong>Semáforo de Carga</strong> te alertará sobre la dificultad.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <button
+                            onClick={() => navigate('/semaforo')}
+                            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 shadow-md"
+                        >
+                            <Calendar size={18} />
+                            Ir al Semáforo / Crear
+                        </button>
+
+                        {existeCustom && (
+                          <button 
+                            onClick={() => navigate('/resultado-horario', { state: { tipo: 'custom' } })}
+                            className="w-full bg-white text-green-700 border border-green-200 py-3 rounded-lg font-bold hover:bg-green-50 transition-colors flex justify-center items-center gap-2"
+                          >
+                            <Eye size={18} />
+                            Ver Último Manual
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
                 </div>
               </div>
             )}
+
           </div>
         )}
 
