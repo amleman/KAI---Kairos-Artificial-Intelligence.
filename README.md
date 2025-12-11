@@ -1,12 +1,12 @@
 <div align="center">
 
-# SIOHA - Sistema Inteligente de Optimización de Horarios y Asesoría
+# SIOA - Sistema Inteligente de Optimización Académico
 
 </div>
 
 ## 📋 Descripción General
 
-SIOHA es una plataforma web integral que utiliza **Inteligencia Artificial** para optimizar la planificación académica de estudiantes de Ingeniería en Sistemas. El sistema combina **Machine Learning (K-Means)**, **Algoritmos Genéticos** y **Optimización Matemática** para automatizar la generación de horarios, análisis de carga académica y proyección de metas de promedio.
+SIOA es una plataforma web integral que utiliza **Inteligencia Artificial** para optimizar la planificación académica de estudiantes de Ingeniería en Sistemas. El sistema combina **Machine Learning (K-Means)**, **Algoritmos Genéticos** y **Optimización Matemática** para automatizar la generación de horarios, análisis de carga académica y proyección de metas de promedio.
 
 ---
 
