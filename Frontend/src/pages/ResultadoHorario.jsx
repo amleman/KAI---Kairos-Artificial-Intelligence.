@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock, MapPin, User, Monitor, AlertCircle, LayoutG
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const ResultadoHorario = () => {
     const location = useLocation();
@@ -508,6 +509,7 @@ const ResultadoHorario = () => {
             </div>
             </div>
         </div>
+        <Footer />
         </>
     );
 };

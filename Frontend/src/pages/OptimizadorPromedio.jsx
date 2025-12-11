@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle, Loader2, BookMarked, PlusCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const OptimizadorPromedio = () => {
   // Obtener datos del usuario para crear clave única
@@ -832,6 +833,7 @@ const OptimizadorPromedio = () => {
         </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 };

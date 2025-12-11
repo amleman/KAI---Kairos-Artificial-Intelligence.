@@ -172,10 +172,17 @@ def extraer_cursos_desde_imagen(file_storage):
 
     imagen = Image.open(file_storage.stream).convert("RGB")
 
+    
     # OCR en modo lineal (psm 6) funciona mejor con tablas horizontales
     texto_raw = pytesseract.image_to_string(imagen, lang="spa", config="--psm 6")
 
+    
+    
+    print("Tomo el texto de la imagen")
+    
     cursos = []
+    
+    print("antes de llegar al for")
 
     # 1) Intentar con las líneas directas del string
     for linea in texto_raw.splitlines():
@@ -463,11 +470,15 @@ def cargar_aprobados_imagenes():
     for img in imagenes:
         try:
             cursos_img, texto_raw = extraer_cursos_desde_imagen(img)
+            print("No se pudo extraer")
             if cursos_img:
+                print("No se pudo extraer")
                 cursos_extraidos.extend(cursos_img)
             else:
+                print("No se pudo extraer")
                 errores.append(f"{img.filename}: no se reconoció el formato esperado. Asegúrate de usar el cuadro de columnas Código, Nombre, Créditos, Fecha, Nota, Observaciones. Texto detectado: '{texto_raw[:200]}'")
         except Exception as e:
+            print("Tiro un exception")
             errores.append(f"{img.filename}: {str(e)}")
 
     if not cursos_extraidos:
@@ -521,6 +532,57 @@ def guardar_horario():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# -----------------------------------------------------------
+# OBTENER HORARIO GUARDADO POR EL USUARIO
+# -----------------------------------------------------------
+@app.get("/obtener_horario_guardado/<usuario>")
+def obtener_horario_guardado(usuario):
+    try:
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        
+        # 1. Verificamos si existe ALGO en la tabla para ese usuario
+        cursor.execute("SELECT count(*) FROM horarios_guardados WHERE usuario = ?", (usuario,))
+        count = cursor.fetchone()[0]
+
+        if count == 0:
+            conn.close()
+            return jsonify({"existe": False, "mensaje": "Usuario no tiene registros"}), 200
+
+        # 2. Obtenemos el último guardado
+        cursor.execute("""
+            SELECT data_json, nombre_horario 
+            FROM horarios_guardados 
+            WHERE usuario = ? 
+            ORDER BY id DESC LIMIT 1
+        """, (usuario,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            raw_json = row[0]
+            nombre = row[1]
+            
+            try:
+                horario_lista = json.loads(raw_json)
+                
+                # VALIDACIÓN EXTRA: Si guardaste { "horarios": [...] } en vez de [...]
+                if isinstance(horario_lista, dict) and "horarios" in horario_lista:
+                    horario_lista = horario_lista["horarios"]
+                                
+                return jsonify({
+                    "existe": True, 
+                    "nombre": nombre,
+                    "horario": horario_lista
+                }), 200
+            except json.JSONDecodeError as e:
+                return jsonify({"existe": False, "error": "JSON corrupto en DB"}), 200
+        else:
+            return jsonify({"existe": False}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # -----------------------------------------------------------
 # GENERADOR DE HORARIO OPTIMIZADO

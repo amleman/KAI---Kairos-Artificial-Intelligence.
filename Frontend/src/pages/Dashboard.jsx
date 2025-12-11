@@ -4,6 +4,8 @@ import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTria
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import formatoCursos from "../assets/formato_cursos.svg";
+import HorarioVisualizer from "../components/HorarioVisualizer";
+import Footer from "../components/Footer";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ const Dashboard = () => {
   const [showForm, setShowForm] = useState(getInitialShowForm);
   const [usuarioData, setUsuarioData] = useState(getUserDataFromStorage);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [horarioGuardadoDB, setHorarioGuardadoDB] = useState(null);
 
   // Para verificar si existe horario custom
   const [existeCustom, setExisteCustom] = useState(false);
@@ -86,6 +89,31 @@ const Dashboard = () => {
       }
     }
   }, [tab, usuarioData.carne]); // Se ejecuta al cambiar de pestaña
+
+
+  // ------------------------ Efecto para cargar horario guardado en la DB ------------------------
+  useEffect(() => {
+    const cargarHorarioDB = async () => {
+      // CORRECCIÓN: Usamos 'usuario' (username) en lugar de 'carne'
+      // Porque la DB relaciona por username, no por carnet.
+      const usuarioActivo = usuarioData.nombre; 
+      
+      if (!usuarioActivo) return;
+
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/obtener_horario_guardado/${usuarioActivo}`);
+        const data = await res.json();
+
+        if (res.ok && data.existe) {
+          setHorarioGuardadoDB(data.horario);
+        }
+      } catch (error) {
+        console.error("Error cargando horario DB:", error);
+      }
+    };
+
+    cargarHorarioDB();
+  }, [usuarioData.nombre]);
 
   /* ----------------------- Cargar aprobados desde DB con info completa ----------------------- */
   const cargarAprobadosDB = useCallback(async () => {
@@ -729,6 +757,17 @@ const Dashboard = () => {
 
                 </div>
 
+                {/* --- NUEVA SECCIÓN: MI HORARIO GUARDADO --- */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Calendar className="text-purple-600"/> 
+                      Mi Horario Guardado (Próximo Semestre)
+                  </h2>
+
+                  {/* Aquí usamos el componente mágico */}
+                  <HorarioVisualizer horario={horarioGuardadoDB} />
+                </div>
+
                 <div className="bg-white rounded-2xl shadow-xl p-6">
                   <h3 className="text-2xl font-bold mb-6">Tus cursos aprobados</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -991,6 +1030,8 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      <Footer />
     </>
   );
 };

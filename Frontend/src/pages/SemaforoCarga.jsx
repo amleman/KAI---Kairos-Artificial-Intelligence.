@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye,
   X, AlertTriangle } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import { useNavigate } from 'react-router-dom';
 
 const SemaforoCarga = () => {
@@ -779,6 +780,9 @@ const SemaforoCarga = () => {
           </div>
         </div>
       )}
+
+      <Footer />
+
     </>
   );
 };

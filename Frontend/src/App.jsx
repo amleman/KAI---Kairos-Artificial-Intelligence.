@@ -6,6 +6,7 @@ import SemaforoCarga from "./pages/SemaforoCarga";
 import OptimizadorPromedio from "./pages/OptimizadorPromedio";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResultadoHorario from "./pages/ResultadoHorario";
+import About from './pages/About';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
           path="/resultado-horario"
           element={<ResultadoHorario />}
         />
+        <Route path="/que-es-sioa" element={<About />} />
       </Routes>
     </BrowserRouter>
   );
