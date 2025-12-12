@@ -290,7 +290,8 @@ python inicializar_db.py
 
 ### 👨‍🎓 Dashboard del Estudiante
 
-<img src="assets/dashboard.png" alt="Dashboard Principal" width="700px">
+<img width="700px" height="1086" alt="image" src="https://github.com/user-attachments/assets/4d8ca4cb-cfd7-4262-ba18-c6c42e546085" />
+
 
 *Panel personalizado con estadísticas de progreso académico*
 
