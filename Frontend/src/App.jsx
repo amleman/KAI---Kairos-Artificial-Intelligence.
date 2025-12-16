@@ -7,6 +7,7 @@ import OptimizadorPromedio from "./pages/OptimizadorPromedio";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResultadoHorario from "./pages/ResultadoHorario";
 import About from './pages/About';
+import ChatbotAcademico from './pages/ChatbotAcademico';
 
 function App() {
   return (
@@ -14,33 +15,41 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/semaforo" 
+        <Route
+          path="/semaforo"
           element={
             <ProtectedRoute>
               <SemaforoCarga />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/optimizador" 
+        <Route
+          path="/optimizador"
           element={
             <ProtectedRoute>
               <OptimizadorPromedio />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route
           path="/resultado-horario"
           element={<ResultadoHorario />}
+        />
+        <Route
+          path="/chatbot"
+          element={
+            <ProtectedRoute>
+              <ChatbotAcademico />
+            </ProtectedRoute>
+          }
         />
         <Route path="/que-es-sioa" element={<About />} />
       </Routes>

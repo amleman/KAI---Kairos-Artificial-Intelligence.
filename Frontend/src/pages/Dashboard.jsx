@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Papa from "papaparse";
-import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTriangle, BookCheck, TrendingUp, GraduationCap, List, User, CreditCard, Cake, Briefcase, LogOut , Menu, X, UploadCloud, Images} from "lucide-react";
+import { BookOpen, CheckCircle2, Calendar, FileText, Save, Eye, Award, AlertTriangle, BookCheck, TrendingUp, GraduationCap, List, User, CreditCard, Cake, Briefcase, LogOut, Menu, X, UploadCloud, Images } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import formatoCursos from "../assets/formato_cursos.svg";
 import HorarioVisualizer from "../components/HorarioVisualizer";
 import Footer from "../components/Footer";
+import FloatingChatButton from "../components/FloatingChatButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -54,23 +55,23 @@ const Dashboard = () => {
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
   const [errorUpload, setErrorUpload] = useState("");
   const [procesandoImagenes, setProcesandoImagenes] = useState(false);
-  
+
   // Estados para modal de notas
   const [showModalNotas, setShowModalNotas] = useState(false);
   const [cursosNuevos, setCursosNuevos] = useState([]);
   const [notasTemp, setNotasTemp] = useState({});
   const [errorNotas, setErrorNotas] = useState(""); // Para mostrar errores en el modal
   const [mensajeExito, setMensajeExito] = useState(""); // Para mostrar mensaje de éxito
-  
+
   const isInitialMount = useRef(true);
   const inputImagenesRef = useRef(null);
 
   // --- EFECTO PARA VERIFICAR SI EXISTE HORARIO GUARDADO ---
   useEffect(() => {
     if (tab === "horario" && usuarioData.carne) {
-      const keyCustom = `sioha_progreso_${usuarioData.carne}`;
+      const keyCustom = `SIOA_progreso_${usuarioData.carne}`;
       const savedCustom = localStorage.getItem(keyCustom);
-      
+
       if (savedCustom) {
         try {
           const parsed = JSON.parse(savedCustom);
@@ -96,8 +97,8 @@ const Dashboard = () => {
     const cargarHorarioDB = async () => {
       // CORRECCIÓN: Usamos 'usuario' (username) en lugar de 'carne'
       // Porque la DB relaciona por username, no por carnet.
-      const usuarioActivo = usuarioData.nombre; 
-      
+      const usuarioActivo = usuarioData.nombre;
+
       if (!usuarioActivo) return;
 
       try {
@@ -118,7 +119,7 @@ const Dashboard = () => {
   /* ----------------------- Cargar aprobados desde DB con info completa ----------------------- */
   const cargarAprobadosDB = useCallback(async () => {
     if (!usuarioData.carne) return;
-    
+
     try {
       const response = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`);
       if (response.ok) {
@@ -133,12 +134,12 @@ const Dashboard = () => {
   /* ----------------------- Guardar usuario ----------------------- */
   const handleGuardarUsuario = async () => {
     const usuarioGuardado = localStorage.getItem("usuario");
-    
+
     const dataToSave = {
       ...usuarioData,
       usuario: usuarioGuardado
     };
-    
+
     const response = await fetch("http://127.0.0.1:8000/guardar_usuario_info", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -246,7 +247,7 @@ const Dashboard = () => {
   useEffect(() => {
     const cargarAprobados = async () => {
       if (!usuarioData.carne) return;
-      
+
       try {
         const response = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`);
         if (response.ok) {
@@ -302,12 +303,12 @@ const Dashboard = () => {
     // 1. Obtener cursos que ya tienen nota en DB
     const response = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`);
     const cursosConNota = response.ok ? await response.json() : [];
-    
+
     const codigosConNota = cursosConNota.map(c => c.codigo);
-    
+
     // 2. Identificar cursos nuevos (sin nota en DB)
     const nuevos = aprobados.filter(codigo => !codigosConNota.includes(codigo));
-    
+
     // 3. Si hay cursos nuevos, mostrar modal para ingresar notas
     if (nuevos.length > 0) {
       // Buscar info de cursos nuevos en el pensum
@@ -319,7 +320,7 @@ const Dashboard = () => {
           creditos: curso ? curso.creditos : 3
         };
       });
-      
+
       setCursosNuevos(cursosNuevosInfo);
       setNotasTemp({});
       setShowModalNotas(true);
@@ -356,18 +357,18 @@ const Dashboard = () => {
   /* ----------------------- Confirmar notas en modal ----------------------- */
   const confirmarNotas = () => {
     // Validar que todas las notas estén ingresadas
-    const todasLasNotas = cursosNuevos.every(curso => 
-      notasTemp[curso.codigo] && 
-      notasTemp[curso.codigo] >= 0 && 
+    const todasLasNotas = cursosNuevos.every(curso =>
+      notasTemp[curso.codigo] &&
+      notasTemp[curso.codigo] >= 0 &&
       notasTemp[curso.codigo] <= 100
     );
-    
+
     if (!todasLasNotas) {
       setErrorNotas("Por favor completa todas las notas (0-100)");
       setTimeout(() => setErrorNotas(""), 3000);
       return;
     }
-    
+
     // Crear array con cursos, notas Y nombres
     const cursosConNotas = cursosNuevos.map(curso => ({
       codigo: curso.codigo,
@@ -375,7 +376,7 @@ const Dashboard = () => {
       creditos: curso.creditos,
       nota: parseFloat(notasTemp[curso.codigo])
     }));
-    
+
     guardarEnDB(cursosConNotas);
   };
 
@@ -408,25 +409,25 @@ const Dashboard = () => {
       const response = await fetch('http://127.0.0.1:8000/generar_horario', { // Endpoint del motor genético puro
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: usuarioData.carne }), 
+        body: JSON.stringify({ usuario: usuarioData.carne }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         // 2. GUARDAR EN LOCALSTORAGE DIFERENTE
-        const storageKey = `sioha_optimizado_${usuarioData.carne}`;
+        const storageKey = `SIOA_optimizado_${usuarioData.carne}`;
         localStorage.setItem(storageKey, JSON.stringify({
-           horarios: data.horarios,
-           fecha: new Date().toISOString()
+          horarios: data.horarios,
+          fecha: new Date().toISOString()
         }));
 
         // 3. Navegar indicando el TIPO
-        navigate('/resultado-horario', { 
-            state: { 
-                tipo: 'optimizado', // <--- ESTO ES CLAVE
-                datosHorario: { horarios: data.horarios }
-            } 
+        navigate('/resultado-horario', {
+          state: {
+            tipo: 'optimizado', // <--- ESTO ES CLAVE
+            datosHorario: { horarios: data.horarios }
+          }
         });
       } else {
         setMensajeExito("Error: " + (data.error || "No se pudo generar"));
@@ -446,9 +447,9 @@ const Dashboard = () => {
   useEffect(() => {
     if (tab === "horario" && usuarioData.carne) {
       // Nota la diferencia en la clave: _optimizado_
-      const keyOptimizado = `sioha_optimizado_${usuarioData.carne}`; 
+      const keyOptimizado = `SIOA_optimizado_${usuarioData.carne}`;
       const savedOpt = localStorage.getItem(keyOptimizado);
-      
+
       if (savedOpt) {
         setExisteOptimizado(true); // Si existe el archivo, mostramos el botón
       } else {
@@ -461,7 +462,7 @@ const Dashboard = () => {
   return (
     <>
       {!showForm && <Navbar />}
-      
+
       {/* Toast de éxito */}
       {mensajeExito && (
         <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-in text-sm sm:text-base">
@@ -514,7 +515,7 @@ const Dashboard = () => {
                       <select
                         name="carrera"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                        onChange={(e) => setUsuarioData({...usuarioData, carrera: e.target.value})}
+                        onChange={(e) => setUsuarioData({ ...usuarioData, carrera: e.target.value })}
                       >
                         <option value="">Seleccione su carrera</option>
                         <option>Ing. Sistemas</option>
@@ -527,14 +528,14 @@ const Dashboard = () => {
                         type="date"
                         name="fechaNacimiento"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                        onChange={(e) => setUsuarioData({...usuarioData, fechaNacimiento: e.target.value})}
+                        onChange={(e) => setUsuarioData({ ...usuarioData, fechaNacimiento: e.target.value })}
                       />
                     ) : (
                       <input
                         name={field === "carné" ? "carne" : "nombre"}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
                         placeholder={field === "carné" ? "Ej: 2024001" : "Tu nombre completo"}
-                        onChange={(e) => setUsuarioData({...usuarioData, [field === "carné" ? "carne" : "nombre"]: e.target.value})}
+                        onChange={(e) => setUsuarioData({ ...usuarioData, [field === "carné" ? "carne" : "nombre"]: e.target.value })}
                       />
                     )}
                   </div>
@@ -587,17 +588,16 @@ const Dashboard = () => {
                         if (id === "pensum") cargarPensum();
                         console.log(Icon)
                       }}
-                      className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium transition-all ${
-                        tab === id
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`flex items-center gap-3 px-5 py-3 rounded-xl font-medium transition-all ${tab === id
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       <Icon size={20} />
                       <span className="hidden sm:inline">{label}</span>
                       <span className="sm:hidden">{label}</span>
                     </button>
-                    
+
                   ))}
                 </div>
               </div>
@@ -636,65 +636,63 @@ const Dashboard = () => {
 
                 <div className="space-y-6">
 
-                {pensumPorSemestre.map((sem) => (
-                  <div key={sem.nombre} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
-                        {sem.numero}
-                      </span>
-                      {sem.nombre} Semestre
-                    </h3>
+                  {pensumPorSemestre.map((sem) => (
+                    <div key={sem.nombre} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+                          {sem.numero}
+                        </span>
+                        {sem.nombre} Semestre
+                      </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {sem.cursos.length === 0 && (
-                        <p className="text-gray-500 col-span-4 text-center py-4">No hay cursos cargados.</p>
-                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {sem.cursos.length === 0 && (
+                          <p className="text-gray-500 col-span-4 text-center py-4">No hay cursos cargados.</p>
+                        )}
 
-                      {sem.cursos.map((curso) => {
-                        const aprobado = aprobados.includes(curso.codigo);
-                        const permitido = puedeLlevar(curso);
+                        {sem.cursos.map((curso) => {
+                          const aprobado = aprobados.includes(curso.codigo);
+                          const permitido = puedeLlevar(curso);
 
-                        return (
-                          <div
-                            key={curso.codigo}
-                            onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
-                            className={`p-3 rounded-lg border-2 transition-all ${
-                              aprobado
+                          return (
+                            <div
+                              key={curso.codigo}
+                              onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
+                              className={`p-3 rounded-lg border-2 transition-all ${aprobado
                                 ? "bg-green-50 border-green-500 shadow-md"
                                 : permitido
-                                ? "bg-white border-gray-300 hover:border-blue-400 hover:shadow-md cursor-pointer"
-                                : "bg-red-50 border-red-300 opacity-60 cursor-not-allowed"
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-1.5">
-                              <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                                aprobado ? "bg-green-200 text-green-800" :
-                                permitido ? "bg-blue-100 text-blue-800" :
-                                "bg-red-200 text-red-800"
-                              }`}>
-                                {curso.codigo}
-                              </span>
-                              {aprobado && <CheckCircle2 className="text-green-600" size={16} />}
+                                  ? "bg-white border-gray-300 hover:border-blue-400 hover:shadow-md cursor-pointer"
+                                  : "bg-red-50 border-red-300 opacity-60 cursor-not-allowed"
+                                }`}
+                            >
+                              <div className="flex justify-between items-start mb-1.5">
+                                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${aprobado ? "bg-green-200 text-green-800" :
+                                  permitido ? "bg-blue-100 text-blue-800" :
+                                    "bg-red-200 text-red-800"
+                                  }`}>
+                                  {curso.codigo}
+                                </span>
+                                {aprobado && <CheckCircle2 className="text-green-600" size={16} />}
+                              </div>
+                              <h4 className="font-bold text-xs text-gray-800 mb-1.5 line-clamp-2">{curso.nombre_completo}</h4>
+                              <div className="flex items-center justify-between text-xs text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Award size={12} />
+                                  {curso.creditos} créditos
+                                </span>
+                              </div>
+                              {!permitido && (
+                                <p className="text-xs text-red-700 mt-2 font-medium flex items-center gap-1">
+                                  <AlertTriangle size={12} />
+                                  Falta prerrequisito
+                                </p>
+                              )}
                             </div>
-                            <h4 className="font-bold text-xs text-gray-800 mb-1.5 line-clamp-2">{curso.nombre_completo}</h4>
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                              <span className="flex items-center gap-1">
-                                <Award size={12} />
-                                {curso.creditos} créditos
-                              </span>
-                            </div>
-                            {!permitido && (
-                              <p className="text-xs text-red-700 mt-2 font-medium flex items-center gap-1">
-                                <AlertTriangle size={12} />
-                                Falta prerrequisito
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
                 </div>
 
                 <div className="mt-6 flex gap-3">
@@ -723,7 +721,7 @@ const Dashboard = () => {
             {tab === "aprobados" && (
               <div className="space-y-8">
                 <div className="grid grid-cols-3 sm:grid-cols-3 gap-6">
-                  
+
                   {/* 1. Cursos (Horizontal) */}
                   <div className="bg-blue-50 rounded-2xl p-6 border-l-4 border-blue-600 flex items-center justify-center gap-4">
                     <BookOpen className="text-blue-600" size={38} />
@@ -760,8 +758,8 @@ const Dashboard = () => {
                 {/* --- NUEVA SECCIÓN: MI HORARIO GUARDADO --- */}
                 <div className="mt-12 pt-8 border-t border-gray-200">
                   <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <Calendar className="text-purple-600"/> 
-                      Mi Horario Guardado (Próximo Semestre)
+                    <Calendar className="text-purple-600" />
+                    Mi Horario Guardado (Próximo Semestre)
                   </h2>
 
                   {/* Aquí usamos el componente mágico */}
@@ -803,7 +801,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  
+
                   {/* OPCIÓN 1: HORARIO INTELIGENTE (IA) */}
                   <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100 hover:shadow-xl transition-shadow">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
@@ -818,10 +816,10 @@ const Dashboard = () => {
                     </div>
                     <div className="p-6">
                       <p className="text-gray-600 mb-6 text-sm">
-                        El sistema analizará tu historial académico, prerrequisitos y promedio para sugerirte la 
+                        El sistema analizará tu historial académico, prerrequisitos y promedio para sugerirte la
                         <strong> ruta óptima de graduación</strong> sin choques.
                       </p>
-                      
+
                       <div className="space-y-3">
                         <button
                           onClick={handleGenerarOptimizado}
@@ -833,7 +831,7 @@ const Dashboard = () => {
                         </button>
 
                         {existeOptimizado && (
-                          <button 
+                          <button
                             onClick={() => navigate('/resultado-horario', { state: { tipo: 'optimizado' } })}
                             className="w-full bg-white text-blue-700 border border-blue-200 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex justify-center items-center gap-2"
                           >
@@ -860,18 +858,18 @@ const Dashboard = () => {
                       <p className="text-gray-600 mb-6 text-sm">
                         Selecciona manualmente los cursos que deseas llevar. El <strong>Semáforo de Carga</strong> te alertará sobre la dificultad.
                       </p>
-                      
+
                       <div className="space-y-3">
                         <button
-                            onClick={() => navigate('/semaforo')}
-                            className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 shadow-md"
+                          onClick={() => navigate('/semaforo')}
+                          className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 shadow-md"
                         >
-                            <Calendar size={18} />
-                            Ir al Semáforo / Crear
+                          <Calendar size={18} />
+                          Ir al Semáforo / Crear
                         </button>
 
                         {existeCustom && (
-                          <button 
+                          <button
                             onClick={() => navigate('/resultado-horario', { state: { tipo: 'custom' } })}
                             className="w-full bg-white text-green-700 border border-green-200 py-3 rounded-lg font-bold hover:bg-green-50 transition-colors flex justify-center items-center gap-2"
                           >
@@ -1031,6 +1029,7 @@ const Dashboard = () => {
         )}
       </div>
 
+      <FloatingChatButton />
       <Footer />
     </>
   );

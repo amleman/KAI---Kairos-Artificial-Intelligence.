@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import FloatingChatButton from "../components/FloatingChatButton";
 import { BrainCircuit, Clock, Users, Globe, ShieldAlert, Zap } from "lucide-react";
 
 const About = () => {
@@ -108,6 +109,7 @@ const About = () => {
         </div>
 
       </div>
+      <FloatingChatButton />
       <Footer />
     </>
   );

@@ -10,6 +10,7 @@ from motor_generador import GeneradorHorarios
 from motor_custom import GeneradorHorarioCustom
 from clustering_semaforo import crear_analizador, analizar_carga
 from optimizador_promedio import crear_optimizador, calcular_notas_objetivo
+from chatbot_academico import crear_chatbot
 import pandas as pd
 
 # OCR dependencies (optional but required for carga de imágenes)
@@ -866,6 +867,80 @@ def simular_escenarios_endpoint():
     
     resultado = optimizador_promedio.simular_escenarios(cursos_aprobados, cursos_actuales)
     return jsonify(resultado), 200
+
+
+# -----------------------------------------------------------
+# CHATBOT ACADÉMICO (SIN APIs EXTERNAS)
+# -----------------------------------------------------------
+
+# Instancia global del chatbot
+chatbot_academico = None
+
+@app.post("/chatbot")
+def chatbot():
+    # Responde preguntas del usuario usando intents locales (sin APIs)
+    global chatbot_academico
+    if chatbot_academico is None:
+        chatbot_academico = crear_chatbot("./Data/pensum_sistemas.csv")
+    
+    data = request.get_json()
+    pregunta = data.get("pregunta", "")
+    usuario = data.get("usuario", "")
+    
+    if not pregunta:
+        return jsonify({"error": "Debes proporcionar una pregunta"}), 400
+    
+    # Obtener contexto del usuario si está disponible
+    contexto = {}
+    if usuario:
+        contexto['usuario'] = usuario
+        try:
+            conn = sqlite3.connect(DB)
+            cursor = conn.cursor()
+            cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
+            row = cursor.fetchone()
+            conn.close()
+            
+            if row:
+                if row[0]:
+                    cursos_data = json.loads(row[0])
+                    contexto['cursos_aprobados'] = len(cursos_data)
+                    # Forzar conversión a int para evitar error str + int
+                    contexto['creditos_acumulados'] = sum(int(c.get('creditos', 3)) for c in cursos_data)
+                    contexto['lista_aprobados'] = cursos_data
+        except Exception:
+            pass
+    
+    # Obtener respuesta del chatbot
+    resultado = chatbot_academico.responder(pregunta, contexto)
+    
+    return jsonify({
+        "pregunta": pregunta,
+        "respuesta": resultado['respuesta'],
+        "intent": resultado['intent'],
+        "confianza": resultado['confianza']
+    }), 200
+
+
+@app.get("/chatbot/ayuda")
+def chatbot_ayuda():
+    # Retorna información de ayuda sobre el chatbot
+    return jsonify({
+        "mensaje": "Chatbot Académico SIOA",
+        "capacidades": [
+            "Información de cursos (código, nombre, créditos, semestre)",
+            "Prerrequisitos de cualquier curso",
+            "Búsqueda de cursos por nombre o palabras clave",
+            "Recomendaciones académicas generales"
+        ],
+        "ejemplos": [
+            "¿Qué prerrequisitos tiene Compiladores?",
+            "Cuántos créditos vale Redes 1?",
+            "Información de programación 2",
+            "¿En qué semestre se lleva Inteligencia Artificial?",
+            "Buscar cursos de algoritmos"
+        ]
+    }), 200
 
 
 # -----------------------------------------------------------

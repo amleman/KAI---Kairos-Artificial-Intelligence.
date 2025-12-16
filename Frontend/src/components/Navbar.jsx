@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Home, TrafficCone, Target, LogOut, Menu, X, GraduationCap, Info } from "lucide-react";
+import { Home, TrafficCone, Target, LogOut, Menu, X, GraduationCap, Info, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Navbar = () => {
@@ -18,6 +18,7 @@ const Navbar = () => {
     { path: "/dashboard", label: "Dashboard", icon: Home },
     { path: "/semaforo", label: "Semáforo", icon: TrafficCone },
     { path: "/optimizador", label: "Optimizador", icon: Target },
+    { path: "/chatbot", label: "Chatbot", icon: MessageCircle },
     { path: "/que-es-sioa", label: "¿Qué es?", icon: Info },
   ];
 
@@ -26,7 +27,7 @@ const Navbar = () => {
     <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/60">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          
+
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center space-x-3 group">
@@ -46,7 +47,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200 backdrop-blur-sm relative">
             {NAV_ITEMS.map((item) => {
               const isActive = location.pathname === item.path;
-              
+
               return (
                 <Link
                   key={item.path}
@@ -54,26 +55,26 @@ const Navbar = () => {
                   className={`relative px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 z-10 ${
                     // CAMBIO 4: Texto inactivo gris (slate-500), Activo blanco (para ir sobre la píldora azul)
                     isActive ? "text-white" : "text-slate-500 hover:text-indigo-600"
-                  }`}
+                    }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="navbar-pill"
                       // CAMBIO 5: La píldora activa mantiene el color de marca (Indigo-600)
                       className="absolute inset-0 bg-indigo-600 rounded-lg shadow-md shadow-indigo-500/30"
-                      
+
                       // CAMBIO 6: Velocidad ajustada (Más suave/lento)
                       // stiffness bajó de 300 a 230 (menos rígido = más lento)
                       // damping subió de 30 a 25 (ajuste fino de frenado)
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 230, 
-                        damping: 25 
+                      transition={{
+                        type: "spring",
+                        stiffness: 230,
+                        damping: 25
                       }}
                       initial={false} // Evita animación al cargar la página
                     />
                   )}
-                  
+
                   <item.icon size={16} className="relative z-10" />
                   <span className="relative z-10">{item.label}</span>
                 </Link>
@@ -83,7 +84,7 @@ const Navbar = () => {
 
           {/* Botón Salir */}
           <div className="hidden md:flex">
-             <button
+            <button
               onClick={handleLogout}
               className="px-4 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-sm rounded-lg font-bold transition-all border border-red-100 flex items-center gap-2"
             >
@@ -111,11 +112,10 @@ const Navbar = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMenuAbierto(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                  location.pathname === item.path
-                    ? "bg-indigo-50 text-indigo-700 border border-indigo-100" // Activo en móvil: fondo pastel muy suave
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${location.pathname === item.path
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-100" // Activo en móvil: fondo pastel muy suave
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  }`}
               >
                 <item.icon size={18} /> {item.label}
               </Link>

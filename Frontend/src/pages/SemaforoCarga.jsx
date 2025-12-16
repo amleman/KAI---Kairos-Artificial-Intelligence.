@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye,
-  X, AlertTriangle } from "lucide-react";
+import {
+  TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye,
+  X, AlertTriangle
+} from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import FloatingChatButton from "../components/FloatingChatButton";
 import { useNavigate } from 'react-router-dom';
 
 const SemaforoCarga = () => {
@@ -16,7 +19,7 @@ const SemaforoCarga = () => {
   };
   const userData = getUserData();
   // Clave única: si entra Juan, guarda en "progreso_Juan", si entra Pedro, "progreso_Pedro"
-  const STORAGE_KEY = `sioha_progreso_${userData.carne || "invitado"}`;
+  const STORAGE_KEY = `SIOA_progreso_${userData.carne || "invitado"}`;
 
   // 2. Función auxiliar para leer del LocalStorage al iniciar
   // Si existe dato guardado, lo usa. Si no, usa el valor por defecto (defaultValue)
@@ -45,11 +48,11 @@ const SemaforoCarga = () => {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMensaje, setErrorModalMensaje] = useState("");
   const navigate = useNavigate();
-  
+
   // Estado para la respuesta del horario generado
   const [horarioGenerado, setHorarioGenerado] = useState(() => cargarEstado('horarioGenerado', null));
   const [mostrarFiltrosAvanzados, setMostrarFiltrosAvanzados] = useState(false);
-  
+
   // Filtros para enviar al backend
   const [filtrosAvanzados, setFiltrosAvanzados] = useState(() => cargarEstado('filtrosAvanzados', {
     horaInicioLV: "",
@@ -81,10 +84,10 @@ const SemaforoCarga = () => {
     try {
       const userDataGuardado = localStorage.getItem("userData");
       if (!userDataGuardado) return;
-      
+
       const userData = JSON.parse(userDataGuardado);
       if (!userData.carne) return;
-      
+
       const response = await fetch(`http://127.0.0.1:8000/cursos_clasificados/${userData.carne}`);
       const data = await response.json();
       setCursosDisponibles(data);
@@ -96,7 +99,7 @@ const SemaforoCarga = () => {
   // Seleccionar/deseleccionar Curso (Nivel General)
   const toggleCurso = (curso) => {
     const codigo = curso.codigo;
-    
+
     // Si ya está seleccionada, deseleccionar
     if (cursosSeleccionados[codigo]) {
       const nuevasSelecciones = { ...cursosSeleccionados };
@@ -104,7 +107,7 @@ const SemaforoCarga = () => {
       setCursosSeleccionados(nuevasSelecciones);
       return;
     }
-    
+
     // Agregar selección (Solo datos del curso, sin secciones específicas)
     setCursosSeleccionados({
       ...cursosSeleccionados,
@@ -114,7 +117,7 @@ const SemaforoCarga = () => {
         nivel: curso.nivel
       }
     });
-    
+
     // Limpiar mensaje de error si existía
     setMensajeError(null);
     // Reiniciar resultados si cambia la selección
@@ -166,7 +169,7 @@ const SemaforoCarga = () => {
       const codigos = Object.keys(cursosSeleccionados);
 
       console.log(codigos)
-      
+
       // Preparar payload
       const payload = {
         cursos: codigos,
@@ -174,7 +177,7 @@ const SemaforoCarga = () => {
           // Filtros Lunes a Viernes (Default 7:00 - 21:00)
           hora_inicio_lv: timeToMinutes(filtrosAvanzados.horaInicioLV) || 420,
           hora_fin_lv: timeToMinutes(filtrosAvanzados.horaFinLV) || 1260,
-          
+
           // Filtros Sábado (Default 7:00 - 21:00)
           hora_inicio_sabado: timeToMinutes(filtrosAvanzados.horaInicioSabado) || 420,
           hora_fin_sabado: timeToMinutes(filtrosAvanzados.horaFinSabado) || 1260,
@@ -188,39 +191,39 @@ const SemaforoCarga = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      
+
       // VERIFICACIÓN DE ERRORES HTTP
       if (!response.ok) {
         if (response.status === 500) {
-           throw new Error("No se encontraron combinaciones válidas. Es probable que tus filtros (Horarios o Catedrático) sean muy estrictos y eliminen todas las secciones disponibles. Intenta relajar las restricciones.");
+          throw new Error("No se encontraron combinaciones válidas. Es probable que tus filtros (Horarios o Catedrático) sean muy estrictos y eliminen todas las secciones disponibles. Intenta relajar las restricciones.");
         }
         if (response.status === 404) {
-           throw new Error("No existen combinaciones posibles con los filtros dados.");
+          throw new Error("No existen combinaciones posibles con los filtros dados.");
         }
         // Fallback genérico
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Error del servidor: ${response.status}`);
       }
-      
+
       const data = await response.json();
 
 
-      
+
       // Validación adicional por si el backend devuelve 200 pero con lista vacía
       if (!data.horarios || data.horarios.length === 0) {
-         throw new Error("No se pudo generar ningún horario con los filtros actuales. Intenta seleccionar rangos de hora más amplios.");
+        throw new Error("No se pudo generar ningún horario con los filtros actuales. Intenta seleccionar rangos de hora más amplios.");
       } else {
-        const storageKey = `sioha_progreso_${userData.carne}`;
+        const storageKey = `SIOA_progreso_${userData.carne}`;
         localStorage.setItem(storageKey, JSON.stringify({
-                horarios: data.horarios,
-                fecha: new Date().toISOString()
-            }));
+          horarios: data.horarios,
+          fecha: new Date().toISOString()
+        }));
       }
 
 
 
       setHorarioGenerado(data);
-      
+
     } catch (error) {
       console.error("Error generando horario:", error);
       setErrorModalMensaje(error.message);
@@ -233,8 +236,8 @@ const SemaforoCarga = () => {
   const irAVerHorario = () => {
     if (horarioGenerado && horarioGenerado.horarios) {
       // Enviamos el objeto completo a la nueva ruta mediante el 'state' de history
-      navigate('/resultado-horario', { 
-        state: { datosHorario: horarioGenerado } 
+      navigate('/resultado-horario', {
+        state: { datosHorario: horarioGenerado }
       });
     }
   };
@@ -280,9 +283,9 @@ const SemaforoCarga = () => {
   const cursosFiltrados = cursosDisponibles.filter(curso => {
     // Si el curso ya está seleccionado, no mostrarlo en la lista de disponibles
     if (cursosSeleccionados[curso.codigo]) return false;
-    
+
     const coincideBusqueda = curso.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                             curso.codigo.includes(busqueda);
+      curso.codigo.includes(busqueda);
     const coincideNivel = filtroNivel === "todos" || curso.nivel === parseInt(filtroNivel);
     return coincideBusqueda && coincideNivel;
   });
@@ -325,7 +328,7 @@ const SemaforoCarga = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              
+
               {/* Cursos Seleccionados (Antes Secciones Seleccionadas) */}
               {Object.keys(cursosSeleccionados).length > 0 && (
                 <div className="bg-white rounded-lg shadow-lg p-4">
@@ -412,7 +415,7 @@ const SemaforoCarga = () => {
                     <p className="text-xs text-blue-800 font-semibold mb-2">
                       Estos filtros se usarán únicamente al generar el horario automático.
                     </p>
-                    
+
                     {/* Sección 1: Filtros de Hora Divididos */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Lunes a Viernes */}
@@ -426,7 +429,7 @@ const SemaforoCarga = () => {
                           <input
                             type="time"
                             value={filtrosAvanzados.horaInicioLV}
-                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaInicioLV: e.target.value})}
+                            onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioLV: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>
@@ -435,7 +438,7 @@ const SemaforoCarga = () => {
                           <input
                             type="time"
                             value={filtrosAvanzados.horaFinLV}
-                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaFinLV: e.target.value})}
+                            onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinLV: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>
@@ -452,7 +455,7 @@ const SemaforoCarga = () => {
                           <input
                             type="time"
                             value={filtrosAvanzados.horaInicioSabado}
-                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaInicioSabado: e.target.value})}
+                            onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioSabado: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>
@@ -461,7 +464,7 @@ const SemaforoCarga = () => {
                           <input
                             type="time"
                             value={filtrosAvanzados.horaFinSabado}
-                            onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, horaFinSabado: e.target.value})}
+                            onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinSabado: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                           />
                         </div>
@@ -475,7 +478,7 @@ const SemaforoCarga = () => {
                         <input
                           type="text"
                           value={filtrosAvanzados.catedratico}
-                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, catedratico: e.target.value})}
+                          onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, catedratico: e.target.value })}
                           placeholder="Apellido del catedrático..."
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         />
@@ -485,7 +488,7 @@ const SemaforoCarga = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Modalidad</label>
                         <select
                           value={filtrosAvanzados.modalidad}
-                          onChange={(e) => setFiltrosAvanzados({...filtrosAvanzados, modalidad: e.target.value})}
+                          onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, modalidad: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         >
                           <option value="todos">Cualquiera</option>
@@ -513,8 +516,8 @@ const SemaforoCarga = () => {
                             </div>
                             <p className="text-gray-800 text-xs font-medium line-clamp-2">{curso.nombre}</p>
                           </div>
-                          
-                          <button 
+
+                          <button
                             onClick={() => toggleCurso(curso)}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0"
                           >
@@ -525,7 +528,7 @@ const SemaforoCarga = () => {
                     ))}
                   </div>
                   {cursosFiltrados.length === 0 && (
-                     <p className="text-center text-gray-500 py-4 text-sm">No se encontraron cursos con los filtros actuales.</p>
+                    <p className="text-center text-gray-500 py-4 text-sm">No se encontraron cursos con los filtros actuales.</p>
                   )}
                 </div>
 
@@ -564,7 +567,7 @@ const SemaforoCarga = () => {
                     <BarChart3 className="text-blue-600" size={20} />
                     Visualización de Carga
                   </h2>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <h3 className="text-center font-semibold text-gray-700 mb-3 text-sm">
@@ -577,7 +580,7 @@ const SemaforoCarga = () => {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({name, value}) => `${name}: ${value}`}
+                            label={({ name, value }) => `${name}: ${value}`}
                             outerRadius={70}
                             dataKey="value"
                             strokeWidth={2}
@@ -587,9 +590,9 @@ const SemaforoCarga = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
                               borderRadius: '8px',
                               border: '1px solid #e5e7eb',
                             }}
@@ -605,26 +608,26 @@ const SemaforoCarga = () => {
                       <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={graficos.barData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis 
-                            dataKey="nivel" 
+                          <XAxis
+                            dataKey="nivel"
                             tick={{ fontSize: 12 }}
                             stroke="#6b7280"
                           />
-                          <YAxis 
+                          <YAxis
                             tick={{ fontSize: 12 }}
                             stroke="#6b7280"
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
                               borderRadius: '8px',
                               border: '1px solid #e5e7eb',
                             }}
                           />
                           <Legend wrapperStyle={{ fontSize: '12px' }} />
-                          <Bar 
-                            dataKey="cantidad" 
-                            name="Cursos" 
+                          <Bar
+                            dataKey="cantidad"
+                            name="Cursos"
                             radius={[8, 8, 0, 0]}
                           />
                         </BarChart>
@@ -646,8 +649,8 @@ const SemaforoCarga = () => {
 
                   {mensajeError ? (
                     <div className="rounded-lg p-3 border-l-4 bg-red-50 border-red-500">
-                        <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
-                        <p className="text-xs text-gray-700">{mensajeError}</p>
+                      <h3 className="font-bold text-red-800 mb-1.5 text-sm">❌ Error</h3>
+                      <p className="text-xs text-gray-700">{mensajeError}</p>
                     </div>
                   ) : !resultado ? (
                     <div className="text-center py-8">
@@ -669,11 +672,10 @@ const SemaforoCarga = () => {
                         </h3>
                       </div>
 
-                      <div className={`rounded-lg p-3 border-l-4 ${
-                        resultado.semaforo === 'rojo' ? 'bg-red-50 border-red-500' :
-                        resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
-                        'bg-green-50 border-green-500'
-                      }`}>
+                      <div className={`rounded-lg p-3 border-l-4 ${resultado.semaforo === 'rojo' ? 'bg-red-50 border-red-500' :
+                          resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
+                            'bg-green-50 border-green-500'
+                        }`}>
                         <p className="text-xs text-gray-700 leading-relaxed">
                           {resultado.mensaje}
                         </p>
@@ -689,7 +691,7 @@ const SemaforoCarga = () => {
                         <div className="flex justify-between items-center pb-2 border-b text-sm">
                           <span className="text-gray-600">Total Cursos:</span>
                           <span className="font-bold text-blue-600">
-                              {Object.keys(cursosSeleccionados).length}
+                            {Object.keys(cursosSeleccionados).length}
                           </span>
                         </div>
                       </div>
@@ -702,15 +704,15 @@ const SemaforoCarga = () => {
                           className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
                         >
                           {loadingHorario ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                Generando...
-                              </>
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Generando...
+                            </>
                           ) : (
-                              <>
-                                <Clock size={16} />
-                                Generar Horario
-                              </>
+                            <>
+                              <Clock size={16} />
+                              Generar Horario
+                            </>
                           )}
                         </button>
                         <p className="text-xs text-center text-gray-500 mt-2">
@@ -725,20 +727,20 @@ const SemaforoCarga = () => {
                 {horarioGenerado && (
                   <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-green-100 animate-fade-in">
                     <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <Calendar className="text-green-600" size={20} />
-                        Horario Generado
+                      <Calendar className="text-green-600" size={20} />
+                      Horario Generado
                     </h2>
                     <div className="bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
-                        <p className="text-sm text-green-800 font-medium">
-                          ¡Se ha encontrado una combinación de horarios válida!
-                        </p>
+                      <p className="text-sm text-green-800 font-medium">
+                        ¡Se ha encontrado una combinación de horarios válida!
+                      </p>
                     </div>
-                    <button 
-                        onClick={irAVerHorario}
-                        className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2"
+                    <button
+                      onClick={irAVerHorario}
+                      className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2"
                     >
-                        <Eye size={20} />
-                        Ver Horario Completo
+                      <Eye size={20} />
+                      Ver Horario Completo
                     </button>
                   </div>
                 )}
@@ -760,7 +762,7 @@ const SemaforoCarga = () => {
                 No se pudo generar el horario
               </h3>
             </div>
-            
+
             {/* Cuerpo del Mensaje */}
             <div className="p-6">
               <p className="text-gray-600 text-center text-sm leading-relaxed">
@@ -781,6 +783,7 @@ const SemaforoCarga = () => {
         </div>
       )}
 
+      <FloatingChatButton />
       <Footer />
 
     </>
