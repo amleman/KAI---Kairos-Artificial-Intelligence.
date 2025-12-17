@@ -593,6 +593,10 @@ def generar_horario():
     data = request.get_json()
     carne = data["usuario"]
 
+    # Obtener configuración financiera
+    config_gen = data.get("configGen", {})
+    salario_meta = int(config_gen.get("salarioMeta", 6500))
+
     conn = sqlite3.connect(DB)
     cursor = conn.cursor()
     
@@ -602,19 +606,61 @@ def generar_horario():
     conn.close()
     
     aprobados = []
+    promedio = 0
+    limite_cursos = 6 # Default
+    
     if row and row[0]:
         try:
             cursos_json = json.loads(row[0])
+            # Extraer códigos
             aprobados = [curso["codigo"] for curso in cursos_json]
+            
+            # Calcular promedio de los últimos 6 cursos
+            # Asumimos que el JSON viene en orden cronológico o de inserción. 
+            # Si no, deberíamos ordenar. Tomamos los últimos N.
+            ultimos_cursos = cursos_json[-6:] if len(cursos_json) > 6 else cursos_json
+            notas = []
+            for c in ultimos_cursos:
+                try:
+                    n = float(c.get("nota", 0))
+                    if n > 0: notas.append(n)
+                except:
+                    pass
+            
+            if notas:
+                promedio = sum(notas) / len(notas)
+                
+            # Determinar límite de cursos basado en promedio
+            if promedio > 77:
+                limite_cursos = 7
+            elif promedio > 67:
+                limite_cursos = 6
+            elif promedio >= 61:
+                limite_cursos = 4
+            else:
+                limite_cursos = 4 # < 61 también restringido
+                
+            print(f"Promedio calculado: {promedio}, Limite cursos: {limite_cursos}")
+            
         except json.JSONDecodeError:
             aprobados = []
+
+    # Preparar config de trabajo si existe
+    config_trabajo = None
+    if config_gen.get("trabaja"):
+        config_trabajo = {
+            "trabaja": True,
+            "inicioMin": int(config_gen.get("horaInicio", 0)),
+            "finMin": int(config_gen.get("horaFin", 0))
+        }
+        print(config_trabajo["inicioMin"])
 
     motor = GeneradorHorarios(
         "./Data/pensum_sistemas.csv",
         "./Data/cursos_oferta_limpio.csv"
     )
 
-    resultados = motor.generar(aprobados)
+    resultados = motor.generar(aprobados, salario_meta=salario_meta, config_trabajo=config_trabajo, limite_cursos=limite_cursos)
     return jsonify({"horarios": resultados}), 200
 
 
@@ -639,16 +685,53 @@ def generar_horario_custom_endpoint():
     data = request.get_json()
     codigos_deseados = data.get("cursos", [])
     filtros = data.get("filtros", {})
+    usuario = data.get("usuario", "") # Nuevo campo
     
     if not codigos_deseados:
         return jsonify({"error": "No seleccionaste ningún curso"}), 400
 
     try:
-        # Instanciar el motor custom (asegúrate de tener el csv de oferta limpio)
-        motor = GeneradorHorarioCustom('./Data/cursos_oferta_limpio.csv')
+        # 1. Obtener cursos aprobados reales para calcular verdadero costo de oportunidad
+        aprobados = []
+        if usuario:
+            try:
+                conn = sqlite3.connect(DB)
+                cursor = conn.cursor()
+                cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
+                row = cursor.fetchone()
+                conn.close()
+                
+                if row and row[0]:
+                    cursos_json = json.loads(row[0])
+                    aprobados = [c["codigo"] for c in cursos_json]
+            except Exception as e:
+                print(f"Error obteniendo aprobados para costo oportunidad: {e}")
+
+        # 2. Calcular qué cursos PODRÍA tomar realmente (para compararlos con lo que eligió)
+        motor_inteligente = GeneradorHorarios(
+            "./Data/pensum_sistemas.csv",
+            "./Data/cursos_oferta_limpio.csv"
+        )
+        codigos_reales_disponibles = motor_inteligente.obtener_disponibles(aprobados)
+
+        # 3. Instanciar el motor custom
+        motor = GeneradorHorarioCustom(
+            './Data/cursos_oferta_limpio.csv', 
+            './Data/pensum_sistemas.csv'
+        )
         
-        # Ejecutar generación
-        horarios = motor.generar(codigos_deseados, filtros)
+        # Extraer salario si viene
+        salario_meta = 6500
+        if "configGen" in data:
+            salario_meta = int(data["configGen"].get("salarioMeta", 6500))
+
+        # Ejecutar generación pasando los disponibles reales
+        horarios = motor.generar(
+            codigos_deseados, 
+            filtros, 
+            salario_meta=salario_meta,
+            disponibles_totales=codigos_reales_disponibles
+        )
         
         if not horarios:
             return jsonify({"mensaje": "No se encontraron combinaciones válidas con esos filtros. Intenta relajar las restricciones."}), 404

@@ -81,7 +81,11 @@ const ResultadoHorario = () => {
     if (!datos) return null;
 
     const horariosDisponibles = datos.horarios || [];
-    const cursoActuales = horariosDisponibles[opcionSeleccionada] || [];
+
+    // Extracción inteligente: puede ser [ ... ] o { horario: [...], analisis_financiero: ... }
+    const seleccion = horariosDisponibles[opcionSeleccionada];
+    const cursoActuales = Array.isArray(seleccion) ? seleccion : (seleccion?.horario || []);
+    const analisisFinanciero = !Array.isArray(seleccion) ? seleccion?.analisis_financiero : null;
 
     // --------------------------------------------------------------------------
     // CONFIGURACIÓN DE COLORES DINÁMICOS
@@ -256,8 +260,8 @@ const ResultadoHorario = () => {
                                         key={index}
                                         onClick={() => setOpcionSeleccionada(index)}
                                         className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm border ${opcionSeleccionada === index
-                                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
-                                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
+                                            ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
+                                            : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
                                             }`}
                                     >
                                         Opción {index + 1}
@@ -306,8 +310,8 @@ const ResultadoHorario = () => {
                                         onClick={handleGuardarHorario}
                                         disabled={guardando}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${guardando
-                                                ? "bg-gray-300 cursor-not-allowed text-gray-500"
-                                                : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                                            ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
                                             }`}
                                     >
                                         <Save size={18} />
@@ -315,6 +319,39 @@ const ResultadoHorario = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* --- SECCIÓN DE ANÁLISIS FINANCIERO (NUEVO) --- */}
+                            {analisisFinanciero && (
+                                <div className={`px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between ${analisisFinanciero.alert_type === 'danger' || analisisFinanciero.costo_proyectado_total > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+                                    <div>
+                                        <h3 className={`font-bold text-sm uppercase mb-1 ${analisisFinanciero.costo_proyectado_total > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                                            Análisis de Costo de Oportunidad
+                                        </h3>
+                                        <div className="text-gray-700 text-sm">
+                                            {analisisFinanciero.mensaje_alerta}
+                                        </div>
+                                        {analisisFinanciero.cursos_criticos_ignorados && analisisFinanciero.cursos_criticos_ignorados.length > 0 && (
+                                            <div className="mt-2 text-xs text-red-600 font-semibold">
+                                                Cursos críticos faltantes: {analisisFinanciero.cursos_criticos_ignorados.map(c => c.nombre).join(", ")}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm gap-4">
+                                        <div className="text-right">
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Atraso Estimado</p>
+                                            <p className="font-bold text-gray-800">{analisisFinanciero.meses_atraso_estimado} Meses</p>
+                                        </div>
+                                        <div className="w-px bg-gray-200"></div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-gray-500 uppercase font-bold">Pérdida Proyectada</p>
+                                            <p className={`font-bold ${analisisFinanciero.costo_proyectado_total > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                Q{analisisFinanciero.costo_proyectado_total?.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div ref={captureRef} className="p-6">
                                 <div className="text-2xl font-bold text-gray-800 mb-5 text-center">Opción {opcionSeleccionada + 1}</div>
@@ -507,7 +544,7 @@ const ResultadoHorario = () => {
                 </div>
             </div>
             <FloatingChatButton />
-      <Footer />
+            <Footer />
         </>
     );
 };

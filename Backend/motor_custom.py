@@ -1,15 +1,19 @@
+from financiero import AnalizadorFinanciero
 import pandas as pd
 import random
 import numpy as np
 
 class GeneradorHorarioCustom:
-    def __init__(self, path_oferta):
+    def __init__(self, path_oferta, path_pensum='./Data/pensum_sistemas.csv'):
         # Cargar oferta y limpiar NaNs
         self.df_oferta = pd.read_csv(path_oferta, dtype=str).fillna("")
         
         # Convertir horas a enteros (minutos) para comparaciones matemáticas
         self.df_oferta['Inicio_Min'] = pd.to_numeric(self.df_oferta['Inicio_Min'], errors='coerce').fillna(0).astype(int)
         self.df_oferta['Final_Min'] = pd.to_numeric(self.df_oferta['Final_Min'], errors='coerce').fillna(0).astype(int)
+
+        # Inicializar Analizador Financiero
+        self.analizador_financiero = AnalizadorFinanciero(path_pensum)
 
     def aplicar_filtros_avanzados(self, df_filtrado, filtros):
         """
@@ -93,7 +97,7 @@ class GeneradorHorarioCustom:
             dias2 = set(eval(str(horario2['Dias_Lista'])))
         except:
             return False 
-
+        
         if not dias1.intersection(dias2):
             return False 
         
@@ -108,7 +112,7 @@ class GeneradorHorarioCustom:
                     puntaje -= 500 
         return puntaje
 
-    def generar(self, codigos_deseados, filtros=None):
+    def generar(self, codigos_deseados, filtros=None, salario_meta=6000, disponibles_totales=None):
         # 1. Filtrar solo los cursos solicitados
         df_subset = self.df_oferta[self.df_oferta['Codigo'].isin(codigos_deseados)]
         
@@ -131,6 +135,23 @@ class GeneradorHorarioCustom:
         if cursos_sin_oferta:
             print(f"Advertencia: Los cursos {cursos_sin_oferta} se quedaron sin secciones por los filtros.")
             return [] 
+        
+        # Para el análisis financiero, necesitamos saber qué cursos estaban "Disponibles"
+        # En el caso CUSTOM, los "disponibles" son básicamente los desados (porque el usuario elije qué llevar)
+        # O podríamos llamar al motor general para ver qué OTROS cursos podía llevar.
+        # POR SIMPLICIDAD: Asumimos que los "disponibles" para el cálculo de oportunidad son:
+        # los que está intentando meter + los que NO metió.
+        # Pero dado que el usuario ELIJE los cursos, el análisis de "qué dejaste de llevar" se hace 
+        # comparando (Cursos deseados) vs (Cursos realmente asignados en el horario).
+        # Sin embargo, la logica de costo oportunidad es sobre cursos CRÍTICOS DEL PENSUM que no estás llevando.
+        # Si el usuario NO seleccionó un curso crítico en 'codigos_deseados', la herramienta debería avisarle.
+        
+        # TRUCO: Analizaremos sobre TODA la oferta posible de esos códigos deseados.
+        # Pero para ser útiles, pasaremos como 'disponibles_totales' los codigos_deseados.
+        # SI el horario final NO incluye alguno de los deseados (por choque), ahí saltará la alerta.
+        # ADEMÁS, si quisiéramos ser proactivos, deberíamos pasarle TODOS los disponibles reales del pensum,
+        # pero 'motor_custom' no calcula prerrequisitos.
+        # ASUMIREMOS que 'disponibles_totales' = codigos_deseados.
 
         # --- ALGORITMO GENÉTICO RAPIDO ---
         POBLACION_TAMANO = 60
@@ -169,16 +190,34 @@ class GeneradorHorarioCustom:
                 hijos.append(hijo)
             poblacion = sobrevivientes + hijos
 
-        # Retornar top 3 únicos
+        # Retornar top resultados con análisis
         mejores = sorted(poblacion, key=self.calcular_fitness, reverse=True)
         resultados_unicos = []
         vistos = set()
         
+        finales = []
+        
         for indiv in mejores:
             firma = tuple(sorted([c['Codigo']+c['Seccion'] for c in indiv]))
             if firma not in vistos and self.calcular_fitness(indiv) == 1000:
-                resultados_unicos.append(indiv)
+                
+                # Análisis de costo (usando disponibles_totales si existe, sino lo que pidió)
+                pool_analisis = disponibles_totales if disponibles_totales is not None else codigos_deseados
+                
+                analisis = self.analizador_financiero.analizar_costo_oportunidad(
+                    indiv, 
+                    pool_analisis, 
+                    salario_meta
+                )
+                
+                item_resultado = {
+                    "horario": indiv,
+                    "analisis_financiero": analisis
+                }
+                
+                finales.append(item_resultado)
                 vistos.add(firma)
-            if len(resultados_unicos) >= 5: break
+                
+            if len(finales) >= 5: break
             
-        return resultados_unicos
+        return finales

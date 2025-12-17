@@ -172,6 +172,7 @@ const SemaforoCarga = () => {
 
       // Preparar payload
       const payload = {
+        usuario: userData.carne,
         cursos: codigos,
         filtros: {
           // Filtros Lunes a Viernes (Default 7:00 - 21:00)
@@ -673,8 +674,8 @@ const SemaforoCarga = () => {
                       </div>
 
                       <div className={`rounded-lg p-3 border-l-4 ${resultado.semaforo === 'rojo' ? 'bg-red-50 border-red-500' :
-                          resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
-                            'bg-green-50 border-green-500'
+                        resultado.semaforo === 'amarillo' ? 'bg-yellow-50 border-yellow-500' :
+                          'bg-green-50 border-green-500'
                         }`}>
                         <p className="text-xs text-gray-700 leading-relaxed">
                           {resultado.mensaje}
