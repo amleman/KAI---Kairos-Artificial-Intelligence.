@@ -60,6 +60,35 @@ const UseCasesSection = () => {
                         description="Goal Seeking matemático que calcula las notas exactas necesarias para alcanzar tu promedio objetivo, basado en tu historial real."
                         icon={<svg className="w-7 h-7 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg>}
                     />
+
+                    {/* 4. Chatbot Académico */}
+                    <CaseCard
+                        title="Chatbot Académico"
+                        color="teal"
+                        description="Asistente virtual disponible 24/7 para resolver dudas sobre cursos, prerrequisitos y normativas de la carrera."
+                        icon={<svg className="w-7 h-7 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>}
+                    />
+
+                    {/* 5. Costo de Oportunidad */}
+                    <CaseCard
+                        title="Costo de Oportunidad"
+                        color="orange"
+                        description="Analiza financieramente si tu horario te atrasa, proyectando la pérdida de ingresos futuros por graduación tardía."
+                        icon={<svg className="w-7 h-7 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                    />
+
+                    {/* 6. Reconocimiento Facial (WIP) */}
+                    <div className="relative">
+                        <div className="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full z-20">
+                            En Proceso
+                        </div>
+                        <CaseCard
+                            title="Login Facial (IA)"
+                            color="indigo"
+                            description="Acceso seguro y rápido mediante reconocimiento facial avanzado. Olvida las contraseñas."
+                            icon={<svg className="w-7 h-7 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                        />
+                    </div>
                 </div>
             </div>
         </section>

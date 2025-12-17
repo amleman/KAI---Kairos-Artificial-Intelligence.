@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
+    const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,8 +31,11 @@ const Navbar = () => {
 
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/que-es-sioa" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">¿Qué es SIOA?</Link>
-                        <a href="#casos-uso" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Funcionalidades</a>
-                        <a href="#about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Equipo</a>
+                        {location.pathname === '/' ? (
+                            <a href="#casos-uso" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Funcionalidades</a>
+                        ) : (
+                            <Link to="/#casos-uso" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">Funcionalidades</Link>
+                        )}
                     </div>
 
                     <div className="flex items-center space-x-4">
