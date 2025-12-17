@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import sqlite3
 import hashlib
@@ -12,6 +13,7 @@ from clustering_semaforo import crear_analizador, analizar_carga
 from optimizador_promedio import crear_optimizador, calcular_notas_objetivo
 from chatbot_academico import crear_chatbot
 import pandas as pd
+from analisis_competencias import analizar_competencias_ia
 
 # OCR dependencies (optional but required for carga de imágenes)
 try:
@@ -22,6 +24,14 @@ except ImportError:  # Gracefully handle missing optional deps
     pytesseract = None
 
 app = Flask(__name__)
+
+# Configuración de Uploads
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 app.config["PROPAGATE_EXCEPTIONS"] = True
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
@@ -48,6 +58,8 @@ PENSUM_LOOKUP = cargar_pensum_lookup()
 def merge_cursos_en_db(carne: str, nuevos_cursos: list):
     """Actualiza o inserta cursos aprobados, devolviendo la lista final."""
     conn = sqlite3.connect(DB)
+    # ... (resto de funciones) ...
+
     cursor = conn.cursor()
 
     cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
@@ -950,6 +962,177 @@ def simular_escenarios_endpoint():
     
     resultado = optimizador_promedio.simular_escenarios(cursos_aprobados, cursos_actuales)
     return jsonify(resultado), 200
+
+
+# -----------------------------------------------------------
+# PERFIL DE USUARIO
+# -----------------------------------------------------------
+
+@app.post("/cursos_aprobados")
+def obtener_cursos_aprobados_endpoint():
+    data = request.get_json()
+    usuario_req = data.get("usuario")
+    
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    
+    # PASO 1: Determinar ID correcto
+    cursor.execute("SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario_req,))
+    info_row = cursor.fetchone()
+    
+    carne_busqueda = usuario_req
+    if info_row and info_row[0]:
+        carne_busqueda = info_row[0] 
+    
+    # PASO 2: Buscar cursos
+    cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne_busqueda,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    aprobados = []
+    if row and row[0]:
+        try:
+            aprobados_raw = json.loads(row[0])
+            for c in aprobados_raw:
+                try:
+                    c["creditos"] = int(c.get("creditos", 0))
+                except:
+                    c["creditos"] = 0
+                aprobados.append(c)
+        except:
+            aprobados = []
+            
+    
+    # --- LÓGICA DE IA: ANÁLISIS NLP DE COMPETENCIAS ---
+    competencias_ia = analizar_competencias_ia(aprobados)
+            
+    return jsonify({
+        "aprobados": aprobados, 
+        "carne_usado": carne_busqueda,
+        "competencias_ia": competencias_ia
+    }), 200
+
+@app.route("/api/perfil/<usuario>", methods=['GET'])
+def obtener_perfil(usuario):
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    
+    # Datos básicos (Usuarios)
+    cursor.execute("SELECT email FROM usuarios WHERE usuario = ?", (usuario,))
+    user_data = cursor.fetchone()
+    
+    # Datos info (Usuarios Info)
+    cursor.execute("SELECT nombre, fecha_nacimiento, carrera, carne, foto_perfil, foto_banner FROM usuarios_info WHERE usuario = ?", (usuario,))
+    info_data = cursor.fetchone()
+    
+    conn.close()
+    
+    if not user_data:
+        # Si no está en usuarios, quizás es un error, pero verifiquemos info
+        if not info_data:
+             return jsonify({"error": "Usuario no encontrado"}), 404
+        email = ""
+    else:
+        email = user_data[0]
+        
+    perfil = {
+        "usuario": usuario,
+        "email": email,
+        "nombre": info_data[0] if info_data else "",
+        "fecha_nacimiento": info_data[1] if info_data else "",
+        "carrera": info_data[2] if info_data else "Ingeniería en Sistemas",
+        "carne": info_data[3] if info_data else usuario,
+        "foto_perfil": info_data[4] if info_data and len(info_data) > 4 else None,
+        "foto_banner": info_data[5] if info_data and len(info_data) > 5 else None
+    }
+    return jsonify(perfil)
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route("/api/upload", methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    usuario = request.form.get('usuario')
+    tipo = request.form.get('tipo')  # 'perfil' o 'banner'
+    
+    if file.filename == '' or not usuario or not tipo:
+        return jsonify({'error': 'Faltan datos'}), 400
+        
+    if file:
+        filename = secure_filename(file.filename)
+        # Nombre único: usuario_tipo_timestamp.ext
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'jpg'
+        new_filename = f"{usuario}_{tipo}_{int(datetime.now().timestamp())}.{ext}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+        file.save(filepath)
+        
+        # Guardar ruta en BD
+        conn = sqlite3.connect(DB)
+        cursor = conn.cursor()
+        
+        db_field = "foto_perfil" if tipo == "perfil" else "foto_banner"
+        try:
+            # Upsert en usuarios_info (asegurar que exista la fila)
+            cursor.execute("SELECT id FROM usuarios_info WHERE usuario = ?", (usuario,))
+            exists = cursor.fetchone()
+            
+            url_publica = f"http://localhost:8000/uploads/{new_filename}"
+            
+            if exists:
+                cursor.execute(f"UPDATE usuarios_info SET {db_field} = ? WHERE usuario = ?", (url_publica, usuario))
+            else:
+                # Si no existe, crearlo (idealmente ya debería existir)
+                cursor.execute(f"INSERT INTO usuarios_info (usuario, {db_field}) VALUES (?, ?)", (usuario, url_publica))
+                
+            conn.commit()
+            return jsonify({'url': url_publica})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+        finally:
+            conn.close()
+
+@app.route("/api/perfil/<usuario>", methods=['PUT'])
+def actualizar_perfil(usuario):
+    data = request.json
+    conn = sqlite3.connect(DB)
+    cursor = conn.cursor()
+    
+    try:
+        # Actualizar tabla usuarios (email)
+        if 'email' in data:
+            cursor.execute("UPDATE usuarios SET email = ? WHERE usuario = ?", (data['email'], usuario))
+            
+        # Actualizar/Insertar usuarios_info
+        cursor.execute("SELECT id FROM usuarios_info WHERE usuario = ?", (usuario,))
+        exists = cursor.fetchone()
+        
+        nombre = data.get('nombre', '')
+        fecha = data.get('fecha_nacimiento', '')
+        carrera = data.get('carrera', '')
+        carne = data.get('carne', usuario) 
+        
+        if exists:
+            cursor.execute("""
+                UPDATE usuarios_info 
+                SET nombre = ?, fecha_nacimiento = ?, carrera = ?, carne = ?
+                WHERE usuario = ?
+            """, (nombre, fecha, carrera, carne, usuario))
+        else:
+            cursor.execute("""
+                INSERT INTO usuarios_info (usuario, nombre, fecha_nacimiento, carrera, carne)
+                VALUES (?, ?, ?, ?, ?)
+            """, (usuario, nombre, fecha, carrera, carne))
+            
+        conn.commit()
+        return jsonify({"mensaje": "Perfil actualizado correctamente"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 
 # -----------------------------------------------------------

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Home, TrafficCone, Target, LogOut, Menu, X, GraduationCap, Info, MessageCircle } from "lucide-react";
+import { Home, TrafficCone, Target, LogOut, Menu, X, GraduationCap, MessageCircle, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Navbar = () => {
@@ -16,13 +16,15 @@ const Navbar = () => {
 
   const NAV_ITEMS = [
     { path: "/dashboard", label: "Dashboard", icon: Home },
+    { path: "/perfil", label: "Perfil", icon: User },
+    { path: "/semaforo", label: "Semáforo", icon: TrafficCone },
     { path: "/optimizador", label: "Optimizador", icon: Target },
     { path: "/chatbot", label: "Chatbot", icon: MessageCircle },
   ];
 
   return (
     // CAMBIO 1: Fondo blanco con transparencia (Glass effect) y borde sutil
-    <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/60">
+    <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/60 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
 
@@ -39,8 +41,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* MENU DESKTOP - ISLA DE NAVEGACIÓN
-          */}
+          {/* MENU DESKTOP - ISLA DE NAVEGACIÓN */}
           {/* CAMBIO 3: La "Isla" ahora es gris muy suave (slate-100) en lugar de oscuro */}
           <div className="hidden md:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200 backdrop-blur-sm relative">
             {NAV_ITEMS.map((item) => {
@@ -61,15 +62,13 @@ const Navbar = () => {
                       // CAMBIO 5: La píldora activa mantiene el color de marca (Indigo-600)
                       className="absolute inset-0 bg-indigo-600 rounded-lg shadow-md shadow-indigo-500/30"
 
-                      // CAMBIO 6: Velocidad ajustada (Más suave/lento)
-                      // stiffness bajó de 300 a 230 (menos rígido = más lento)
-                      // damping subió de 30 a 25 (ajuste fino de frenado)
+                      // CAMBIO 6: Velocidad ajustada
                       transition={{
                         type: "spring",
                         stiffness: 230,
                         damping: 25
                       }}
-                      initial={false} // Evita animación al cargar la página
+                      initial={false}
                     />
                   )}
 
