@@ -16,10 +16,8 @@ const Navbar = () => {
 
   const NAV_ITEMS = [
     { path: "/dashboard", label: "Dashboard", icon: Home },
-    { path: "/semaforo", label: "Semáforo", icon: TrafficCone },
     { path: "/optimizador", label: "Optimizador", icon: Target },
     { path: "/chatbot", label: "Chatbot", icon: MessageCircle },
-    { path: "/que-es-sioa", label: "¿Qué es?", icon: Info },
   ];
 
   return (

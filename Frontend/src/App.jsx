@@ -9,11 +9,14 @@ import ResultadoHorario from "./pages/ResultadoHorario";
 import About from './pages/About';
 import ChatbotAcademico from './pages/ChatbotAcademico';
 
+import LandingPage from "./pages/LandingPage";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/dashboard"
