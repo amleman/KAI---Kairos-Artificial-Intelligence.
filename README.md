@@ -86,28 +86,41 @@ Desarrollar una plataforma web integral que utilice técnicas de Inteligencia Ar
 
 ## ⚡ Funcionalidades Clave
 
-### 🤖 Tres Módulos de Inteligencia Artificial
-
+### 🤖 Módulos de Inteligencia Artificial
 **1. Semáforo de Carga Académica (K-Means Clustering)**
+
 - Clasificación automática de cursos: 🟢 Verde (Fácil) | 🟡 Amarillo (Moderado) | 🔴 Rojo (Difícil)
 - Análisis en tiempo real de combinaciones seleccionadas
 - Alertas visuales para prevenir "horarios suicidas"
 
 **2. Generador de Horarios (Algoritmos Genéticos)**
-- **Modo IA:** Generación automática según prerrequisitos y rendimiento
-- **Modo Custom:** Selección manual con filtros avanzados (horarios, catedrático, modalidad)
+
+- Modo IA: Generación automática según prerrequisitos y rendimiento
+- Modo Custom: Selección manual con filtros avanzados (horarios, catedrático, modalidad)
 - Garantía de 0 choques mediante optimización evolutiva
 
 **3. Optimizador de Promedio (Goal Seeking)**
+
 - Cálculo de notas necesarias para alcanzar promedio objetivo
 - Simulación de escenarios: Optimista, Realista, Pesimista, Mínimo
 - Optimización con restricciones (61-100 puntos)
 
+**4. Asistente del Proyecto (Chatbot)**
+- Consultas en lenguaje natural sobre cualquier aspecto técnico o funcional del proyecto
+- Respuestas instantáneas basadas en la documentación interna del sistema
+
 ### 📊 Gestión Académica
+
 - Dashboard personalizado con estadísticas de progreso
 - Gestión de cursos aprobados con notas y créditos
 - Visualización interactiva del pensum por semestres
 - Calendario visual de horarios generados
+
+### 💰 Gestión Financiera
+
+- Calculadora de Inversión Universitaria: Estimación detallada de gastos del semestre
+- Desglose de costos: Matrícula, créditos, materiales y transporte
+- Análisis de viabilidad económica para la planificación académica
 
 ---
 
