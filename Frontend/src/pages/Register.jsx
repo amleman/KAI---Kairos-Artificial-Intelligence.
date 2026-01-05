@@ -41,7 +41,7 @@ const Register = () => {
       if (response.ok) {
         setSuccess("¡Registro exitoso! Redirigiendo al login...");
         setTimeout(() => {
-          navigate("/");
+          navigate("/login");
         }, 2000);
       } else {
         setError(data.error || "Error al registrar usuario");
@@ -141,7 +141,7 @@ const Register = () => {
             <p className="text-gray-600">
               ¿Ya tienes cuenta?{" "}
               <Link
-                to="/"
+                to="/login"
                 className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
               >
                 Inicia sesión

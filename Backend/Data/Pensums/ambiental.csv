@@ -1,0 +1,86 @@
+semestre,codigo,nombre_completo,creditos,pre_requisitos,obligatorio
+Primero,0017,Área Social Humanística 1,4,,True
+Primero,0027,Biología,3,,True
+Primero,0069,Área Técnica Complementaria 1,3,,True
+Primero,0101,Área Matemática Básica 1,7,,True
+Primero,0354,Química 3,5,,True
+Primero,0006,Idioma Técnico 1,2,,False
+Primero,0039,Deportes 1,1,,False
+Segundo,0005,Técnicas de Estudio e Investigación,3,,True
+Segundo,0019,Área Social Humanística 2,4,0017,True
+Segundo,0075,Dibujo Computarizado,1,0069,True
+Segundo,0103,Área Matemática Básica 2,7,0101,True
+Segundo,0147,Física Básica,5,0101,True
+Segundo,0356,Química 4,5,0354,True
+Segundo,0879,Climatología,3,0027,True
+Segundo,0008,Idioma Técnico 2,2,0006,False
+Segundo,0040,Deportes 2,1,"0039, 0031",False
+Tercero,0030,Geografía,3,0879,True
+Tercero,0107,Área Matemática Intermedia 1,10,0103,True
+Tercero,0150,Física 1,6,"0103, 0147",True
+Tercero,0362,Análisis Cualitativo,5,0356,True
+Tercero,2025,Prácticas Iniciales,,0103,True
+Tercero,0009,Idioma Técnico 3,2,0008,False
+Cuarto,0080,Topografía 1,6,"0107, 0075",True
+Cuarto,0112,Área Matemática Intermedia 2,5,0107,True
+Cuarto,0114,Área Matemática Intermedia 3,5,0107,True
+Cuarto,0152,Física 2,6,"0107, 0150",True
+Cuarto,0170,Mecánica Analítica 1,5,"0107, 0150",True
+Cuarto,0358,Química Orgánica 1,4,0362,True
+Cuarto,0450,Geología,3,"0030, 0354",True
+Cuarto,0732,Estadística 1,5,"0107, 0005",True
+Cuarto,0364,Análisis Cuantitativo,5,0362,False
+Cuarto,0010,Lógica,2,0019,False
+Cuarto,0011,Idioma Técnico 4,2,0009,False
+Quinto,0028,Ecología,3,0450,True
+Quinto,0082,Topografía 2,6,0080,True
+Quinto,0090,Programación de Computadoras 1,3,"0114, 0732",True
+Quinto,0250,Mecánica de Fluidos,6,"0114, 0170",True
+Quinto,0300,Resistencia de Materiales 1,5,"0114, 0170",True
+Quinto,0335,Gestión de Desastres,3,0642,True
+Quinto,0663,Legislación Ambiental 1,3,0732,True
+Quinto,0700,Ingeniería Económica 1,5,0732,True
+Quinto,0360,Química Orgánica 2,4,0358,False
+Quinto,0368,Principios de Metrología,3,"0732, 0152, 0354, 0348",False
+Quinto,0380,Físico Química 1,4,"0356, 0114",False
+Quinto,0734,Estadística 2,5,0732,False
+Quinto,3116,Matemática Aplicada 3 (diplomado),,"0112, 0114",False
+Quinto,3118,Matemática Aplicada 1 (diplomado),,"0112, 0114",False
+Quinto,3123,Matemática Aplicada 5 (diplomado),,"0112, 0114",False
+Sexto,0084,Topografía 3,6,0082,True
+Sexto,0252,Hidráulica,6,0250,True
+Sexto,0370,Química Ambiental,3,"0028, 0358",True
+Sexto,0390,Termodinámica 1,5,0250,True
+Sexto,0431,Economía de los Recursos Naturales Renovables,3,0700,True
+Sexto,0440,Microbiología,5,"0358, 0732",True
+Sexto,0455,Materiales de Construcción 2,6,0300,True
+Sexto,0456,Materiales de Construcción,6,0300,True
+Sexto,0458,Mecánica de Suelos 1,5,0300,True
+Sexto,0642,Seguridad e Higiene Industrial,3,"0663, 0662",True
+Sexto,0670,Legislación Ambiental 2,3,"0663, 0662, 0358",True
+Sexto,0361,Bioquímica 1,4,0360,False
+Sexto,0739,Didáctica de la Matemática,2,,False
+Sexto,3120,Matemática Aplicada 2 (diplomado),,3118,False
+Séptimo,0060,Taller de Sist de inf Geográfica,2,0084,True
+Séptimo,0254,Hidrología,6,0252,True
+Séptimo,2036,Prácticas Intermedias,,"2025, 0663, 0370",True
+Séptimo,0656,Administración de Empresas 1,5,150CR,False
+Séptimo,0870,Sismología,6,0458,False
+Octavo,0193,Manejo de Cuencas Hidrográficas,3,"0084, 0254",True
+Octavo,0198,Calidad del Agua,3,"0440, 0060",True
+Octavo,0280,Ingeniería Sanitaria 1,5,0254,True
+Octavo,0282,Ingeniería Sanitaria 2,5,0254,True
+Octavo,0441,Manejo Adecuado de los Desechos Sólidos,3,"0254, 0370",True
+Octavo,7935,Seminario de Investigación Ambiental,4,200CR,True
+Octavo,0262,Aguas Subterráneas,5,0254,False
+Octavo,0392,Termodinámica 2,5,0390,False
+Noveno,0001,Ética Profesional,4,200CR,True
+Noveno,0196,Calidad del Aire,3,0198,True
+Noveno,0706,Preparación y Evaluación de Proyectos 1,4,"0700, 0441",True
+Noveno,7989,Seminario de Investigación E.P.S. Ambiental,4,225CR,True
+Noveno,0284,Saneamiento Ambiental,5,"0280, 0282",False
+Décimo,0288,Introducción al Estudio de Impacto Ambiental,4,"0706, 0335",True
+Décimo,2035,Prácticas Finales Ingeniería Ambiental,,"2036, 200CR",True
+Décimo,0434,Procesos Químicos Industriales,4,"0198, 0196",False
+Décimo,0437,Control de Contaminantes Industriales,4,"0198, 0196",False
+Décimo,0708,Preparación y Evaluación de Proyectos 2,4,0706,False

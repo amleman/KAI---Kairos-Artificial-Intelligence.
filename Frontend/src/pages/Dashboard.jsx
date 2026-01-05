@@ -194,7 +194,9 @@ const Dashboard = () => {
 
   /* ----------------------- Cargar CSV del pensum ----------------------- */
   const cargarPensum = () => {
-    fetch("http://127.0.0.1:8000/pensum")
+    const carreraQuery = usuarioData.carrera ? `?carrera=${encodeURIComponent(usuarioData.carrera)}` : "";
+
+    fetch(`http://127.0.0.1:8000/pensum${carreraQuery}`)
       .then((res) => res.text())
       .then((csv) => {
         Papa.parse(csv, {
@@ -556,6 +558,9 @@ const Dashboard = () => {
                         <option>Ing. Civil</option>
                         <option>Ing. Industrial</option>
                         <option>Ing. Mecánica</option>
+                        <option>Ing. Electrónica</option>
+                        <option>Ing. Eléctrica</option>
+                        <option>Ing. Química</option>
                       </select>
                     ) : field === "fechaNacimiento" ? (
                       <input
@@ -644,7 +649,7 @@ const Dashboard = () => {
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-3">
                   <GraduationCap className="text-blue-600" size={28} />
-                  Pensum - Ingeniería en Sistemas
+                  Pensum - {usuarioData.carrera || "Ingeniería en Sistemas"}
                 </h2>
                 <p className="text-gray-600 text-sm mt-1">
                   Aquí encontraras los cursos de tu carrera por semestre,

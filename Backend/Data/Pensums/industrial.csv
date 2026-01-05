@@ -1,0 +1,78 @@
+semestre,codigo,nombre_completo,creditos,pre_requisitos,obligatorio
+Primero,0005,Técnicas de Estudio e Investigación,3,,True
+Primero,0017,Área Social Humanística 1,3,,True
+Primero,0069,Área Técnica Complementaria 1,4,,True
+Primero,0101,Área Matemática Básica 1,9,,True
+Primero,0348,Química General 1,7,,True
+Primero,0610,Informática,3,,True
+Segundo,0019,Área Social Humanística 2,3,0017,True
+Segundo,0028,Ecología,4,0348,True
+Segundo,0103,Área Matemática Básica 2,9,0101,True
+Segundo,0147,Física Básica,5,0101,True
+Segundo,0662,Legislación 1,3,"0005, 0017",True
+Segundo,0667,Programación Comercial 1,4,0610,True
+Segundo,0352,Química 2,6,"0101, 0348",False
+Tercero,0022,Psicología Industrial,3,0019,True
+Tercero,0073,Dibujo Técnico Mecánico,3,"0069, 0667",True
+Tercero,0107,Área Matemática Intermedia 1,9,0103,True
+Tercero,0150,Física 1,5,"0103, 0147",True
+Tercero,0664,Legislación 2,3,0662,True
+Tercero,0732,Estadística 1,5,"0005, 0103",True
+Tercero,2025,Prácticas Iniciales,,0103,True
+Tercero,0001,Ética Profesional,2,0019,False
+Cuarto,0112,Área Matemática Intermedia 2,6,0107,True
+Cuarto,0114,Área Matemática Intermedia 3,6,0107,True
+Cuarto,0152,Física 2,6,"0107, 0150",True
+Cuarto,0170,Mecánica Analítica 1,4,"0107, 0150",True
+Cuarto,0734,Estadística 2,5,0732,True
+Cuarto,0018,Filosofía de la Ciencia,1,0019,False
+Quinto,0116,Matemática Aplicada 3,5,"0112, 0114",True
+Quinto,0200,Ingeniería Eléctrica 1,6,"0114, 0152",True
+Quinto,0250,Mecánica de Fluidos,5,"0114, 0170",True
+Quinto,0300,Resistencia de Materiales 1,5,"0114, 0170",True
+Quinto,0452,Ciencia de los Materiales,4,0152,True
+Quinto,0637,Diseño Industrial,6,0734,True
+Quinto,0118,Matemática Aplicada 1,5,"0112, 0114",False
+Quinto,0172,Mecánica Analítica 2,5,"0114, 0170",False
+Quinto,0368,Principios de Metrología,4,"0152, 0734",False
+Sexto,0390,Termodinámica 1,6,0250,True
+Sexto,0520,Procesos de Manufactura 1,5,0452,True
+Sexto,0601,Investigación de Operaciones I,6,0116,True
+Sexto,0639,Control Estadístico de la Calidad,6,0637,True
+Sexto,0653,Ingeniería de Costos,4,0637,True
+Sexto,0122,Matemática Aplicada 4,5,0118,False
+Sexto,0302,Resistencia de Materiales 2,5,0300,False
+Séptimo,0603,Investigación de Operaciones II,6,0601,True
+Séptimo,0634,Ingeniería de Métodos,7,"0639, 0653",True
+Séptimo,0655,Administración Financiera,4,0653,True
+Séptimo,0672,Fundamentos de Administración,4,"0022, 0639",True
+Séptimo,0674,Fundamentos de Mercadotecnia,4,0639,True
+Séptimo,2036,Prácticas Intermedias,,"0639, 2025",True
+Séptimo,0335,Gestión de Desastres,4,0639,False
+Séptimo,0392,Termodinámica 2,6,0390,False
+Séptimo,0454,Metalurgia y Metalografía,6,0452,False
+Octavo,0620,Gestión Ambiental,4,0634,True
+Octavo,0640,Control de la Producción,6,0634,True
+Octavo,0659,Administración de Recursos Humanos,6,0672,True
+Octavo,0676,Comercio Internacional,3,0674,True
+Octavo,0700,Ingeniería Económica 1,4,0655,True
+Octavo,0504,Motores de Combustión Interna,6,0392,False
+Octavo,0506,Plantas de Vapor,6,0392,False
+Octavo,0524,Diseño de Máquinas 1,4,"0302, 0452",False
+Noveno,0508,Montaje y Mantenimiento de Equipo,4,0640,True
+Noveno,0612,Gestión Tecnológica,4,"0603, 0640",True
+Noveno,0614,Logística y Cadena de Suministro,4,0640,True
+Noveno,0643,Salud y Seguridad Ocupacional,5,0640,True
+Noveno,0665,Microeconomía,3,0700,True
+Noveno,0706,Preparación y Evaluación de Proyectos 1,5,"0674, 0700",True
+Noveno,7905,Seminario de Investigación Industrial,3,0640,True
+Noveno,7985,Seminario de Investigación E.P.S. Industrial,3,0640,True
+Noveno,0606,Análisis de Sistemas Industriales,3,"0603, 0640",False
+Décimo,0609,Innovación y Emprendimiento,6,0706,True
+Décimo,0622,Sistema de Gestión de la Calidad,6,0643,True
+Décimo,0632,Ingeniería de Plantas,6,0643,True
+Décimo,0709,Gestión de Proyectos,4,0706,True
+Décimo,2005,Prácticas Finales Ingeniería Industrial,,"0643, 2036",True
+Décimo,0288,Introducción al Estudio de Impacto Ambiental,4,0643,False
+Décimo,0645,Ingeniería Textil,4,0640,False
+Décimo,0669,Economía Industrial,2,0665,False

@@ -1,0 +1,87 @@
+semestre,codigo,nombre_completo,creditos,pre_requisitos,obligatorio
+Primero,0005,Técnicas de Estudio e Investigación,3,,True
+Primero,0017,Área Social Humanística 1,3,,True
+Primero,0069,Área Técnica Complementaria 1,4,,True
+Primero,0101,Área Matemática Básica 1,9,,True
+Primero,0348,Química General 1,7,,True
+Primero,0039,Deportes 1,2,,False
+Segundo,0019,Área Social Humanística 2,3,0017,True
+Segundo,0074,Dibujo Constructivo para Ingeniería,6,0069,True
+Segundo,0103,Área Matemática Básica 2,9,0101,True
+Segundo,0147,Física Básica,5,0101,True
+Segundo,0349,Química para Ingeniería Civil,6,"0101, 0348",True
+Tercero,0028,Ecología,4,0349,True
+Tercero,0107,Área Matemática Intermedia 1,9,0103,True
+Tercero,0150,Física 1,5,"0103, 0147",True
+Tercero,2025,Prácticas Iniciales,,"0103, 0074, 0147",True
+Tercero,0001,Ética Profesional,2,0019,False
+Tercero,0010,Lógica,1,0019,False
+Tercero,0018,Filosofía de la Ciencia,1,0019,False
+Tercero,0030,Geografía,4,0147,False
+Cuarto,0080,Topografía 1,7,"0107, 0074",True
+Cuarto,0112,Área Matemática Intermedia 2,6,0107,True
+Cuarto,0114,Área Matemática Intermedia 3,6,0107,True
+Cuarto,0170,Mecánica Analítica 1,4,"0107, 0150",True
+Cuarto,0450,Geología,4,"0028, 0150",True
+Cuarto,0732,Estadística 1,5,"0107, 0005",True
+Cuarto,0152,Física 2,6,"0107, 0150",False
+Cuarto,0474,Introducción a la Ingeniería Petrolera,4,"0107, 0150",False
+Cuarto,0662,Legislación 1,3,"0019, 0028",False
+Quinto,0082,Topografía 2,7,0080,True
+Quinto,0118,Matemática Aplicada 1,5,"0112, 0114",True
+Quinto,0250,Mecánica de Fluidos,5,"0112, 0170",True
+Quinto,0300,Resistencia de Materiales 1,5,"0114, 0170",True
+Quinto,0453,Materiales de Construcción 1,6,0450,True
+Quinto,0476,Geología del Petróleo,4,0450,False
+Quinto,0478,Petrología,4,0450,False
+Quinto,0536,Perforación de Pozos 1,4,"0450, 0474",False
+Quinto,0538,Geofísica,3,"0114, 0450",False
+Quinto,0687,Geología Estructural,3,0450,False
+Sexto,0201,Instalaciones Eléctricas (CIVIL),4,"0103, 0147, 0074",True
+Sexto,0252,Hidráulica,5,0250,True
+Sexto,0302,Resistencia de Materiales 2,5,0300,True
+Sexto,0455,Materiales de Construcción 2,7,"0300, 0453",True
+Sexto,0458,Mecánica de Suelos 1,5,"0300, 0450",True
+Sexto,0700,Ingeniería Económica 1,4,0118,True
+Sexto,0022,Psicología Industrial,3,0732,False
+Sexto,0084,Topografía 3,6,"0082, 0118",False
+Sexto,0653,Ingeniería de Costos,4,0732,False
+Sexto,0664,Legislación 2,3,0662,False
+Séptimo,0254,Hidrología,6,"0252, 0082, 0732",True
+Séptimo,0286,Hidráulica de Canales,4,0252,True
+Séptimo,0311,Análisis Estructural,5,0302,True
+Séptimo,0314,Concreto Armado 1,5,"0302, 0455",True
+Séptimo,0550,Vías Terrestres 1,6,"0082, 0458",True
+Séptimo,2036,Prácticas Intermedias,,"2025, 0455",True
+Séptimo,0258,Máquinas Hidráulicas,6,0252,False
+Séptimo,0659,Administración de Recursos Humanos,6,0022,False
+Séptimo,0702,Ingeniería Económica 2,4,0700,False
+Octavo,0280,Ingeniería Sanitaria 1,4,0254,True
+Octavo,0282,Ingeniería Sanitaria 2,4,0254,True
+Octavo,0288,Introducción al Estudio de Impacto Ambiental,4,"0019, 0028, 0254, 0700",True
+Octavo,0316,Concreto Armado 2,5,0314,True
+Octavo,0318,Cimentaciones 1,4,"0311, 0314",True
+Octavo,0560,Vías Terrestres 2,4,"0550, 0314",True
+Octavo,7980,Investigación 1,4,"0550, 0311, 0254, 2036",True
+Octavo,0173,Análisis Mecánico,5,"0170, 0311",False
+Octavo,0262,Aguas Subterráneas,3,0254,False
+Octavo,0307,Tipología Estructural,3,0300,False
+Octavo,0672,Fundamentos de Administración,4,0659,False
+Noveno,0284,Saneamiento Ambiental,3,"0280, 0282",True
+Noveno,0320,Cimentaciones 2,4,0318,True
+Noveno,0322,Diseño Estructural 1,6,"0311, 0316",True
+Noveno,0460,Pavimentos,4,"0455, 0458, 0560",True
+Noveno,0706,Preparación y Evaluación de Proyectos 1,5,"0700, 0288",True
+Noveno,0256,Obras Hidráulicas,4,"0286, 0318",False
+Noveno,0335,Gestion de Desastres,4,0288,False
+Noveno,0585,Ingeniería de Tránsito y Transportes,4,0550,False
+Décimo,0324,Diseño Estructural 2,6,0322,True
+Décimo,0332,Puentes,5,"0322, 0320",True
+Décimo,0346,Métodos de Construcción y Supervisión de Obras,4,0322,True
+Décimo,0666,Costos Presupuestos y Avalúos,5,"0322, 0460, 0320",True
+Décimo,0710,Planeamiento,4,0706,True
+Décimo,2001,Prácticas Finales Ingeniería Civil,,"2036, 0320, 0322",True
+Décimo,7981,Seminario de Investigación E.P.S. Civil,3,"7980, 0284",True
+Décimo,7991,Seminario de Investigación Civil,3,"7980, 0284",True
+Décimo,0709,Gestión de Proyectos,4,0706,False
+Décimo,0712,Urbanismo,4,0706,False
