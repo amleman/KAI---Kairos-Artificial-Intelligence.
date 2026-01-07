@@ -16,7 +16,7 @@ Tercero,0107,Área Matemática Intermedia 1,9,0103,True
 Tercero,0150,Física 1,5,"0103, 0147",True
 Tercero,0664,Legislación 2,3,0662,True
 Tercero,0732,Estadística 1,5,"0005, 0103",True
-Tercero,2025,Prácticas Iniciales,,0103,True
+Tercero,2025,Prácticas Iniciales,0,0103,True
 Tercero,0001,Ética Profesional,2,0019,False
 Tercero,0352,Química 2,6,"0101, 0348",False
 Cuarto,0112,Área Matemática Intermedia 2,6,0107,True
@@ -44,7 +44,7 @@ Séptimo,0022,Psicología Industrial,3,0019,True
 Séptimo,0392,Termodinámica 2,6,0390,True
 Séptimo,0508,Montaje y Mantenimiento de Equipo,4,0520,True
 Séptimo,0524,Diseño de Máquinas 1,4,"0302, 0452",True
-Séptimo,2036,Prácticas Intermedias,,"0390, 2025",True
+Séptimo,2036,Prácticas Intermedias,0,"0390, 2025",True
 Séptimo,0258,Máquinas Hidráulicas,6,0252,False
 Séptimo,0335,Gestión de Desastres,4,0390,False
 Séptimo,0532,Vibraciones,6,0530,False
@@ -81,6 +81,6 @@ Duodécimo,0609,Innovación y Emprendimiento,6,0706,True
 Duodécimo,0614,Logística y Cadena de Suministro,4,0640,True
 Duodécimo,0622,Sistema de Gestión de la Calidad,6,0640,True
 Duodécimo,0632,Ingeniería de Plantas,6,"0640, 0643",True
-Duodécimo,2007,Prácticas Finales Ingeniería Mecánica Industrial,,"0640, 2036",True
+Duodécimo,2007,Prácticas Finales Ingeniería Mecánica Industrial,0,"0640, 2036",True
 Duodécimo,0606,Análisis de Sistemas Industriales,3,"0603, 0640",False
 Duodécimo,0612,Gestión Tecnológica,4,"0603, 0640",False

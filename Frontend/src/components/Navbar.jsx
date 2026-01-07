@@ -1,136 +1,182 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Home, TrafficCone, Target, LogOut, Menu, X, GraduationCap, MessageCircle, User } from "lucide-react";
-import { motion } from "framer-motion";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Network,
+  Target,
+  TrafficCone,
+  MessageCircle,
+  User,
+  GraduationCap,
+  Sun,
+  Moon,
+  LogOut,
+  Menu
+} from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [dashboardOpen, setDashboardOpen] = useState(true);
+  const [isDark, setIsDark] = useState(false); // Placeholder for theme state
 
-  const handleLogout = () => {
+  const toggleTheme = () => setIsDark(!isDark);
+
+  const onLogout = () => {
     localStorage.removeItem("usuario");
     localStorage.removeItem("userData");
     navigate("/");
   };
 
-  const NAV_ITEMS = [
-    { path: "/dashboard", label: "Dashboard", icon: Home },
-    { path: "/perfil", label: "Perfil", icon: User },
-    { path: "/semaforo", label: "Semáforo", icon: TrafficCone },
-    { path: "/optimizador", label: "Optimizador", icon: Target },
-    { path: "/chatbot", label: "Chatbot", icon: MessageCircle },
-  ];
+  const NavItem = ({ path, icon: Icon, label }) => {
+    const isActive = location.pathname === path || (path.includes("?") && location.search.includes("tab=pensum"));
+
+    return (
+      <Link
+        to={path}
+        onClick={() => setIsSidebarOpen(false)}
+        className={`
+          flex items-center gap-3 px-4 py-3 rounded-xl transition-colors
+          ${isActive
+            ? 'bg-pastel-blue text-slate-900 font-semibold shadow-sm'
+            : 'text-slate-600 hover:bg-pastel-green hover:text-slate-900'
+          }
+        `}
+      >
+        <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
+        <span>{label}</span>
+      </Link>
+    );
+  };
 
   return (
-    // CAMBIO 1: Fondo blanco con transparencia (Glass effect) y borde sutil
-    <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200/60 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+    <>
+      {/* Mobile Menu Toggle */}
+      <div className="lg:hidden fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 rounded-xl bg-white/70 backdrop-blur-xl border border-pastel-blue shadow-sm text-slate-700"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
 
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 group-hover:shadow-indigo-300 transition-all duration-300">
-                <GraduationCap className="text-white" size={20} />
-              </div>
-              {/* CAMBIO 2: Texto del logo oscuro para contrastar con blanco */}
-              <span className="text-xl font-bold text-slate-800 tracking-wide group-hover:text-indigo-600 transition-colors">
-                SIOA
-              </span>
-            </Link>
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop & Mobile */}
+      <aside className={`
+        fixed top-0 left-0 z-40 w-72 h-screen 
+        bg-white/70 backdrop-blur-xl border-r border-pastel-blue 
+        transition-transform duration-300 transform 
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="p-6 h-full flex flex-col">
+          {/* Logo Section */}
+          <div className="flex items-center gap-3 mb-10 pl-2">
+            <div className="w-10 h-10 rounded-xl bg-pastel-pink flex items-center justify-center text-slate-700 shadow-sm">
+              <GraduationCap className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+              KAI
+            </h1>
           </div>
 
-          {/* MENU DESKTOP - ISLA DE NAVEGACIÓN */}
-          {/* CAMBIO 3: La "Isla" ahora es gris muy suave (slate-100) en lugar de oscuro */}
-          <div className="hidden md:flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200 backdrop-blur-sm relative">
-            {NAV_ITEMS.map((item) => {
-              const isActive = location.pathname === item.path;
+          {/* Navigation */}
+          <nav className="flex-1 space-y-2 overflow-y-auto">
+            {/* Dashboard Group */}
+            <div>
+              <button
+                onClick={() => setDashboardOpen(!dashboardOpen)}
+                className={`
+                  w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-colors
+                  ${location.pathname.includes('/dashboard') ||
+                    location.pathname.includes('/aprobados') ||
+                    location.pathname.includes('/pensum') ||
+                    location.pathname.includes('/horarios')
+                    ? 'bg-pastel-blue text-slate-900 font-semibold shadow-sm'
+                    : 'text-slate-600 hover:bg-pastel-green hover:text-slate-900'
+                  }
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>Dashboard</span>
+                </div>
+                <div className={`transition-transform duration-200 ${dashboardOpen ? 'rotate-180' : ''}`}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </button>
 
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2 z-10 ${
-                    // CAMBIO 4: Texto inactivo gris (slate-500), Activo blanco (para ir sobre la píldora azul)
-                    isActive ? "text-white" : "text-slate-500 hover:text-indigo-600"
-                    }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="navbar-pill"
-                      // CAMBIO 5: La píldora activa mantiene el color de marca (Indigo-600)
-                      className="absolute inset-0 bg-indigo-600 rounded-lg shadow-md shadow-indigo-500/30"
+              {/* Submenu */}
+              {dashboardOpen && (
+                <div className="mt-1 ml-4 pl-4 border-l-2 border-slate-100 space-y-1 animate-fadeIn">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`block px-4 py-2 text-sm rounded-lg transition-colors ${location.pathname === '/dashboard' ? 'text-slate-900 font-medium bg-white/50' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    Resumen
+                  </Link>
+                  <Link
+                    to="/aprobados"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`block px-4 py-2 text-sm rounded-lg transition-colors ${location.pathname === '/aprobados' ? 'text-slate-900 font-medium bg-white/50' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    Cursos Aprobados
+                  </Link>
+                  <Link
+                    to="/pensum"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`block px-4 py-2 text-sm rounded-lg transition-colors ${location.pathname === '/pensum' ? 'text-slate-900 font-medium bg-white/50' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    Pensum
+                  </Link>
+                  <Link
+                    to="/horarios"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`block px-4 py-2 text-sm rounded-lg transition-colors ${location.pathname === '/horarios' ? 'text-slate-900 font-medium bg-white/50' : 'text-slate-500 hover:text-slate-800'}`}
+                  >
+                    Horarios
+                  </Link>
+                </div>
+              )}
+            </div>
 
-                      // CAMBIO 6: Velocidad ajustada
-                      transition={{
-                        type: "spring",
-                        stiffness: 230,
-                        damping: 25
-                      }}
-                      initial={false}
-                    />
-                  )}
+            <NavItem path="/semaforo" icon={TrafficCone} label="Semáforo" />
+            <NavItem path="/perfil" icon={User} label="Perfil" />
+            <NavItem path="/optimizador" icon={Target} label="Optimizador" />
+            <NavItem path="/chatbot" icon={MessageCircle} label="Chatbot" />
+          </nav>
 
-                  <item.icon size={16} className="relative z-10" />
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Botón Salir */}
-          <div className="hidden md:flex">
+          {/* Bottom Actions */}
+          <div className="pt-6 border-t border-pastel-blue space-y-3 mt-auto">
             <button
-              onClick={handleLogout}
-              className="px-4 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-sm rounded-lg font-bold transition-all border border-red-100 flex items-center gap-2"
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-pastel-yellow hover:text-slate-900 transition-colors border border-transparent"
             >
-              <LogOut size={16} />
-              Salir
+              {isDark ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-500" />}
+              <span className="font-medium">{isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
             </button>
-          </div>
-
-          {/* Menu Mobile Toggle */}
-          <div className="md:hidden">
             <button
-              onClick={() => setMenuAbierto(!menuAbierto)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-pastel-pink hover:text-red-700 transition-colors"
             >
-              {menuAbierto ? <X size={24} /> : <Menu size={24} />}
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Cerrar Sesión</span>
             </button>
           </div>
         </div>
-
-        {/* Menu Mobile */}
-        {menuAbierto && (
-          <div className="md:hidden py-4 space-y-2 border-t border-slate-100 animate-fade-in bg-white/95 backdrop-blur-xl">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setMenuAbierto(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${location.pathname === item.path
-                  ? "bg-indigo-50 text-indigo-700 border border-indigo-100" // Activo en móvil: fondo pastel muy suave
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                  }`}
-              >
-                <item.icon size={18} /> {item.label}
-              </Link>
-            ))}
-
-            <div className="pt-4 mt-2 border-t border-slate-100">
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-all flex items-center gap-2"
-              >
-                <LogOut size={18} />
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+      </aside>
+    </>
   );
 };
 

@@ -13,7 +13,7 @@ Segundo,0349,Química para Ingeniería Civil,6,"0101, 0348",True
 Tercero,0028,Ecología,4,0349,True
 Tercero,0107,Área Matemática Intermedia 1,9,0103,True
 Tercero,0150,Física 1,5,"0103, 0147",True
-Tercero,2025,Prácticas Iniciales,,"0103, 0074, 0147",True
+Tercero,2025,Prácticas Iniciales,0,"0103, 0074, 0147",True
 Tercero,0001,Ética Profesional,2,0019,False
 Tercero,0010,Lógica,1,0019,False
 Tercero,0018,Filosofía de la Ciencia,1,0019,False
@@ -52,7 +52,7 @@ Séptimo,0286,Hidráulica de Canales,4,0252,True
 Séptimo,0311,Análisis Estructural,5,0302,True
 Séptimo,0314,Concreto Armado 1,5,"0302, 0455",True
 Séptimo,0550,Vías Terrestres 1,6,"0082, 0458",True
-Séptimo,2036,Prácticas Intermedias,,"2025, 0455",True
+Séptimo,2036,Prácticas Intermedias,0,"2025, 0455",True
 Séptimo,0258,Máquinas Hidráulicas,6,0252,False
 Séptimo,0659,Administración de Recursos Humanos,6,0022,False
 Séptimo,0702,Ingeniería Económica 2,4,0700,False
@@ -80,7 +80,7 @@ Décimo,0332,Puentes,5,"0322, 0320",True
 Décimo,0346,Métodos de Construcción y Supervisión de Obras,4,0322,True
 Décimo,0666,Costos Presupuestos y Avalúos,5,"0322, 0460, 0320",True
 Décimo,0710,Planeamiento,4,0706,True
-Décimo,2001,Prácticas Finales Ingeniería Civil,,"2036, 0320, 0322",True
+Décimo,2001,Prácticas Finales Ingeniería Civil,0,"2036, 0320, 0322",True
 Décimo,7981,Seminario de Investigación E.P.S. Civil,3,"7980, 0284",True
 Décimo,7991,Seminario de Investigación Civil,3,"7980, 0284",True
 Décimo,0709,Gestión de Proyectos,4,0706,False

@@ -56,39 +56,11 @@ def get_chatbot_academico():
 # -------------------------
 # Cache Pensums
 # -------------------------
-def cargar_pensums_lookup():
-    lookups = {}
-    pensums_dir = "./Data/Pensums/"
-    
-    for carrera, filename in CAREER_FILE_MAP.items():
-        path = os.path.join(pensums_dir, filename)
-        if not os.path.exists(path):
-            continue
-            
-        try:
-            df = pd.read_csv(path)
-            career_lookup = {}
-            for _, row in df.iterrows():
-                codigo = str(row.get("codigo", "")).zfill(4)
-                
-                # Manejo seguro de créditos (puede ser NaN o vacío)
-                creditos_val = row.get("creditos", 3)
-                try:
-                    creditos = int(float(creditos_val)) if pd.notna(creditos_val) else 0
-                except:
-                    creditos = 0
-                    
-                career_lookup[codigo] = {
-                    "nombre": str(row.get("nombre_completo", row.get("nombre", ""))),
-                    "creditos": creditos,
-                }
-            lookups[carrera] = career_lookup
-        except Exception as e:
-            print(f"Error cargando pensum {carrera}: {e}")
-            
-    return lookups
-
-PENSUM_LOOKUPS = cargar_pensums_lookup()
+# -------------------------
+# Cache Pensums
+# -------------------------
+# (Eliminado para carga bajo demanda para evitar errores de inicio)
+PENSUM_LOOKUPS = {}
 
 # -------------------------
 # DB Helper

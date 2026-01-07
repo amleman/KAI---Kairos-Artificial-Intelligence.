@@ -11,6 +11,11 @@ import ChatbotAcademico from './pages/ChatbotAcademico';
 import Perfil from './pages/Perfil';
 
 import LandingPage from "./pages/LandingPage";
+import GlassDemo from "./pages/GlassDemo";
+import PlatformLayout from "./components/ui/PlatformLayout";
+import ApprovedCoursesPage from "./pages/ApprovedCoursesPage";
+import PensumPage from "./pages/PensumPage";
+import SchedulePage from "./pages/SchedulePage";
 
 function App() {
   return (
@@ -19,51 +24,22 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/semaforo"
-          element={
-            <ProtectedRoute>
-              <SemaforoCarga />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/optimizador"
-          element={
-            <ProtectedRoute>
-              <OptimizadorPromedio />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/resultado-horario"
-          element={<ResultadoHorario />}
-        />
-        <Route
-          path="/chatbot"
-          element={
-            <ProtectedRoute>
-              <ChatbotAcademico />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/perfil"
-          element={
-            <ProtectedRoute>
-              <Perfil />
-            </ProtectedRoute>
-          }
-        />
+
+        {/* Platform Routes wrapped in Layout */}
+        <Route element={<ProtectedRoute><PlatformLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/aprobados" element={<ApprovedCoursesPage />} />
+          <Route path="/pensum" element={<PensumPage />} />
+          <Route path="/horarios" element={<SchedulePage />} />
+          <Route path="/semaforo" element={<SemaforoCarga />} />
+          <Route path="/optimizador" element={<OptimizadorPromedio />} />
+          <Route path="/resultado-horario" element={<ResultadoHorario />} />
+          <Route path="/chatbot" element={<ChatbotAcademico />} />
+          <Route path="/perfil" element={<Perfil />} />
+        </Route>
+
         <Route path="/que-es-sioa" element={<About />} />
+        <Route path="/glass-demo" element={<GlassDemo />} />
       </Routes>
     </BrowserRouter>
   );

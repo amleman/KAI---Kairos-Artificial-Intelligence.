@@ -19,7 +19,7 @@ Tercero,0030,Geografía,3,0879,True
 Tercero,0107,Área Matemática Intermedia 1,10,0103,True
 Tercero,0150,Física 1,6,"0103, 0147",True
 Tercero,0362,Análisis Cualitativo,5,0356,True
-Tercero,2025,Prácticas Iniciales,,0103,True
+Tercero,2025,Prácticas Iniciales,0,0103,True
 Tercero,0009,Idioma Técnico 3,2,0008,False
 Cuarto,0080,Topografía 1,6,"0107, 0075",True
 Cuarto,0112,Área Matemática Intermedia 2,5,0107,True
@@ -63,7 +63,7 @@ Sexto,0739,Didáctica de la Matemática,2,,False
 Sexto,3120,Matemática Aplicada 2 (diplomado),,3118,False
 Séptimo,0060,Taller de Sist de inf Geográfica,2,0084,True
 Séptimo,0254,Hidrología,6,0252,True
-Séptimo,2036,Prácticas Intermedias,,"2025, 0663, 0370",True
+Séptimo,2036,Prácticas Intermedias,0,"2025, 0663, 0370",True
 Séptimo,0656,Administración de Empresas 1,5,150CR,False
 Séptimo,0870,Sismología,6,0458,False
 Octavo,0193,Manejo de Cuencas Hidrográficas,3,"0084, 0254",True
@@ -80,7 +80,7 @@ Noveno,0706,Preparación y Evaluación de Proyectos 1,4,"0700, 0441",True
 Noveno,7989,Seminario de Investigación E.P.S. Ambiental,4,225CR,True
 Noveno,0284,Saneamiento Ambiental,5,"0280, 0282",False
 Décimo,0288,Introducción al Estudio de Impacto Ambiental,4,"0706, 0335",True
-Décimo,2035,Prácticas Finales Ingeniería Ambiental,,"2036, 200CR",True
+Décimo,2035,Prácticas Finales Ingeniería Ambiental,0,"2036, 200CR",True
 Décimo,0434,Procesos Químicos Industriales,4,"0198, 0196",False
 Décimo,0437,Control de Contaminantes Industriales,4,"0198, 0196",False
 Décimo,0708,Preparación y Evaluación de Proyectos 2,4,0706,False

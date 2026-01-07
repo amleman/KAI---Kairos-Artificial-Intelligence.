@@ -18,7 +18,7 @@ Tercero,0107,Área Matemática Intermedia 1,9,0103,True
 Tercero,0150,Física 1,5,"0103, 0147",True
 Tercero,0664,Legislación 2,3,0662,True
 Tercero,0732,Estadística 1,5,"0005, 0103",True
-Tercero,2025,Prácticas Iniciales,,0103,True
+Tercero,2025,Prácticas Iniciales,0,0103,True
 Tercero,0001,Ética Profesional,2,0019,False
 Cuarto,0112,Área Matemática Intermedia 2,6,0107,True
 Cuarto,0114,Área Matemática Intermedia 3,6,0107,True
@@ -47,7 +47,7 @@ Séptimo,0634,Ingeniería de Métodos,7,"0639, 0653",True
 Séptimo,0655,Administración Financiera,4,0653,True
 Séptimo,0672,Fundamentos de Administración,4,"0022, 0639",True
 Séptimo,0674,Fundamentos de Mercadotecnia,4,0639,True
-Séptimo,2036,Prácticas Intermedias,,"0639, 2025",True
+Séptimo,2036,Prácticas Intermedias,0,"0639, 2025",True
 Séptimo,0335,Gestión de Desastres,4,0639,False
 Séptimo,0392,Termodinámica 2,6,0390,False
 Séptimo,0454,Metalurgia y Metalografía,6,0452,False
@@ -72,7 +72,7 @@ Décimo,0609,Innovación y Emprendimiento,6,0706,True
 Décimo,0622,Sistema de Gestión de la Calidad,6,0643,True
 Décimo,0632,Ingeniería de Plantas,6,0643,True
 Décimo,0709,Gestión de Proyectos,4,0706,True
-Décimo,2005,Prácticas Finales Ingeniería Industrial,,"0643, 2036",True
+Décimo,2005,Prácticas Finales Ingeniería Industrial,0,"0643, 2036",True
 Décimo,0288,Introducción al Estudio de Impacto Ambiental,4,0643,False
 Décimo,0645,Ingeniería Textil,4,0640,False
 Décimo,0669,Economía Industrial,2,0665,False

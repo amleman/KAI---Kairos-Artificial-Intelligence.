@@ -16,7 +16,7 @@ Tercero,0018,Filosofía de la Ciencia,1,0019,True
 Tercero,0107,Área Matemática Intermedia 1,9,0103,True
 Tercero,0150,Física 1,5,"0103, 0147",True
 Tercero,0991,Lenguajes de Programación Aplicados a I.E.,5,0769,True
-Tercero,2025,Prácticas Iniciales,,"0103, 0769",True
+Tercero,2025,Prácticas Iniciales,0,"0103, 0769",True
 Tercero,0009,Idioma Técnico 3,3,0008,False
 Cuarto,0010,Lógica,1,0019,True
 Cuarto,0112,Área Matemática Intermedia 2,6,0107,True
@@ -44,7 +44,7 @@ Séptimo,0230,Instrumentación Eléctrica,7,"0206, 0732",True
 Séptimo,0240,Electrónica 2,6,"0156, 0206, 0232",True
 Séptimo,0242,Comunicaciones 1,6,"0210, 0232, 0206, 0736",True
 Séptimo,0246,Electrónica 3,6,0232,True
-Séptimo,2036,Prácticas Intermedias,,"2025, 0232, 0210, 0206",True
+Séptimo,2036,Prácticas Intermedias,0,"2025, 0232, 0210, 0206",True
 Séptimo,0116,Matemática Aplicada 3,5,"0112, 0114",False
 Séptimo,0212,Conversión de Energía Electromecánica 1,7,"0204, 0210",False
 Séptimo,0659,Administración de Recursos Humanos,6,0022,False
@@ -62,7 +62,7 @@ Noveno,0236,Sistemas de Control 1,5,0232,True
 Noveno,0241,Radiocomunicaciones Terrestres,5,0211,True
 Noveno,0245,Comunicaciones 3,6,0244,True
 Noveno,0249,Electrónica 6,6,0248,True
-Noveno,2013,Prácticas Finales Ingeniería Electrónica,,2036,True
+Noveno,2013,Prácticas Finales Ingeniería Electrónica,0,2036,True
 Noveno,7913,Seminario de Investigación Electrónica,3,"0244, 0980",True
 Noveno,0214,Máquinas Eléctricas,7,"0206, 0212",False
 Noveno,0601,Investigación de Operaciones I,6,0991,False

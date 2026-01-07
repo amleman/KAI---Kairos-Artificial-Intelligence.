@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { Calendar, List, Clock, MapPin, User, AlertCircle } from "lucide-react";
 
-const HorarioVisualizer = ({ horario }) => {
+const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
   // 1. Hooks siempre arriba
-  const [vista, setVista] = useState("calendario");
+  const [vistaInternal, setVistaInternal] = useState("calendario");
+  const vista = vistaProp || vistaInternal;
+  const setVista = vistaProp ? () => { } : setVistaInternal;
 
   // 2. Helpers (Funciones auxiliares)
   const getDato = (obj, keys) => {
@@ -33,7 +35,7 @@ const HorarioVisualizer = ({ horario }) => {
   // Getters seguros
   const getInicio = (c) => formatearHora(getDato(c, ["Inicio", "inicio", "Inicio_Min"]));
   const getFinal = (c) => formatearHora(getDato(c, ["Final", "final", "Final_Min"]));
-  const getNombre = (c) => getDato(c, ["Nombre_Limpio", "Nombre", "nombre"]);
+  const getNombre = (c) => getDato(c, ["Nombre_Limpio", "Nombre", "nombre", "Nombre de Curso"]);
   const getSeccion = (c) => getDato(c, ["Seccion", "seccion", "Salon"]);
   const getEdificio = (c) => getDato(c, ["Edificio", "edificio", "Lugar"]);
   const getProfe = (c) => getDato(c, ["Catedratico", "catedratico"]);
@@ -43,16 +45,34 @@ const HorarioVisualizer = ({ horario }) => {
     try {
       if (Array.isArray(raw)) return raw;
       if (!raw) return [];
-      const limpio = String(raw).replace(/[[\]']/g, "").replace(/"/g, "");
-      return limpio.split(",").map(d => d.trim()).filter(d => d.length > 0 && d !== "None");
+      // Si viene como string de python lista "['Lunes']"
+      const limpio = String(raw).replace(/'/g, '"');
+      try {
+        return JSON.parse(limpio);
+      } catch {
+        return String(raw).replace(/[[\]']/g, "").replace(/"/g, "").split(",").map(d => d.trim()).filter(d => d.length > 0 && d !== "None");
+      }
     } catch { return []; }
   };
 
   /* ----------------------------------------------------------------------------------
    *  LÓGICA DE EXTRACCIÓN DE DATOS (Soporte estructura nueva y vieja)
    * ---------------------------------------------------------------------------------- */
-  const listaHorario = Array.isArray(horario) ? horario : (horario?.horario || []);
-  const analisis = (!Array.isArray(horario) && horario?.analisis_financiero) ? horario.analisis_financiero : null;
+  // Si viene de DB (data_json) usualmente trae {analisis_financiero:..., horario:[...]}
+  // Si viene del generador custom, puede ser array directo o objeto.
+
+  let rawData = horario;
+  // Unwrap si viene dentro de "horario" otra vez (caso raro pero posible)
+  if (horario?.horario && Array.isArray(horario.horario)) {
+    rawData = horario;
+  } else if (Array.isArray(horario)) {
+    rawData = { horario: horario };
+  }
+
+  const listaHorario = rawData?.horario || (Array.isArray(rawData) ? rawData : []);
+  const analisis = rawData?.analisis_financiero || null;
+  const fechaGuardado = rawData?.fecha_guardado || horario?.fecha_guardado; // Pasado como prop si existe
+
   const [mostrarAnalisis, setMostrarAnalisis] = useState(false);
 
   // 3. useMemo (El Hook conflictivo) MOVIDO ARRIBA
@@ -121,13 +141,33 @@ const HorarioVisualizer = ({ horario }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center shrink-0">
-        <h3 className="font-bold text-gray-700 flex items-center gap-2">
-          <Calendar className="text-gray-500" size={20} /> Visualización
-        </h3>
-        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-          <button onClick={() => setVista("calendario")} className={`p-2 rounded-md ${vista === "calendario" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`} title="Calendario"><Calendar size={18} /></button>
-          <button onClick={() => setVista("lista")} className={`p-2 rounded-md ${vista === "lista" ? "bg-blue-100 text-blue-600" : "text-gray-400"}`} title="Lista"><List size={18} /></button>
+      {/* Header (Always Visible) */}
+      <div className={`bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0 ${compact ? 'px-4 py-2' : 'px-6 py-4'}`}>
+        <div className="flex flex-col">
+          <h3 className={`font-bold text-gray-700 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
+            <Calendar className="text-gray-500" size={compact ? 16 : 20} /> Visualización
+          </h3>
+          {fechaGuardado && (
+            <span className="text-[10px] text-gray-400 font-medium ml-7">
+              Guardado: {new Date(fechaGuardado).toLocaleDateString()} {new Date(fechaGuardado).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
+        <div className="flex p-1 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <button
+            onClick={() => setVista("calendario")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "calendario" ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:bg-gray-50"
+              }`}
+          >
+            <Calendar size={14} /> Calendario
+          </button>
+          <button
+            onClick={() => setVista("lista")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "lista" ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:bg-gray-50"
+              }`}
+          >
+            <List size={14} /> Lista
+          </button>
         </div>
       </div>
 
@@ -170,97 +210,118 @@ const HorarioVisualizer = ({ horario }) => {
             ))}
           </div>
         ) : (
-          /* --- VISTA CALENDARIO --- */
-          <div className="relative min-w-[700px]">
-            <div className="pl-14">
-              <div className="grid grid-cols-6 border-b-2 border-gray-200 mb-2 sticky top-0 bg-white z-20">
-                {DIAS_SEMANA.map(d => (
-                  <div key={d} className="py-2 text-center font-bold text-gray-700 text-sm uppercase tracking-wide">{d}</div>
+          /* --- VISTA CUADRÍCULA (NUEVA ESTRUCTURA) --- */
+          <div className="overflow-x-auto">
+            <div className="min-w-[800px]">
+              {/* Grid Header */}
+              <div className="grid grid-cols-7 gap-2 mb-2">
+                <div className="bg-slate-800 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center">
+                  Horario
+                </div>
+                {DIAS_SEMANA.map((dia) => (
+                  <div key={dia} className="bg-slate-800 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest">
+                    {dia}
+                  </div>
                 ))}
               </div>
 
-              <div className="relative border-l border-gray-200" style={{ height: `${horasAMostrar.length * 5}rem` }}>
-                {horasAMostrar.map((hora, i) => (
-                  <div key={i} className="absolute w-full border-t border-gray-100" style={{ top: `${i * 5}rem` }}>
-                    <span className="absolute -left-14 -top-2.5 text-xs font-bold text-gray-400 w-12 text-right">
-                      {hora}:00
-                    </span>
+              {/* Grid Body */}
+              <div className="space-y-2">
+                {[
+                  { start: "07:00", end: "07:50" },
+                  { start: "07:50", end: "08:40" },
+                  { start: "09:00", end: "09:50" },
+                  { start: "09:50", end: "10:40" },
+                  { start: "11:00", end: "11:50" },
+                  { start: "11:50", end: "12:40" },
+                  { start: "14:00", end: "14:50" },
+                  { start: "14:50", end: "15:40" },
+                  { start: "16:00", end: "16:50" },
+                  { start: "16:50", end: "17:40" },
+                  { start: "18:00", end: "18:50" },
+                  { start: "18:50", end: "19:40" },
+                ].map((bloque, idx) => (
+                  <div key={idx} className="grid grid-cols-7 gap-2">
+                    {/* Time Label */}
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-xs font-bold text-slate-500">
+                      {bloque.start} - {bloque.end}
+                    </div>
+
+                    {/* Columns for Days */}
+                    {DIAS_SEMANA.map((dia) => {
+                      // Buscar curso que coincida con este día y bloque
+                      const cursoFound = listaHorario.find((c) => {
+                        const diasCurso = parsearDias(c).map(d => d.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+                        const diaActual = dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().substring(0, 3);
+                        // Chequear dia
+                        const esDia = diasCurso.some(d => d.includes(diaActual));
+                        if (!esDia) return false;
+
+                        // Chequear intersección de tiempo
+                        const inicioC = toMinutos(getInicio(c));
+                        const finalC = toMinutos(getFinal(c));
+                        const inicioB = toMinutos(bloque.start);
+                        const finalB = toMinutos(bloque.end);
+
+                        // Hay traslape significativo?
+                        return (inicioC < finalB && finalC > inicioB);
+                      });
+
+                      if (cursoFound) {
+                        const colorIndex = listaHorario.indexOf(cursoFound) % PALETA.length;
+                        // Extraer color base para aplicar estilos
+                        const colorClasses = PALETA[colorIndex]; // ej: "bg-blue-100 ..."
+                        // Extraer solo clases de bg para tener más control si se requiere, o usar la paleta directo
+                        // Usaremos la paleta directa pero con bordes redondeados consistentes
+
+                        return (
+                          <div key={dia} className={`rounded-xl p-3 flex flex-col justify-center relative group cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md ${colorClasses}`}>
+                            <h4 className="font-black text-[11px] leading-tight mb-1 line-clamp-2 md:line-clamp-none">
+                              {getNombre(cursoFound)}
+                            </h4>
+                            <div className="flex justify-between items-center opacity-80">
+                              <span className="text-[10px] font-bold">{getSeccion(cursoFound)}</span>
+                              <span className="text-[9px] font-mono">{getInicio(cursoFound)}</span>
+                            </div>
+
+                            {/* Tooltip nativo o custom */}
+                            <div className="absolute inset-0 z-10" title={`${getNombre(cursoFound)}\n${getEdificio(cursoFound)}\n${getProfe(cursoFound)}`} />
+                          </div>
+                        );
+                      }
+
+                      // Empty Slot
+                      return (
+                        <div key={dia} className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50" />
+                      );
+                    })}
                   </div>
                 ))}
-
-                {listaHorario.map((curso, idx) => {
-                  const dias = parsearDias(curso);
-                  const horaI = getInicio(curso);
-                  const horaF = getFinal(curso);
-                  const seccion = getSeccion(curso);
-                  const estiloPosicion = getPosicionCalendario(horaI, horaF);
-                  const colorClase = PALETA[idx % PALETA.length];
-
-                  return dias.map((diaNombre, dIdx) => {
-                    const diaNorm = diaNombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-                    const colIndex = DIAS_SEMANA.findIndex(d => d.startsWith(diaNorm));
-
-                    if (colIndex === -1) return null;
-
-                    return (
-                      <div
-                        key={`${idx}-${dIdx}`}
-                        className={`absolute rounded-md p-2 text-xs shadow-sm hover:shadow-xl hover:scale-[1.02] hover:z-50 transition-all cursor-pointer flex flex-col justify-start overflow-hidden ${colorClase}`}
-                        style={{
-                          top: estiloPosicion.top,
-                          height: estiloPosicion.height,
-                          left: `${(colIndex / 6) * 100}%`,
-                          width: `${(1 / 6) * 96}%`,
-                          marginLeft: '2%'
-                        }}
-                        title={`${getNombre(curso)}\nSección: ${seccion}\n${horaI} - ${horaF}\n${getEdificio(curso)}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className="font-bold leading-tight line-clamp-2 text-[11px]">
-                            {getNombre(curso)}
-                          </span>
-                          <span className="bg-white/50 px-1 rounded text-[10px] font-bold border border-black/10">
-                            {seccion}
-                          </span>
-                        </div>
-                        <div className="mt-1 text-[10px] opacity-90 font-medium flex flex-col gap-0.5">
-                          <span className="flex items-center gap-1">
-                            <Clock size={10} /> {horaI}-{horaF}
-                          </span>
-                          <span className="flex items-center gap-1 truncate">
-                            <MapPin size={10} /> {getEdificio(curso)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  });
-                })}
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* --- FOOTER CON ANÁLISIS FINANCIERO (TOGGLE) --- */}
-      {analisis && (
+      {/* --- FOOTER CON ANÁLISIS FINANCIERO (独立 / Independent) --- */}
+      {analisis && !compact && (
         <div className="bg-gray-50 border-t border-gray-200">
-
           {mostrarAnalisis && (
-            <div className="px-6 py-4 animate-fadeIn">
+            <div className={`px-6 py-4 animate-fadeIn ${compact ? 'text-xs' : ''}`}>
               <div className={`rounded-lg border-l-4 p-4 ${analisis.tipo_alerta === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className={`font-bold ${analisis.tipo_alerta === 'success' ? 'text-green-800' : 'text-red-800'}`}>
                       {analisis.mensaje_alerta}
                     </h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className={`text-gray-600 mt-1 ${compact ? 'text-[10px]' : 'text-sm'}`}>
                       {analisis.tipo_alerta === 'success'
                         ? "¡Gran elección! Esta combinación maximiza tus oportunidades académicas."
-                        : `Cuidado: Dejar cursos críticos podría costarte hasta Q${analisis.costo_proyectado_total} en salarios futuros por retraso.`
+                        : `Impacto económico estimado: Q${analisis.costo_proyectado_total?.toLocaleString()} por retraso de ${analisis.meses_atraso_estimado} meses.`
                       }
                     </p>
                   </div>
-                  <span className="text-2xl">
+                  <span className={compact ? 'text-lg' : 'text-2xl'}>
                     {analisis.tipo_alerta === 'success' ? '💰' : '📉'}
                   </span>
                 </div>
@@ -270,9 +331,9 @@ const HorarioVisualizer = ({ horario }) => {
 
           <button
             onClick={() => setMostrarAnalisis(!mostrarAnalisis)}
-            className="w-full py-3 text-sm font-semibold text-gray-500 hover:text-blue-600 hover:bg-white transition-colors border-t border-transparent hover:border-gray-200 flex items-center justify-center gap-2"
+            className={`w-full text-sm font-semibold text-gray-500 hover:text-blue-600 hover:bg-white transition-colors border-t border-transparent hover:border-gray-200 flex items-center justify-center gap-2 ${compact ? 'py-2 text-[11px]' : 'py-3'}`}
           >
-            {mostrarAnalisis ? "Ocultar Análisis Financiero" : "Ver Análisis Financiero del Horario"}
+            {mostrarAnalisis ? "Ocultar Análisis" : "Ver Impacto Económico (Costo de Oportunidad)"}
           </button>
         </div>
       )}

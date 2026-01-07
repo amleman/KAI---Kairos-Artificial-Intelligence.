@@ -201,6 +201,9 @@ def guardar_horario_final():
         # Convertimos la lista de objetos JS a String para SQLite
         json_string = json.dumps(horario_seleccionado)
         
+        # Eliminar horario anterior del usuario para mantener solo 1 por perfil (evita bloat de DB)
+        cursor.execute("DELETE FROM horarios_guardados WHERE usuario = ?", (usuario,))
+        
         cursor.execute(
             "INSERT INTO horarios_guardados (usuario, nombre_horario, data_json) VALUES (?, ?, ?)",
             (usuario, nombre_personalizado, json_string)
@@ -231,7 +234,7 @@ def obtener_horario_guardado(usuario):
 
         # 2. Obtenemos el último guardado
         cursor.execute("""
-            SELECT data_json, nombre_horario 
+            SELECT data_json, nombre_horario, fecha_guardado
             FROM horarios_guardados 
             WHERE usuario = ? 
             ORDER BY id DESC LIMIT 1
@@ -242,18 +245,26 @@ def obtener_horario_guardado(usuario):
         if row:
             raw_json = row[0]
             nombre = row[1]
+            fecha = row[2]
             
             try:
                 horario_lista = json.loads(raw_json)
                 
-                # VALIDACIÓN EXTRA: Si guardaste { "horarios": [...] } en vez de [...]
-                if isinstance(horario_lista, dict) and "horarios" in horario_lista:
-                    horario_lista = horario_lista["horarios"]
-                                
+                # VALIDACIÓN EXTRA y normalización
+                final_data = horario_lista
+                if isinstance(horario_lista, dict) and "horario" in horario_lista:
+                     final_data = horario_lista
+                elif isinstance(horario_lista, list):
+                     final_data = { "horario": horario_lista }
+                
+                # Inyectar fecha_guardado al objeto para que el visualizador lo vea
+                if isinstance(final_data, dict):
+                    final_data["fecha_guardado"] = fecha
+
                 return jsonify({
                     "existe": True, 
                     "nombre": nombre,
-                    "horario": horario_lista
+                    "horario": final_data
                 }), 200
             except json.JSONDecodeError as e:
                 return jsonify({"existe": False, "error": "JSON corrupto en DB"}), 200

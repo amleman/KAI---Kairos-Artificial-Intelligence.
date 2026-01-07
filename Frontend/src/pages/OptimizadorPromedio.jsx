@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle, Loader2, BookMarked, PlusCircle } from "lucide-react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import FloatingChatButton from "../components/FloatingChatButton";
+import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle, Loader2, BookMarked, PlusCircle, Search, Info } from "lucide-react";
 
 const OptimizadorPromedio = () => {
-  // Obtener datos del usuario para crear clave única
   const getUserData = () => {
     try {
       return JSON.parse(localStorage.getItem("userData") || "{}");
@@ -15,7 +11,6 @@ const OptimizadorPromedio = () => {
   const userData = getUserData();
   const STORAGE_KEY = `SIOA_optimizador_${userData.carne || "invitado"}`;
 
-  // Función auxiliar para cargar estado desde localStorage
   const cargarEstado = (key, defaultValue) => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -39,12 +34,10 @@ const OptimizadorPromedio = () => {
   const [vistaActiva, setVistaActiva] = useState(() => cargarEstado('vistaActiva', "calculadora"));
   const [mensajeExito, setMensajeExito] = useState("");
 
-  // Estados para búsqueda de cursos actuales
   const [pensum, setPensum] = useState([]);
   const [busquedaActuales, setBusquedaActuales] = useState("");
   const [resultadosBusquedaActuales, setResultadosBusquedaActuales] = useState([]);
 
-  // Efecto para guardar estado en localStorage cuando cambie
   useEffect(() => {
     const estadoAGuardar = {
       cursosActuales,
@@ -57,7 +50,6 @@ const OptimizadorPromedio = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(estadoAGuardar));
   }, [cursosActuales, promedioObjetivo, resultado, promedioActual, escenarios, vistaActiva, STORAGE_KEY]);
 
-  // Cargar datos al iniciar
   useEffect(() => {
     const userDataGuardado = localStorage.getItem("userData");
     if (userDataGuardado) {
@@ -73,7 +65,6 @@ const OptimizadorPromedio = () => {
     }
   }, []);
 
-  // Cargar cursos aprobados desde la DB
   const cargarAprobadosDB = async (carne) => {
     try {
       const response = await fetch(`http://127.0.0.1:8000/aprobados/${carne}`);
@@ -85,19 +76,17 @@ const OptimizadorPromedio = () => {
           nota: c.nota || "",
           creditos: c.creditos
         }));
-        setCursosAprobados(cursosFormateados.length > 0 ? cursosFormateados : [{ codigo: "", nombre: "", nota: "", creditos: 0 }]);
+        setCursosAprobados(cursosFormateados.length > 0 ? cursosFormateados : []);
       }
     } catch (error) {
       console.error("Error cargando aprobados:", error);
     }
   };
 
-  // Cargar pensum completo
   const cargarPensum = async () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/pensum");
       const csv = await response.text();
-
       const Papa = await import("papaparse");
       Papa.parse(csv, {
         header: true,
@@ -117,47 +106,28 @@ const OptimizadorPromedio = () => {
     }
   };
 
-  // Búsqueda de cursos actuales
   useEffect(() => {
     if (busquedaActuales.trim() === "") {
       setResultadosBusquedaActuales([]);
       return;
     }
-
     const busqueda = busquedaActuales.toLowerCase();
     const codigosAprobados = cursosAprobados.map(c => c.codigo);
-
-    // Filtrar cursos disponibles (que cumplan prerrequisitos)
     const resultados = pensum.filter(curso => {
-      // No mostrar si ya está aprobado
       if (codigosAprobados.includes(curso.codigo)) return false;
-
-      // Verificar prerrequisitos
       if (curso.pre_requisitos) {
-        const prereqs = curso.pre_requisitos
-          .replace(/"/g, "")
-          .split(",")
-          .map(r => r.trim())
-          .filter(r => r !== "");
-
-        // Todos los prerrequisitos deben estar aprobados
+        const prereqs = curso.pre_requisitos.replace(/"/g, "").split(",").map(r => r.trim()).filter(r => r !== "");
         const cumplePrerequisitos = prereqs.every(p => codigosAprobados.includes(p));
         if (!cumplePrerequisitos) return false;
       }
-
-      // Filtrar por búsqueda
-      return curso.codigo.toLowerCase().includes(busqueda) ||
-        curso.nombre.toLowerCase().includes(busqueda);
+      return curso.codigo.toLowerCase().includes(busqueda) || curso.nombre.toLowerCase().includes(busqueda);
     }).slice(0, 5);
-
     setResultadosBusquedaActuales(resultados);
   }, [busquedaActuales, pensum, cursosAprobados]);
 
-  // Agregar curso actual desde búsqueda
   const agregarCursoActualDesdeBusqueda = (curso) => {
     const yaExiste = cursosActuales.includes(curso.codigo);
     const yaAprobado = cursosAprobados.some(c => c.codigo === curso.codigo);
-
     if (!yaExiste && !yaAprobado) {
       setCursosActuales([...cursosActuales.filter(c => c !== ""), curso.codigo]);
     } else if (yaAprobado) {
@@ -168,32 +138,25 @@ const OptimizadorPromedio = () => {
     setResultadosBusquedaActuales([]);
   };
 
-  // Eliminar curso actual
   const eliminarCursoActual = (index) => {
     const nuevos = cursosActuales.filter((_, i) => i !== index);
     setCursosActuales(nuevos.length > 0 ? nuevos : [""]);
   };
 
-  // Calcular promedio actual
   const calcularPromedioActual = async () => {
     const aprobadosValidos = cursosAprobados.filter(c => c.codigo && c.nota);
-
     if (aprobadosValidos.length === 0) {
       setMensajeExito("Debes agregar al menos un curso aprobado con nota");
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch("http://127.0.0.1:8000/calcular_promedio_actual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cursos_aprobados: aprobadosValidos.map(c => ({
-            codigo: c.codigo,
-            nota: parseFloat(c.nota)
-          }))
+          cursos_aprobados: aprobadosValidos.map(c => ({ codigo: c.codigo, nota: parseFloat(c.nota) }))
         })
       });
       const data = await response.json();
@@ -207,39 +170,26 @@ const OptimizadorPromedio = () => {
     }
   };
 
-  // Calcular notas necesarias
   const calcularNotasNecesarias = async () => {
     const aprobadosValidos = cursosAprobados.filter(c => c.codigo && c.nota);
     const actualesValidos = cursosActuales.filter(c => c.trim() !== "");
-
-    if (aprobadosValidos.length === 0) {
-      setMensajeExito("Debes agregar al menos un curso aprobado con nota");
+    if (aprobadosValidos.length === 0 || actualesValidos.length === 0) {
+      setMensajeExito("Selecciona cursos aprobados y actuales");
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
-
-    if (actualesValidos.length === 0) {
-      setMensajeExito("Debes agregar al menos un curso actual");
-      setTimeout(() => setMensajeExito(""), 3000);
-      return;
-    }
-
     if (!promedioObjetivo || parseFloat(promedioObjetivo) < 0 || parseFloat(promedioObjetivo) > 100) {
-      setMensajeExito("Ingresa un promedio objetivo válido (0-100)");
+      setMensajeExito("Ingresa un promedio objetivo válido");
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch("http://127.0.0.1:8000/calcular_notas_objetivo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cursos_aprobados: aprobadosValidos.map(c => ({
-            codigo: c.codigo,
-            nota: parseFloat(c.nota)
-          })),
+          cursos_aprobados: aprobadosValidos.map(c => ({ codigo: c.codigo, nota: parseFloat(c.nota) })),
           cursos_actuales: actualesValidos,
           promedio_objetivo: parseFloat(promedioObjetivo)
         })
@@ -248,85 +198,58 @@ const OptimizadorPromedio = () => {
       setResultado(data);
     } catch (error) {
       console.error("Error calculando notas:", error);
-      setMensajeExito("Error al calcular las notas necesarias");
-      setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoading(false);
     }
   };
 
-  // Simular escenarios
   const simularEscenarios = async () => {
     const aprobadosValidos = cursosAprobados.filter(c => c.codigo && c.nota);
     const actualesValidos = cursosActuales.filter(c => c.trim() !== "");
-
     if (aprobadosValidos.length === 0 || actualesValidos.length === 0) {
-      setMensajeExito("Debes agregar cursos aprobados y actuales");
+      setMensajeExito("Faltan cursos");
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch("http://127.0.0.1:8000/simular_escenarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          cursos_aprobados: aprobadosValidos.map(c => ({
-            codigo: c.codigo,
-            nota: parseFloat(c.nota)
-          })),
+          cursos_aprobados: aprobadosValidos.map(c => ({ codigo: c.codigo, nota: parseFloat(c.nota) })),
           cursos_actuales: actualesValidos
         })
       });
       const data = await response.json();
       setEscenarios(data);
     } catch (error) {
-      console.error("Error simulando escenarios:", error);
-      setMensajeExito("Error al simular escenarios");
-      setTimeout(() => setMensajeExito(""), 3000);
+      console.error("Error simulando:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const limpiarTodo = () => {
-    setCursosAprobados([]);
     setCursosActuales([""]);
     setPromedioObjetivo("");
     setResultado(null);
     setPromedioActual(null);
     setEscenarios(null);
-
-    // Recargar cursos aprobados de la DB
-    const userDataGuardado = localStorage.getItem("userData");
-    if (userDataGuardado) {
-      try {
-        const userData = JSON.parse(userDataGuardado);
-        if (userData.carne) {
-          cargarAprobadosDB(userData.carne);
-        }
-      } catch (e) {
-        console.error("Error parseando userData:", e);
-      }
-    }
+    cargarAprobadosDB(userData.carne);
   };
 
-  // Preparar datos para gráfico de notas necesarias
   const getGraficoNotas = () => {
     if (!resultado || !resultado.factible || !resultado.notas_necesarias) return null;
-
     return resultado.notas_necesarias.map(nota => ({
       curso: nota.codigo,
-      minima: Math.max(61, nota.nota_minima).toFixed(1), // No menor a 61
+      minima: Math.max(61, nota.nota_minima).toFixed(1),
       sugerida: nota.nota_sugerida.toFixed(1)
     }));
   };
 
-  // Preparar datos para gráfico de escenarios
   const getGraficoEscenarios = () => {
     if (!escenarios || !escenarios.escenarios) return null;
-
     return escenarios.escenarios.map(esc => ({
       nombre: esc.nombre,
       promedio: esc.promedio_final,
@@ -338,503 +261,315 @@ const OptimizadorPromedio = () => {
   const graficoEscenarios = getGraficoEscenarios();
 
   return (
-    <>
-      <Navbar />
-
-      {/* Toast de notificación */}
+    <div className="animate-fadeIn space-y-8 pb-12">
+      {/* Toast Notification */}
       {mensajeExito && (
-        <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-in">
-          <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-            <span className="text-green-500 font-bold text-sm">✓</span>
+        <div className="fixed top-24 right-8 z-50 bg-white/90 backdrop-blur-xl text-slate-800 px-6 py-4 rounded-2xl shadow-xl border border-soft-blue flex items-center gap-3 animate-slide-in">
+          <div className="w-8 h-8 bg-pastel-green rounded-xl flex items-center justify-center">
+            <CheckCircle className="text-green-600" size={18} />
           </div>
-          <span className="font-medium">{mensajeExito}</span>
+          <span className="font-bold">{mensajeExito}</span>
         </div>
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* ----------------------- HEADER ----------------------- */}
-          <div className="bg-white rounded-lg shadow-lg mb-6">
-            <div className="px-6 py-4">
-              <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <Target className="text-purple-600" size={28} />
-                Optimizador de Promedio
-              </h1>
-              <p className="text-gray-600 text-sm">
-                Calcula las notas que necesitas en tus cursos actuales para alcanzar tu promedio objetivo
-              </p>
+      {/* Header Glass Card */}
+      <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="p-3 bg-pastel-purple rounded-2xl text-slate-700 shadow-sm">
+            <Target size={32} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Optimizador de Promedio</h1>
+            <p className="text-slate-500 font-medium">Define tu meta y nosotros calculamos el camino.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex gap-4">
+        {[
+          { id: "calculadora", label: "Calculadora de Notas", icon: Calculator },
+          { id: "escenarios", label: "Simulador de Escenarios", icon: Sparkles },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setVistaActiva(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${vistaActiva === tab.id
+              ? "bg-slate-900 text-white shadow-lg scale-105"
+              : "bg-white/50 backdrop-blur-xl text-slate-600 border border-soft-blue shadow-inner hover:bg-white/60"
+              }`}
+          >
+            <tab.icon size={18} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Input (8/12) */}
+        <div className="lg:col-span-8 space-y-8">
+
+          {/* Cursos Aprobados Section */}
+          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border-[3px] border-soft-blue shadow-inner">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <BookMarked className="text-pastel-purple-dark" size={24} />
+                Historial de Notas Académicas
+              </h2>
+              <button
+                onClick={calcularPromedioActual}
+                disabled={loading}
+                className="px-5 py-2.5 bg-white/60 border-[2px] border-soft-blue/50 text-slate-700 rounded-xl text-xs font-bold hover:bg-white hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <TrendingUp size={16} />}
+                Ver Promedio Actual
+              </button>
             </div>
-          </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setVistaActiva("calculadora")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${vistaActiva === "calculadora"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100 shadow"
-                }`}
-            >
-              <Calculator size={16} />
-              Calculadora de Notas
-            </button>
-            <button
-              onClick={() => setVistaActiva("escenarios")}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 ${vistaActiva === "escenarios"
-                  ? "bg-purple-600 text-white"
-                  : "bg-white text-gray-700 hover:bg-gray-100 shadow"
-                }`}
-            >
-              <Sparkles size={16} />
-              Simulador de Escenarios
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Panel de Entrada */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Cursos Aprobados */}
-              <div className="bg-white rounded-lg shadow-lg p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <BookMarked className="text-purple-600" size={20} />
-                    Cursos Aprobados (Solo Lectura)
-                  </h2>
-                  <button
-                    onClick={calcularPromedioActual}
-                    disabled={loading}
-                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-1.5"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin" />
-                        Calculando...
-                      </>
-                    ) : (
-                      <>
-                        <TrendingUp size={14} />
-                        Calcular Promedio
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                  {cursosAprobados.map((curso, index) => (
-                    <div key={index} className="bg-gradient-to-r from-purple-50 to-pink-50 p-2 rounded-lg border border-purple-200">
-                      <div className="mb-1.5">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="px-1.5 py-0.5 bg-purple-600 text-white rounded text-xs font-bold">
-                            {curso.codigo}
-                          </span>
-                          <span className="px-1 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
-                            {curso.creditos} cred
-                          </span>
-                        </div>
-                        <div className="font-semibold text-gray-800 text-xs line-clamp-2 min-h-[2rem]">
-                          {curso.nombre}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">Nota:</span>
-                        <div className="px-2 py-0.5 bg-white border-2 border-purple-300 rounded font-bold text-purple-700 text-sm">
-                          {curso.nota || "N/A"}
-                        </div>
-                      </div>
+            {cursosAprobados.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                {cursosAprobados.map((curso, index) => (
+                  <div key={index} className="bg-white/60 border border-pastel-blue/20 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">#{curso.codigo}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pastel-blue/30 text-slate-600">{curso.creditos} Cr.</span>
                     </div>
-                  ))}
-                </div>
-
-                {cursosAprobados.length === 0 && (
-                  <div className="text-center text-gray-500 py-8">
-                    <BookMarked className="mx-auto mb-2 text-gray-400" size={32} />
-                    <p className="text-sm">No hay cursos aprobados cargados</p>
-                    <p className="text-xs text-gray-400 mt-1">Ve al Dashboard para agregar tus cursos</p>
+                    <h4 className="text-slate-800 font-bold text-xs line-clamp-2 min-h-[32px] mb-3">{curso.nombre}</h4>
+                    <div className="flex items-center justify-between border-t border-slate-100/50 pt-2">
+                      <span className="text-[10px] font-bold text-slate-400 font-mono">NOTA</span>
+                      <span className="text-sm font-black text-pastel-purple-dark bg-white px-3 py-1 rounded-lg border-[2px] border-soft-blue/30">{curso.nota || "--"}</span>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
+            ) : (
+              <div className="py-12 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-pastel-blue/20 rounded-3xl">
+                <Info size={48} className="mb-3 opacity-10" />
+                <p className="text-sm font-medium">No hay cursos aprobados en el sistema.</p>
+              </div>
+            )}
+          </div>
 
-              {/* Cursos Actuales */}
-              <div className="bg-white rounded-lg shadow-lg p-4">
-                <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <PlusCircle className="text-purple-600" size={20} />
-                  Cursos Actuales (que estás llevando)
-                </h2>
+          {/* Cursos Actuales & Meta */}
+          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border-[3px] border-soft-blue shadow-inner">
+            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <PlusCircle className="text-blue-500" size={24} />
+              Cursos Actuales & Meta
+            </h2>
 
-                {/* Búsqueda */}
-                <div className="relative mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              {/* Search */}
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Agregar Cursos que Cursas</p>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input
                     type="text"
-                    placeholder="Buscar por código o nombre..."
+                    placeholder="Buscar por código..."
                     value={busquedaActuales}
                     onChange={(e) => setBusquedaActuales(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full pl-12 pr-4 py-4 bg-white/60 border-[2px] border-soft-blue/50 rounded-xl text-sm focus:ring-2 focus:ring-pastel-blue focus:border-transparent transition-all"
                   />
                   {resultadosBusquedaActuales.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-2 bg-white/90 backdrop-blur-xl border border-pastel-blue/40 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
                       {resultadosBusquedaActuales.map((curso) => (
                         <div
                           key={curso.codigo}
                           onClick={() => agregarCursoActualDesdeBusqueda(curso)}
-                          className="px-4 py-2 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
+                          className="p-4 hover:bg-pastel-blue/20 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
                         >
-                          <div className="font-semibold">{curso.codigo} - {curso.nombre}</div>
-                          <div className="text-sm text-gray-600">{curso.creditos} créditos</div>
+                          <div className="font-bold text-slate-800 text-sm">{curso.codigo} - {curso.nombre}</div>
+                          <div className="text-[10px] font-bold text-slate-400">{curso.creditos} créditos</div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                  {cursosActuales.filter(c => c !== "").map((codigo, index) => {
-                    const curso = pensum.find(c => c.codigo === codigo);
-                    return (
-                      <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <span className="px-1.5 py-0.5 bg-blue-600 text-white rounded text-xs font-bold">
-                                {codigo}
-                              </span>
-                              {curso && (
-                                <span className="px-1 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                                  {curso.creditos} cred
-                                </span>
-                              )}
-                            </div>
-                            {curso && (
-                              <div className="font-semibold text-gray-800 text-xs line-clamp-2">
-                                {curso.nombre}
-                              </div>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => eliminarCursoActual(index)}
-                            className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors shrink-0"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {cursosActuales.filter(c => c !== "").length === 0 && (
-                  <div className="text-center text-gray-500 py-4">
-                    No hay cursos actuales agregados. Usa la búsqueda para agregar cursos.
-                  </div>
-                )}
               </div>
 
-              {/* Vista Calculadora */}
+              {/* Meta Input */}
               {vistaActiva === "calculadora" && (
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Target className="text-purple-600" size={20} />
-                    Promedio Objetivo
-                  </h2>
-
-                  <div className="mb-4">
-                    <input
-                      type="number"
-                      placeholder="Ingresa tu promedio objetivo (0-100)"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={promedioObjetivo}
-                      onChange={(e) => setPromedioObjetivo(e.target.value)}
-                      className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={calcularNotasNecesarias}
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Calculando...
-                        </>
-                      ) : (
-                        <>
-                          <Calculator size={18} />
-                          Calcular Notas
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={limpiarTodo}
-                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors flex items-center gap-2"
-                    >
-                      <Trash2 size={18} />
-                      Limpiar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Vista Escenarios */}
-              {vistaActiva === "escenarios" && (
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <Sparkles className="text-purple-600" size={20} />
-                    Simulación de Escenarios
-                  </h2>
-                  <p className="text-gray-600 mb-4 text-sm">
-                    Simula diferentes escenarios según el desempeño en tus cursos actuales
-                  </p>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={simularEscenarios}
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Simulando...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles size={18} />
-                          Simular Escenarios
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={limpiarTodo}
-                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors flex items-center gap-2"
-                    >
-                      <Trash2 size={18} />
-                      Limpiar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Gráfico de Notas Necesarias */}
-              {resultado && resultado.factible && graficoNotas && vistaActiva === "calculadora" && (
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <TrendingUp className="text-purple-600" size={20} />
-                    Visualización de Notas Necesarias
-                  </h2>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={graficoNotas}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="curso"
-                        tick={{ fontSize: 12 }}
-                        stroke="#6b7280"
-                      />
-                      <YAxis
-                        domain={[0, 100]}
-                        tick={{ fontSize: 12 }}
-                        stroke="#6b7280"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          borderRadius: '8px',
-                          border: '1px solid #e5e7eb',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar
-                        dataKey="minima"
-                        name="Nota Mínima"
-                        fill="#ef4444"
-                        radius={[8, 8, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="sugerida"
-                        name="Nota Sugerida"
-                        fill="#22c55e"
-                        radius={[8, 8, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-
-              {/* Gráfico de Escenarios */}
-              {escenarios && graficoEscenarios && vistaActiva === "escenarios" && (
-                <div className="bg-white rounded-lg shadow-lg p-4">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Sparkles className="text-purple-600" size={20} />
-                    Comparación de Escenarios
-                  </h2>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={graficoEscenarios}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="nombre"
-                        tick={{ fontSize: 12 }}
-                        stroke="#6b7280"
-                      />
-                      <YAxis
-                        domain={[0, 100]}
-                        tick={{ fontSize: 12 }}
-                        stroke="#6b7280"
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          borderRadius: '8px',
-                          border: '1px solid #e5e7eb',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="promedio"
-                        name="Promedio Final"
-                        stroke="#8b5cf6"
-                        strokeWidth={3}
-                        dot={{ fill: '#8b5cf6', r: 5 }}
-                        activeDot={{ r: 7 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Promedio Objetivo (%)</p>
+                  <input
+                    type="number"
+                    placeholder="Ej: 85.0"
+                    min="0" max="100" step="0.1"
+                    value={promedioObjetivo}
+                    onChange={(e) => setPromedioObjetivo(e.target.value)}
+                    className="w-full px-6 py-4 bg-white/60 border-[2px] border-soft-blue/50 rounded-xl text-xl font-black text-slate-800 placeholder:text-slate-300 focus:ring-2 focus:ring-pastel-purple focus:border-transparent transition-all"
+                  />
                 </div>
               )}
             </div>
 
-            {/* Panel de Resultados */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-lg p-4 sticky top-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <TrendingUp className="text-purple-600" size={20} />
-                  Resultados
-                </h2>
-
-                {/* Promedio Actual */}
-                {promedioActual && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                    <h3 className="font-semibold text-gray-800 mb-1.5 text-sm">Promedio Actual (últimos 6 cursos)</h3>
-                    <p className="text-2xl font-bold text-blue-600">{promedioActual.promedio}</p>
-                    <div className="mt-2 text-xs text-gray-600 space-y-0.5">
-                      <p>Créditos: {promedioActual.creditos_totales}</p>
-                      <p>Cursos: {promedioActual.cursos_count}</p>
+            {/* List of current courses */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+              {cursosActuales.filter(c => c !== "").map((codigo, index) => {
+                const curso = pensum.find(c => c.codigo === codigo);
+                return (
+                  <div key={index} className="bg-white/80 p-4 rounded-xl border border-pastel-blue/20 flex justify-between items-center group shadow-sm">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1 block">#{codigo}</span>
+                      <p className="font-bold text-slate-700 text-sm truncate pr-4">{curso?.nombre || "Cargando..."}</p>
                     </div>
+                    <button
+                      onClick={() => eliminarCursoActual(index)}
+                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                )}
+                );
+              })}
+            </div>
 
-                {/* Resultados Calculadora */}
-                {vistaActiva === "calculadora" && resultado && (
-                  <div className="space-y-3">
-                    {resultado.factible ? (
-                      <>
-                        <div className="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <CheckCircle className="text-green-600" size={20} />
-                            <h3 className="font-semibold text-green-800 text-sm">¡Es Factible!</h3>
-                          </div>
-                          <p className="text-xs text-green-700">{resultado.mensaje}</p>
-                        </div>
+            <div className="flex gap-4">
+              <button
+                onClick={vistaActiva === "calculadora" ? calcularNotasNecesarias : simularEscenarios}
+                disabled={loading}
+                className="flex-1 bg-slate-900 text-white py-5 rounded-xl font-black text-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl active:scale-95"
+              >
+                {loading ? <Loader2 className="animate-spin" size={24} /> : (vistaActiva === "calculadora" ? <Calculator size={24} /> : <Sparkles size={24} />)}
+                {vistaActiva === "calculadora" ? "Calcular Notas Necesarias" : "Simular Todos los Escenarios"}
+              </button>
+              <button
+                onClick={limpiarTodo}
+                className="px-8 bg-white/40 border-[2px] border-soft-blue/50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+              >
+                <Trash2 size={24} />
+              </button>
+            </div>
+          </div>
 
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-gray-800 text-sm">Notas Necesarias:</h4>
-                          <div className="space-y-1.5 max-h-96 overflow-y-auto">
-                            {resultado.notas_necesarias.map((nota, idx) => (
-                              <div key={idx} className="p-2.5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                                <div className="flex justify-between items-center mb-1.5">
-                                  <span className="font-mono font-semibold text-gray-800 text-xs">{nota.codigo}</span>
-                                  <span className="text-xs text-gray-600">{nota.creditos} créd.</span>
-                                </div>
-                                <div className="space-y-0.5 text-xs">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-600">Mínima:</span>
-                                    <span className="font-bold text-red-600">
-                                      {Math.max(61, nota.nota_minima).toFixed(1)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-600">Sugerida:</span>
-                                    <span className="font-bold text-green-600">{nota.nota_sugerida.toFixed(1)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <XCircle className="text-red-600" size={20} />
-                          <h3 className="font-semibold text-red-800 text-sm">No es Factible</h3>
-                        </div>
-                        <p className="text-xs text-red-700">{resultado.mensaje}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Resultados Escenarios */}
-                {vistaActiva === "escenarios" && escenarios && (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-                      <h3 className="font-semibold text-gray-800 mb-1.5 text-sm">Promedio Actual</h3>
-                      <p className="text-2xl font-bold text-purple-600">{escenarios.promedio_actual.toFixed(2)}</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-800 text-sm">Escenarios Posibles:</h4>
-                      {escenarios.escenarios.map((esc, idx) => (
-                        <div key={idx} className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="font-semibold text-gray-800 text-sm">{esc.nombre}</span>
-                            <span className="text-xs px-2 py-0.5 bg-purple-200 text-purple-800 rounded font-medium">{esc.nota_promedio}</span>
-                          </div>
-                          <p className="text-xl font-bold text-purple-600">{esc.promedio_final.toFixed(2)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!resultado && !escenarios && vistaActiva === "calculadora" && (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 text-sm">
-                      Ingresa tus datos y haz clic en "Calcular" para ver los resultados
-                    </p>
-                  </div>
-                )}
-
-                {!escenarios && vistaActiva === "escenarios" && (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                      </svg>
-                    </div>
-                    <p className="text-gray-500 text-sm">
-                      Haz clic en "Simular Escenarios" para ver las proyecciones
-                    </p>
-                  </div>
-                )}
+          {/* Visualization Charts */}
+          {(resultado || escenarios) && (
+            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner animate-fadeIn">
+              <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
+                <TrendingUp className="text-green-500" size={24} />
+                Análisis Proyectado
+              </h2>
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  {vistaActiva === "calculadora" && graficoNotas ? (
+                    <BarChart data={graficoNotas}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                      <XAxis dataKey="curso" tick={{ fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} />
+                      <Bar dataKey="minima" name="Min. para aprobar (61+)" fill="#FDE2E4" radius={[8, 8, 8, 8]} barSize={40} />
+                      <Bar dataKey="sugerida" name="Sug. para Meta" fill="#DFEEF3" radius={[8, 8, 8, 8]} barSize={40} />
+                    </BarChart>
+                  ) : graficoEscenarios ? (
+                    <LineChart data={graficoEscenarios}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <Line type="monotone" dataKey="promedio" name="Promedio Final Estimado" stroke="#B8A7D1" strokeWidth={4} dot={{ r: 6, fill: "#B8A7D1", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 8 }} />
+                    </LineChart>
+                  ) : <div />}
+                </ResponsiveContainer>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Right Column: Results Summary (4/12) */}
+        <div className="lg:col-span-4 space-y-8">
+          {/* Promedio Actual Card */}
+          {promedioActual && (
+            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100/50 rounded-full blur-2xl group-hover:bg-blue-200/50 transition-colors" />
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 relative">Promedio de Cierre</h3>
+              <div className="flex items-baseline gap-2 relative">
+                <span className="text-6xl font-black text-slate-800 tracking-tighter">{promedioActual.promedio}</span>
+                <span className="text-xl font-bold text-blue-500">%</span>
+              </div>
+              <div className="mt-6 flex gap-4 border-t border-pastel-blue/20 pt-4">
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-slate-400">CRÉDITOS</p>
+                  <p className="text-sm font-black text-slate-700">{promedioActual.creditos_totales || "0"}</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-slate-400">CURSOS</p>
+                  <p className="text-sm font-black text-slate-700">{promedioActual.cursos_count || "0"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Results Breakdown */}
+          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border border-soft-blue shadow-inner">
+            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <TrendingUp className="text-purple-500" size={24} />
+              Resumen de Metas
+            </h2>
+
+            {!resultado && !escenarios ? (
+              <div className="py-12 text-center space-y-4">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                  <Target size={32} />
+                </div>
+                <p className="text-sm text-slate-400 font-medium max-w-[180px] mx-auto">Configura tus cursos y presiona <b>Calcular</b>.</p>
+              </div>
+            ) : vistaActiva === "calculadora" && resultado ? (
+              <div className="space-y-6">
+                {resultado.factible ? (
+                  <div className="bg-green-50/50 border border-green-100 p-5 rounded-xl flex gap-3">
+                    <CheckCircle className="text-green-500 shrink-0" size={24} />
+                    <p className="text-sm text-green-700 font-bold leading-tight">{resultado.mensaje}</p>
+                  </div>
+                ) : (
+                  <div className="bg-red-50/50 border border-red-100 p-5 rounded-xl flex gap-3">
+                    <XCircle className="text-red-500 shrink-0" size={24} />
+                    <p className="text-sm text-red-700 font-bold leading-tight">{resultado.mensaje}</p>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {resultado.notas_necesarias?.map((nota, idx) => (
+                    <div key={idx} className="bg-white/60 p-4 rounded-xl border border-pastel-blue/20">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-black text-slate-700">#{nota.codigo}</span>
+                        <span className="text-[10px] font-bold text-slate-400">{nota.creditos} Cr.</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-2 bg-red-50/50 rounded-xl">
+                          <p className="text-[9px] font-bold text-red-400 uppercase">Mínima</p>
+                          <p className="text-lg font-black text-red-600">{Math.max(61, nota.nota_minima).toFixed(1)}</p>
+                        </div>
+                        <div className="text-center p-2 bg-green-50/50 rounded-xl">
+                          <p className="text-[9px] font-bold text-green-400 uppercase">Sugerida</p>
+                          <p className="text-lg font-black text-green-600">{nota.nota_sugerida.toFixed(1)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : escenarios ? (
+              <div className="space-y-4">
+                <p className="text-xs font-bold text-slate-500 mb-4 px-1">Escenarios Sugeridos para Alcanzar:</p>
+                {escenarios.escenarios?.map((esc, idx) => (
+                  <div key={idx} className="bg-white/60 p-5 rounded-xl border border-pastel-blue/20 group hover:bg-white transition-all">
+                    <div className="flex justify-between items-start mb-3">
+                      <h4 className="font-black text-slate-700 text-sm">{esc.nombre}</h4>
+                      <span className="text-[10px] font-bold px-2 py-1 bg-pastel-purple/20 text-pastel-purple-dark rounded-lg">Prom. {esc.nota_promedio}</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-slate-800">{esc.promedio_final.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-slate-400">% final</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-      <FloatingChatButton />
-      <Footer />
-    </>
+    </div >
   );
 };
 

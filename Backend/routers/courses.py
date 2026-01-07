@@ -3,7 +3,9 @@ import sqlite3
 import json
 import os
 import re
-from config import DB, CAREER_FILE_MAP, PENSUM_LOOKUPS, get_user_career, get_db_connection
+from config import DB, CAREER_FILE_MAP, get_user_career, get_db_connection
+import csv
+
 # Optional imports
 try:
     from PIL import Image
@@ -19,8 +21,82 @@ courses_bp = Blueprint('courses', __name__)
 # -----------------------------------------------------------
 # HELPERS
 # -----------------------------------------------------------
+
+def get_pensum_map(carrera):
+    """
+    Carga el pensum de la carrera específica desde el archivo CSV.
+    Retorna un diccionario {codigo: {nombre, creditos}}
+    """
+    filename = CAREER_FILE_MAP.get(carrera, "sistemas.csv")
+    path = os.path.join("Data", "Pensums", filename)
+    pensum_map = {}
+    
+    if os.path.exists(path):
+        try:
+            with open(path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    key_cod = next((k for k in row.keys() if "codigo" in k.lower() or "código" in k.lower()), None)
+                    key_nom = next((k for k in row.keys() if "nombre" in k.lower()), None)
+                    key_cre = next((k for k in row.keys() if "creditos" in k.lower() or "créditos" in k.lower() or "credito" in k.lower()), None)
+                    
+                    if key_cod and row[key_cod]:
+                        codigo_limpio = row[key_cod].strip()
+                        if codigo_limpio:
+                            try:
+                                creds = int(row.get(key_cre, 0)) if key_cre and row[key_cre].isdigit() else 3
+                            except:
+                                creds = 3
+                            pensum_map[codigo_limpio] = {
+                                "nombre": row.get(key_nom, "").strip() if key_nom else "",
+                                "creditos": creds
+                            }
+        except Exception as e:
+            print(f"Error leyendo pensum {filename}: {e}")
+    else:
+        print(f"Advertencia: Archivo de pensum no encontrado para {carrera}: {path}")
+        
+    return pensum_map
+
+def validar_contra_pensum(carne, cursos_candidatos):
+    """
+    Filtra y normaliza una lista de cursos candidatos basándose en el pensum de la carrera del usuario.
+    Retorna una lista de diccionarios {codigo, nombre, creditos, nota} válidos.
+    """
+    carrera = get_user_career(carne)
+    pensum_map = get_pensum_map(carrera)
+
+    cursos_validos = []
+    for cur in cursos_candidatos:
+        cod = str(cur.get("codigo", "")).strip()
+        if not cod: 
+            continue
+            
+        # Validación estricta: Debe existir en el pensum
+        if cod in pensum_map:
+            info_pensum = pensum_map[cod]
+            
+            # Usar datos del pensum para consistencia (nombre y créditos), pero mantener la nota del input
+            cursos_validos.append({
+                "codigo": cod,
+                "nombre": info_pensum["nombre"], # Forzamos nombre oficial
+                "creditos": info_pensum["creditos"], # Forzamos créditos oficiales
+                "nota": cur.get("nota") # Mantenemos la nota (o None)
+            })
+        else:
+            print(f"Curso {cod} ignorado por no estar en el pensum de {carrera}")
+
+    return cursos_validos
+
 def merge_cursos_en_db(carne: str, nuevos_cursos: list):
-    """Actualiza o inserta cursos aprobados, devolviendo la lista final."""
+    """Actualiza o inserta cursos aprobados, validándolos contra el pensum."""
+    
+    # 1. Validar y normalizar los cursos entrantes
+    cursos_a_guardar = validar_contra_pensum(carne, nuevos_cursos)
+    
+    if not cursos_a_guardar:
+        print("No hay cursos válidos para guardar después de la validación.")
+    
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -30,16 +106,11 @@ def merge_cursos_en_db(carne: str, nuevos_cursos: list):
         cursos_existentes = json.loads(row[0]) if row and row[0] else []
 
         cursos_dict = {c.get("codigo"): c for c in cursos_existentes if c.get("codigo")}
-        for curso in nuevos_cursos:
-            codigo = curso.get("codigo")
-            if not codigo:
-                continue
-            cursos_dict[codigo] = {
-                "codigo": codigo,
-                "nombre": curso.get("nombre", ""),
-                "creditos": curso.get("creditos", 3),
-                "nota": curso.get("nota"),
-            }
+        
+        # Merge
+        for curso in cursos_a_guardar:
+            codigo = curso["codigo"]
+            cursos_dict[codigo] = curso
 
         cursos_finales = list(cursos_dict.values())
         cursos_json = json.dumps(cursos_finales)
@@ -54,20 +125,18 @@ def merge_cursos_en_db(carne: str, nuevos_cursos: list):
     finally:
         conn.close()
 
-
 def interpretar_nota(nota_token: str):
     if nota_token is None:
         return None
     texto = str(nota_token).strip()
     if not texto:
         return None
-    if "APRO" in texto.upper():  # Aprobado sin nota numérica
+    if "APRO" in texto.upper():
         return None
     try:
         return float(texto.replace(",", "."))
     except ValueError:
         return None
-
 
 def extraer_curso_desde_linea(linea: str, career_lookup: dict):
     """Parsea una línea OCR intentando extraer código, nombre, créditos y nota."""
@@ -140,30 +209,26 @@ def extraer_curso_desde_linea(linea: str, career_lookup: dict):
         "nota": interpretar_nota(nota_token),
     }
 
-
 def extraer_cursos_desde_imagen(file_storage, carne):
     if pytesseract is None or Image is None:
         raise RuntimeError("OCR no disponible. Instala Pillow y pytesseract y configura el binario de Tesseract.")
 
     carrera = get_user_career(carne)
-    career_lookup = PENSUM_LOOKUPS.get(carrera, {})
+    career_lookup = get_pensum_map(carrera)
 
     imagen = Image.open(file_storage.stream).convert("RGB")
     
-    # OCR en modo lineal (psm 6) funciona mejor con tablas horizontales
     texto_raw = pytesseract.image_to_string(imagen, lang="spa", config="--psm 6")
     
     print("Tomo el texto de la imagen")
     cursos = []
     
-    # 1) Intentar con las líneas directas del string
     for linea in texto_raw.splitlines():
         linea_limpia = re.sub(r"[|;\t]", " ", linea)
         curso = extraer_curso_desde_linea(linea_limpia, career_lookup)
         if curso:
             cursos.append(curso)
 
-    # 2) Si no hubo resultados, usar image_to_data para recuperar líneas con coordenadas
     if not cursos:
         data = pytesseract.image_to_data(imagen, lang="spa", output_type=pytesseract.Output.DICT, config="--psm 6")
         line_map = {}
@@ -181,7 +246,6 @@ def extraer_cursos_desde_imagen(file_storage, carne):
 
     return cursos, texto_raw
 
-
 # -----------------------------------------------------------
 # ROUTES
 # -----------------------------------------------------------
@@ -193,7 +257,6 @@ def obtener_pensum():
     ruta = os.path.join("Data", "Pensums", filename)
     
     if not os.path.exists(ruta):
-        # Fallback a ubicación anterior solo si es sistemas
         if filename == "sistemas.csv":
              ruta_old = os.path.join("Data", "pensum_sistemas.csv")
              if os.path.exists(ruta_old):
@@ -202,19 +265,58 @@ def obtener_pensum():
         
     return send_file(ruta, mimetype="text/csv")
 
+@courses_bp.route("/extraer_cursos", methods=['POST'])
+def extraer_cursos_endpoint():
+    """
+    Recibe imágenes y retorna los cursos detectados (sin guardar en DB).
+    Usado para previsualización y confirmación en el frontend.
+    """
+    imagenes = request.files.getlist("files")
+    carne = request.form.get("usuario")
+
+    if not imagenes:
+        return jsonify({"error": "No se enviaron imágenes"}), 400
+    if not carne:
+        return jsonify({"error": "Usuario no identificado"}), 400
+
+    cursos_detectados = []
+    
+    for img in imagenes:
+        try:
+            cursos_img, _ = extraer_cursos_desde_imagen(img, carne)
+            if cursos_img:
+                cursos_detectados.extend(cursos_img)
+        except Exception as e:
+            print(f"Error procesando imagen {img.filename}: {e}")
+
+    # Deduplicar
+    dedup = {}
+    for c in cursos_detectados:
+        cod = c.get("codigo")
+        if not cod: continue
+        
+        existente = dedup.get(cod)
+        nota_nueva = c.get("nota") or 0
+        nota_vieja = existente.get("nota") or 0 if existente else -1
+        
+        if not existente or nota_nueva > nota_vieja:
+            dedup[cod] = c
+
+    lista_final = list(dedup.values())
+    
+    return jsonify({"cursos_extraidos": lista_final}), 200
 
 @courses_bp.route("/guardar_aprobados", methods=['POST'])
 def guardar_aprobados():
     data = request.get_json()
     carne = data.get("carne")
-    nuevos_cursos = data.get("cursos", [])  # [{codigo, nombre, creditos, nota}]
+    nuevos_cursos = data.get("cursos", []) 
 
     if not carne:
         return jsonify({"error": "carne requerido"}), 400
 
     merge_cursos_en_db(carne, nuevos_cursos)
-    return jsonify({"message": "Cursos guardados correctamente"}), 200
-
+    return jsonify({"message": "Cursos guardados y validados correctamente"}), 200
 
 @courses_bp.route("/aprobados/<carne>", methods=['GET'])
 def obtener_aprobados(carne):
@@ -230,7 +332,6 @@ def obtener_aprobados(carne):
         
         cursos = json.loads(row[0])
         
-        # Retornar directamente los datos guardados
         resultado = []
         for curso in cursos:
             resultado.append({
@@ -244,7 +345,6 @@ def obtener_aprobados(carne):
     finally:
         conn.close()
 
-
 @courses_bp.route("/cargar_aprobados_imagenes", methods=['POST'])
 def cargar_aprobados_imagenes():
     carne = request.form.get("carne")
@@ -255,7 +355,7 @@ def cargar_aprobados_imagenes():
     if not imagenes:
         return jsonify({"error": "Debes adjuntar al menos una imagen"}), 400
     if pytesseract is None or Image is None:
-        return jsonify({"error": "OCR no disponible. Instala Pillow y pytesseract y asegúrate de tener el binario de Tesseract en el PATH."}), 500
+        return jsonify({"error": "OCR no disponible."}), 500
 
     cursos_extraidos = []
     errores = []
@@ -263,21 +363,16 @@ def cargar_aprobados_imagenes():
     for img in imagenes:
         try:
             cursos_img, texto_raw = extraer_cursos_desde_imagen(img, carne)
-            print("No se pudo extraer")
             if cursos_img:
-                print("No se pudo extraer")
                 cursos_extraidos.extend(cursos_img)
             else:
-                print("No se pudo extraer")
-                errores.append(f"{img.filename}: no se reconoció el formato esperado. Asegúrate de usar el cuadro de columnas Código, Nombre, Créditos, Fecha, Nota, Observaciones. Texto detectado: '{texto_raw[:200]}'")
+                errores.append(f"{img.filename}: no se reconoció el formato esperado.")
         except Exception as e:
-            print("Tiro un exception")
             errores.append(f"{img.filename}: {str(e)}")
 
     if not cursos_extraidos:
         return jsonify({"error": "No se encontraron cursos en las imágenes", "detalles": errores}), 400
 
-    # Dedupe por código priorizando la nota más alta si viniera repetido
     dedup = {}
     for curso in cursos_extraidos:
         codigo = curso.get("codigo")
@@ -298,7 +393,6 @@ def cargar_aprobados_imagenes():
         "advertencias": errores,
     }), 200
 
-
 @courses_bp.route("/cursos_aprobados", methods=['POST'])
 def obtener_cursos_aprobados_endpoint():
     data = request.get_json()
@@ -308,7 +402,6 @@ def obtener_cursos_aprobados_endpoint():
     try:
         cursor = conn.cursor()
         
-        # PASO 1: Determinar ID correcto
         cursor.execute("SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario_req,))
         info_row = cursor.fetchone()
         
@@ -316,7 +409,6 @@ def obtener_cursos_aprobados_endpoint():
         if info_row and info_row[0]:
             carne_busqueda = info_row[0] 
         
-        # PASO 2: Buscar cursos
         cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne_busqueda,))
         row = cursor.fetchone()
         
@@ -333,7 +425,6 @@ def obtener_cursos_aprobados_endpoint():
             except:
                 aprobados = []
                 
-        # --- LÓGICA DE IA: ANÁLISIS NLP DE COMPETENCIAS ---
         competencias_ia = analizar_competencias_ia(aprobados)
                 
         return jsonify({
