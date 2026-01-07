@@ -132,14 +132,14 @@ const Perfil = () => {
     };
 
     const dataPie = [
-        { name: 'Aprobados', value: stats.creditosAprobados, color: '#4F46E5' },
-        { name: 'Pendientes', value: Math.max(0, stats.creditosTotales - stats.creditosAprobados), color: '#E5E7EB' }
+        { name: 'Aprobados', value: stats.creditosAprobados, color: '#0f172a' }, // Slate-900
+        { name: 'Pendientes', value: Math.max(0, stats.creditosTotales - stats.creditosAprobados), color: '#cbd5e1' } // Slate-300
     ];
 
     if (loading) {
         return (
             <div className="min-h-[400px] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pastel-blue-dark"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-800"></div>
             </div>
         );
     }
@@ -147,18 +147,18 @@ const Perfil = () => {
     return (
         <div className="animate-fadeIn space-y-8 pb-12">
             {/* Profile Header Card */}
-            <div className="bg-white/50 backdrop-blur-xl rounded-2xl border border-soft-blue shadow-inner overflow-hidden group">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
                 {/* Banner */}
-                <div className="h-56 bg-slate-200 relative overflow-hidden">
+                <div className="h-64 bg-slate-800 relative overflow-hidden">
                     {formData.foto_banner ? (
-                        <img src={formData.foto_banner} alt="Banner" className="w-full h-full object-cover" />
+                        <img src={formData.foto_banner} alt="Banner" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-r from-pastel-blue via-pastel-purple to-pastel-pink opacity-80" />
+                        <div className="w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-700 via-slate-900 to-black" />
                     )}
                     {editando && (
                         <button
                             onClick={() => fileInputBanner.current.click()}
-                            className="absolute top-6 right-6 bg-white/40 backdrop-blur-md hover:bg-white/60 text-slate-700 p-3 rounded-xl transition-all shadow-lg"
+                            className="absolute top-6 right-6 bg-black/50 backdrop-blur-md text-white p-3 rounded-2xl hover:bg-black/70 transition-all shadow-lg hover:scale-105"
                         >
                             <Camera size={20} />
                         </button>
@@ -167,14 +167,14 @@ const Perfil = () => {
                 </div>
 
                 <div className="px-10 pb-10">
-                    <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 relative z-10 gap-8">
+                    <div className="flex flex-col md:flex-row items-center md:items-end -mt-20 relative z-10 gap-8">
                         {/* Avatar */}
-                        <div className="relative">
-                            <div className="w-40 h-40 rounded-full border-8 border-white bg-white shadow-2xl overflow-hidden flex items-center justify-center transition-transform hover:scale-105 duration-500">
+                        <div className="relative group/avatar">
+                            <div className="w-44 h-44 rounded-full border-[6px] border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center transition-transform hover:scale-105 duration-500">
                                 {formData.foto_perfil ? (
                                     <img src={formData.foto_perfil} alt="Perfil" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
+                                    <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
                                         <User size={80} strokeWidth={1} />
                                     </div>
                                 )}
@@ -182,7 +182,7 @@ const Perfil = () => {
                             {editando && (
                                 <button
                                     onClick={() => fileInputPerfil.current.click()}
-                                    className="absolute -bottom-2 -right-2 bg-slate-900 text-white p-3 rounded-xl shadow-xl hover:scale-110 transition-all border-4 border-white"
+                                    className="absolute bottom-2 right-2 bg-slate-900 text-white p-3 rounded-full shadow-xl hover:scale-110 transition-all border-4 border-white"
                                 >
                                     <Camera size={20} />
                                 </button>
@@ -192,28 +192,28 @@ const Perfil = () => {
 
                         {/* Name & Title */}
                         <div className="flex-1 text-center md:text-left mb-2">
-                            <h1 className="text-4xl font-black text-slate-800 tracking-tighter mb-2">
-                                {formData.nombre || 'Nombre de Usuario'}
+                            <h1 className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter mb-2">
+                                {formData.nombre || 'Usuario'}
                             </h1>
                             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-                                <span className="text-xl font-bold text-slate-400">@{usuario?.usuario}</span>
-                                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-200" />
-                                <div className="bg-pastel-blue/30 px-4 py-1 rounded-full border border-pastel-blue/50">
-                                    <span className="text-sm font-black text-slate-600 uppercase tracking-widest">{formData.carrera}</span>
+                                <span className="text-xl font-bold text-slate-500">@{usuario?.usuario}</span>
+                                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                <div className="bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200">
+                                    <span className="text-sm font-black text-slate-700 uppercase tracking-widest">{formData.carrera}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="md:mb-4">
+                        <div className="md:mb-4 w-full md:w-auto">
                             {editando ? (
-                                <div className="flex gap-3">
-                                    <button onClick={() => setEditando(false)} className="px-6 py-3 bg-white/60 text-slate-600 rounded-xl border border-pastel-blue/30 font-bold hover:bg-white transition-all">Cancelar</button>
-                                    <button onClick={handleGuardar} disabled={guardando} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 shadow-xl transition-all">{guardando ? 'Guardando...' : 'Guardar'}</button>
+                                <div className="flex gap-3 justify-center">
+                                    <button onClick={() => setEditando(false)} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl border border-slate-200 font-bold hover:bg-slate-200 transition-all">Cancelar</button>
+                                    <button onClick={handleGuardar} disabled={guardando} className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-1">{guardando ? 'Guardando...' : 'Guardar Cambios'}</button>
                                 </div>
                             ) : (
-                                <button onClick={() => setEditando(true)} className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 shadow-xl hover:-translate-y-1 transition-all">
-                                    <Edit3 size={20} />
+                                <button onClick={() => setEditando(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 shadow-xl hover:-translate-y-1 transition-all group/btn">
+                                    <Edit3 size={20} className="group-hover/btn:rotate-12 transition-transform" />
                                     Editar Perfil
                                 </button>
                             )}
@@ -226,10 +226,10 @@ const Perfil = () => {
                 {/* Information Column (8/12) */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* Personal Info */}
-                    <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-10 border border-soft-blue shadow-inner relative overflow-hidden">
-                        <div className="absolute -right-20 -top-20 w-64 h-64 bg-pastel-blue/20 rounded-full blur-3xl opacity-50" />
-                        <h2 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-3">
-                            <Shield className="text-blue-500" /> Información Académica
+                    <div className="bg-white rounded-3xl p-10 border border-slate-200 shadow-lg relative overflow-hidden hover:shadow-xl transition-shadow duration-500">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0" />
+                        <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3 relative z-10">
+                            <Shield className="text-slate-900" /> Información Personal
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                             {[
@@ -238,36 +238,37 @@ const Perfil = () => {
                                 { label: 'Correo Electrónico', icon: Mail, name: 'email', value: formData.email },
                                 { label: 'Fecha de Nacimiento', icon: Calendar, name: 'fecha_nacimiento', value: formData.fecha_nacimiento, type: 'date' },
                             ].map((field) => (
-                                <div key={field.name} className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
+                                <div key={field.name} className="space-y-2 group/input">
+                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">{field.label}</label>
                                     <div className="relative">
-                                        <field.icon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <field.icon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando && !field.disabled ? "text-slate-800" : "text-slate-400"}`} size={20} />
                                         <input
                                             type={field.type || "text"}
                                             name={field.name}
                                             value={field.value}
                                             onChange={handleChange}
                                             disabled={field.disabled || !editando}
-                                            className={`w-full pl-14 pr-6 py-4 rounded-xl ${editando && !field.disabled
-                                                ? "bg-white border-[2px] border-soft-blue/40 shadow-inner focus:ring-2 focus:ring-pastel-blue focus:border-transparent"
-                                                : "bg-white/40 border-transparent text-slate-600 cursor-default"
+                                            className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando && !field.disabled
+                                                ? "bg-slate-50 border-2 border-slate-200 text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 shadow-inner"
+                                                : "bg-slate-50 border-transparent text-slate-500 cursor-default"
                                                 }`}
                                         />
                                     </div>
                                 </div>
                             ))}
-                            <div className="md:col-span-2 space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Carrera</label>
+                            <div className="md:col-span-2 space-y-2 group/input">
+                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">Carrera</label>
                                 <div className="relative">
-                                    <Book className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <Book className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando ? "text-slate-800" : "text-slate-400"}`} size={20} />
                                     <input
                                         type="text"
                                         name="carrera"
                                         value={formData.carrera}
                                         onChange={handleChange}
                                         disabled={!editando}
-                                        className={`w-full pl-14 pr-6 py-4 rounded-xl border-[2px] border-soft-blue/40 transition-all font-black ${editando ? "bg-white shadow-inner focus:ring-2 focus:ring-pastel-blue focus:border-transparent"
-                                            : "bg-white/40 border-transparent text-slate-600 cursor-default"
+                                        className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando
+                                            ? "bg-slate-50 border-2 border-slate-200 text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 shadow-inner"
+                                            : "bg-slate-50 border-transparent text-slate-500 cursor-default"
                                             }`}
                                     />
                                 </div>
@@ -276,43 +277,50 @@ const Perfil = () => {
                     </div>
 
                     {/* Radar Chart */}
-                    <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-10 border border-soft-blue shadow-inner">
+                    <div className="bg-white rounded-3xl p-10 border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-500">
                         <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-xl font-black text-slate-800 flex items-center gap-3">
-                                <Brain className="text-pastel-purple-dark" /> Análisis de Capacidades
+                            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                <Brain className="text-emerald-600" /> Análisis de Competencias
                             </h2>
-                            <div className="flex items-center gap-2 px-4 py-1.5 bg-pastel-green/20 rounded-full border border-pastel-green/30">
-                                <Zap size={14} className="text-green-600" />
-                                <span className="text-[10px] font-black text-green-700 uppercase tracking-tighter">AI Analysis</span>
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
+                                <Zap size={14} className="text-emerald-600" />
+                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">AI Powered</span>
                             </div>
                         </div>
                         <div className="flex flex-col xl:flex-row items-center gap-12">
                             <div className="flex-1 w-full h-[320px]">
                                 {radarData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                            <PolarGrid stroke="#E2E8F0" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748B', fontSize: 10, fontWeight: 700 }} />
-                                            <Radar name="Nivel" dataKey="A" stroke="#B8A7D1" strokeWidth={4} fill="#B8A7D1" fillOpacity={0.4} />
-                                            <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                                        <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
+                                            <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 11, fontWeight: 800 }} />
+                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                            <Radar name="Nivel" dataKey="A" stroke="#0f172a" strokeWidth={3} fill="#0f172a" fillOpacity={0.2} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', backgroundColor: '#1e293b', color: '#fff' }}
+                                                itemStyle={{ color: '#fff' }}
+                                            />
                                         </RadarChart>
                                     </ResponsiveContainer>
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 border-[2.5px] border-dashed border-soft-blue/30 rounded-2xl">
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-300 border-[3px] border-dashed border-slate-200 rounded-2xl bg-slate-50">
                                         <Brain size={48} className="mb-3 opacity-20" />
-                                        <p className="text-sm font-bold">Sin datos de análisis</p>
+                                        <p className="text-sm font-bold text-slate-400">Sin datos de análisis</p>
                                     </div>
                                 )}
                             </div>
-                            <div className="w-full xl:w-72 space-y-4">
+                            <div className="w-full xl:w-72 space-y-5">
                                 {radarData.map((item, idx) => (
-                                    <div key={idx} className="space-y-1.5">
-                                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
-                                            <span>{item.subject}</span>
-                                            <span className="text-slate-800">{item.A}%</span>
+                                    <div key={idx} className="space-y-2 group">
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
+                                            <span className="group-hover:text-slate-800 transition-colors">{item.subject}</span>
+                                            <span className="text-slate-900">{item.A}%</span>
                                         </div>
-                                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                            <div className="h-full bg-pastel-blue-dark rounded-full" style={{ width: `${item.A}%` }} />
+                                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                                            <div
+                                                className="h-full bg-slate-800 rounded-full transition-all duration-1000 ease-out group-hover:bg-emerald-500"
+                                                style={{ width: `${item.A}%` }}
+                                            />
                                         </div>
                                     </div>
                                 ))}
@@ -324,58 +332,74 @@ const Perfil = () => {
                 {/* Vertical Sidebar Column (4/12) */}
                 <div className="lg:col-span-4 space-y-8">
                     {/* Progress Chart */}
-                    <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border border-soft-blue shadow-inner text-center">
-                        <h3 className="text-md font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Progreso de Carrera</h3>
-                        <div className="h-64 relative">
+                    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg text-center hover:shadow-xl transition-all duration-500 group">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8 group-hover:text-slate-600 transition-colors">Progreso de Carrera</h3>
+                        <div className="h-64 relative transform group-hover:scale-105 transition-transform duration-500 ease-out">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
-                                    <Pie data={dataPie} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={8} dataKey="value" cornerRadius={10}>
-                                        {dataPie.map((entry, index) => <Cell key={`cell-${index}`} fill={index === 0 ? '#B8A7D1' : '#F1F5F9'} />)}
+                                    <Pie
+                                        data={dataPie}
+                                        cx="50%" cy="50%"
+                                        innerRadius={80}
+                                        outerRadius={100}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        cornerRadius={8}
+                                        stroke="none"
+                                    >
+                                        {dataPie.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                                     </Pie>
-                                    <Tooltip contentStyle={{ borderRadius: '16px' }} />
+                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', backgroundColor: '#1e293b', color: 'white' }} itemStyle={{ color: 'white' }} />
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-4xl font-black text-slate-800 tracking-tighter">{stats.creditosAprobados}</span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Créditos</span>
+                                <span className="text-6xl font-black text-slate-800 tracking-tighter">{stats.creditosAprobados}</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase mt-2">Créditos Ganados</span>
                             </div>
                         </div>
-                        <div className="mt-4 text-slate-400 font-bold text-sm">
-                            Faltan {Math.max(0, stats.creditosTotales - stats.creditosAprobados)} para la meta
+                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
+                                Faltan <span className="text-slate-900">{Math.max(0, stats.creditosTotales - stats.creditosAprobados)}</span> créditos
+                            </p>
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                                <div className="h-full bg-slate-400 rounded-full" style={{ width: `${(stats.creditosAprobados / stats.creditosTotales) * 100}%` }} />
+                            </div>
                         </div>
                     </div>
 
                     {/* Stats Breakdown */}
-                    <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border border-soft-blue shadow-inner space-y-8">
+                    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg space-y-8 hover:shadow-xl transition-shadow duration-500">
                         <div className="flex flex-col items-center text-center">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Promedio General</h3>
                             <div className="h-40 w-full relative">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: parseFloat(stats.promedio) }]} startAngle={180} endAngle={0}>
-                                        <RadialBar dataKey="value" fill="#DFEEF3" cornerRadius={100} />
+                                        <RadialBar dataKey="value" fill="#0f172a" cornerRadius={100} background={{ fill: '#f1f5f9' }} />
                                     </RadialBarChart>
                                 </ResponsiveContainer>
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                                    <span className="text-5xl font-black text-slate-800 tracking-tighter">{stats.promedio}</span>
-                                    <div className="w-8 h-1 bg-pastel-blue rounded-full mt-1" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8 flex flex-col items-center">
+                                    <span className="text-6xl font-black text-slate-800 tracking-tighter">{stats.promedio}</span>
+                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 mt-2">Puntos</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white/60 p-5 rounded-2xl border-[2px] border-soft-blue/20 flex flex-col items-center shadow-sm">
-                                <span className="text-2xl font-black text-slate-800 mb-1">{stats.cursosAprobados}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Cursos Ganados</span>
+                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center group hover:bg-white hover:border-slate-300 hover:shadow-md transition-all">
+                                <span className="text-3xl font-black text-slate-800 mb-1 group-hover:scale-110 transition-transform">{stats.cursosAprobados}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Cursos</span>
                             </div>
-                            <div className="bg-white/60 p-5 rounded-2xl border-[2px] border-soft-blue/20 flex flex-col items-center shadow-sm">
-                                <span className="text-2xl font-black text-slate-800 mb-1">{stats.mejorNota}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Mejor Nota</span>
+                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center group hover:bg-white hover:border-slate-300 hover:shadow-md transition-all">
+                                <span className="text-3xl font-black text-slate-800 mb-1 group-hover:scale-110 transition-transform">{stats.mejorNota}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Max Nota</span>
                             </div>
                         </div>
 
-                        <div className="bg-soft-blue/30 p-5 rounded-2xl border-[2px] border-soft-blue/40 text-center shadow-sm">
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Curso Estrella</p>
-                            <p className="text-sm font-black text-slate-700 truncate">{stats.mejorCurso}</p>
+                        <div className="bg-slate-900 p-6 rounded-2xl shadow-lg shadow-slate-200 text-center relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Award className="text-amber-400 mx-auto mb-3" size={28} />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Curso Estrella</p>
+                            <p className="text-lg font-black text-white leading-tight">{stats.mejorCurso}</p>
                         </div>
                     </div>
                 </div>

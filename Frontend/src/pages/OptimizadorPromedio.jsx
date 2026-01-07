@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle, Loader2, BookMarked, PlusCircle, Search, Info } from "lucide-react";
+import { Target, Calculator, Sparkles, Trash2, TrendingUp, CheckCircle, XCircle, Loader2, BookMarked, PlusCircle, Search, Info, Download } from "lucide-react";
 
 const OptimizadorPromedio = () => {
   const getUserData = () => {
@@ -143,6 +143,48 @@ const OptimizadorPromedio = () => {
     setCursosActuales(nuevos.length > 0 ? nuevos : [""]);
   };
 
+  const cargarDesdeHorario = async () => {
+    if (!userData.carne) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/obtener_horario_guardado/${userData.carne}`);
+      const data = await response.json();
+
+      if (data.existe) {
+        let lista = [];
+        // Manejo robusto de la estructura de datos (puede venir anidada)
+        const rawData = data.horario;
+        if (rawData.horario && Array.isArray(rawData.horario)) {
+          lista = rawData.horario;
+        } else if (Array.isArray(rawData)) {
+          lista = rawData;
+        }
+
+        // Extraer códigos, limpiando nulos/vacíos
+        const codigos = lista.map(c => c.Codigo || c.codigo).filter(c => c);
+
+        if (codigos.length > 0) {
+          // Eliminar duplicados y actualizar estado
+          setCursosActuales([...new Set(codigos)]);
+          setMensajeExito("¡Cursos importados de tu último horario!");
+          setTimeout(() => setMensajeExito(""), 3000);
+        } else {
+          setMensajeExito("El horario guardado no contiene cursos válidos.");
+          setTimeout(() => setMensajeExito(""), 3000);
+        }
+      } else {
+        setMensajeExito("No se encontró un horario guardado.");
+        setTimeout(() => setMensajeExito(""), 3000);
+      }
+    } catch (error) {
+      console.error("Error importando horario:", error);
+      setMensajeExito("Error al conectar con la base de datos.");
+      setTimeout(() => setMensajeExito(""), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const calcularPromedioActual = async () => {
     const aprobadosValidos = cursosAprobados.filter(c => c.codigo && c.nota);
     if (aprobadosValidos.length === 0) {
@@ -264,29 +306,30 @@ const OptimizadorPromedio = () => {
     <div className="animate-fadeIn space-y-8 pb-12">
       {/* Toast Notification */}
       {mensajeExito && (
-        <div className="fixed top-24 right-8 z-50 bg-white/90 backdrop-blur-xl text-slate-800 px-6 py-4 rounded-2xl shadow-xl border border-soft-blue flex items-center gap-3 animate-slide-in">
-          <div className="w-8 h-8 bg-pastel-green rounded-xl flex items-center justify-center">
-            <CheckCircle className="text-green-600" size={18} />
+        <div className="fixed top-24 right-8 z-50 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-in border border-slate-700">
+          <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/50">
+            <CheckCircle className="text-white" size={18} />
           </div>
-          <span className="font-bold">{mensajeExito}</span>
+          <span className="font-bold tracking-tight">{mensajeExito}</span>
         </div>
       )}
 
-      {/* Header Glass Card */}
-      <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="p-3 bg-pastel-purple rounded-2xl text-slate-700 shadow-sm">
-            <Target size={32} />
+      {/* Header Section */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0" />
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="p-4 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-200">
+            <Target size={40} strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Optimizador de Promedio</h1>
-            <p className="text-slate-500 font-medium">Define tu meta y nosotros calculamos el camino.</p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">Optimizador de Promedio</h1>
+            <p className="text-slate-500 font-medium text-lg">Define tu meta académica y nosotros calculamos la estrategia perfecta.</p>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex gap-4">
+      <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
         {[
           { id: "calculadora", label: "Calculadora de Notas", icon: Calculator },
           { id: "escenarios", label: "Simulador de Escenarios", icon: Sparkles },
@@ -294,12 +337,12 @@ const OptimizadorPromedio = () => {
           <button
             key={tab.id}
             onClick={() => setVistaActiva(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${vistaActiva === tab.id
-              ? "bg-slate-900 text-white shadow-lg scale-105"
-              : "bg-white/50 backdrop-blur-xl text-slate-600 border border-soft-blue shadow-inner hover:bg-white/60"
+            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all text-sm uppercase tracking-wider ${vistaActiva === tab.id
+              ? "bg-white text-slate-900 shadow-lg scale-100 ring-1 ring-black/5"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
               }`}
           >
-            <tab.icon size={18} />
+            <tab.icon size={18} className={vistaActiva === tab.id ? "text-emerald-500" : ""} />
             {tab.label}
           </button>
         ))}
@@ -310,16 +353,16 @@ const OptimizadorPromedio = () => {
         <div className="lg:col-span-8 space-y-8">
 
           {/* Cursos Aprobados Section */}
-          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border-[3px] border-soft-blue shadow-inner">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <BookMarked className="text-pastel-purple-dark" size={24} />
-                Historial de Notas Académicas
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                <BookMarked className="text-slate-900" size={28} />
+                Historial Académico
               </h2>
               <button
                 onClick={calcularPromedioActual}
                 disabled={loading}
-                className="px-5 py-2.5 bg-white/60 border-[2px] border-soft-blue/50 text-slate-700 rounded-xl text-xs font-bold hover:bg-white hover:shadow-md transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-6 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center gap-2 disabled:opacity-50 uppercase tracking-wider"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <TrendingUp size={16} />}
                 Ver Promedio Actual
@@ -329,56 +372,69 @@ const OptimizadorPromedio = () => {
             {cursosAprobados.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                 {cursosAprobados.map((curso, index) => (
-                  <div key={index} className="bg-white/60 border border-pastel-blue/20 p-4 rounded-xl shadow-sm hover:shadow-md transition-all">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">#{curso.codigo}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pastel-blue/30 text-slate-600">{curso.creditos} Cr.</span>
+                  <div key={index} className="bg-slate-50 border border-slate-100 p-5 rounded-2xl hover:border-slate-300 hover:bg-white hover:shadow-md transition-all group">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-slate-200 text-slate-600">#{curso.codigo}</span>
+                      <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">{curso.creditos} Cr.</span>
                     </div>
-                    <h4 className="text-slate-800 font-bold text-xs line-clamp-2 min-h-[32px] mb-3">{curso.nombre}</h4>
-                    <div className="flex items-center justify-between border-t border-slate-100/50 pt-2">
-                      <span className="text-[10px] font-bold text-slate-400 font-mono">NOTA</span>
-                      <span className="text-sm font-black text-pastel-purple-dark bg-white px-3 py-1 rounded-lg border-[2px] border-soft-blue/30">{curso.nota || "--"}</span>
+                    <h4 className="text-slate-800 font-bold text-xs line-clamp-2 min-h-[32px] mb-4 group-hover:text-slate-900 transition-colors uppercase tracking-tight">{curso.nombre}</h4>
+                    <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nota Final</span>
+                      <span className="text-lg font-black text-slate-900">{curso.nota || "--"}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-12 flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-pastel-blue/20 rounded-3xl">
-                <Info size={48} className="mb-3 opacity-10" />
-                <p className="text-sm font-medium">No hay cursos aprobados en el sistema.</p>
+              <div className="py-16 flex flex-col items-center justify-center text-slate-300 border-[3px] border-dashed border-slate-100 rounded-3xl bg-slate-50">
+                <Info size={56} className="mb-4 opacity-20" />
+                <p className="text-sm font-bold text-slate-400">No hay cursos aprobados registrados en el sistema.</p>
               </div>
             )}
           </div>
 
           {/* Cursos Actuales & Meta */}
-          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border-[3px] border-soft-blue shadow-inner">
-            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <PlusCircle className="text-blue-500" size={24} />
-              Cursos Actuales & Meta
-            </h2>
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg relative overflow-hidden">
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+              <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                <PlusCircle className="text-emerald-500" size={28} />
+                Cursos Actuales & Meta
+              </h2>
+
+              {/* BOTÓN MÁGICO DE IMPORTAR */}
+              <button
+                onClick={cargarDesdeHorario}
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 transition-all font-bold text-xs border border-indigo-100 hover:shadow-sm"
+                title="Importar cursos de tu Horario Guardado"
+              >
+                <Download size={16} />
+                Importar de Horario
+              </button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               {/* Search */}
               <div className="space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Agregar Cursos que Cursas</p>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Agregar Curso Manualmente</p>
+                <div className="relative group/search">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover/search:text-slate-600 transition-colors" size={20} />
                   <input
                     type="text"
                     placeholder="Buscar por código..."
                     value={busquedaActuales}
                     onChange={(e) => setBusquedaActuales(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white/60 border-[2px] border-soft-blue/50 rounded-xl text-sm focus:ring-2 focus:ring-pastel-blue focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold focus:bg-white focus:border-slate-900 focus:ring-0 transition-all placeholder:text-slate-400 text-slate-800"
                   />
                   {resultadosBusquedaActuales.length > 0 && (
-                    <div className="absolute z-10 w-full mt-2 bg-white/90 backdrop-blur-xl border border-pastel-blue/40 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+                    <div className="absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
                       {resultadosBusquedaActuales.map((curso) => (
                         <div
                           key={curso.codigo}
                           onClick={() => agregarCursoActualDesdeBusqueda(curso)}
-                          className="p-4 hover:bg-pastel-blue/20 cursor-pointer border-b border-slate-50 last:border-0 transition-colors"
+                          className="p-4 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors group/item"
                         >
-                          <div className="font-bold text-slate-800 text-sm">{curso.codigo} - {curso.nombre}</div>
+                          <div className="font-black text-slate-800 text-sm group-hover/item:text-emerald-700 transition-colors">#{curso.codigo} - {curso.nombre}</div>
                           <div className="text-[10px] font-bold text-slate-400">{curso.creditos} créditos</div>
                         </div>
                       ))}
@@ -390,52 +446,63 @@ const OptimizadorPromedio = () => {
               {/* Meta Input */}
               {vistaActiva === "calculadora" && (
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Promedio Objetivo (%)</p>
-                  <input
-                    type="number"
-                    placeholder="Ej: 85.0"
-                    min="0" max="100" step="0.1"
-                    value={promedioObjetivo}
-                    onChange={(e) => setPromedioObjetivo(e.target.value)}
-                    className="w-full px-6 py-4 bg-white/60 border-[2px] border-soft-blue/50 rounded-xl text-xl font-black text-slate-800 placeholder:text-slate-300 focus:ring-2 focus:ring-pastel-purple focus:border-transparent transition-all"
-                  />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Promedio Objetivo (%)</p>
+                  <div className="relative">
+                    <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <input
+                      type="number"
+                      placeholder="Ej: 85.0"
+                      min="0" max="100" step="0.1"
+                      value={promedioObjetivo}
+                      onChange={(e) => setPromedioObjetivo(e.target.value)}
+                      className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xl font-black text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-emerald-500 focus:ring-0 transition-all"
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
             {/* List of current courses */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              {cursosActuales.filter(c => c !== "").map((codigo, index) => {
-                const curso = pensum.find(c => c.codigo === codigo);
-                return (
-                  <div key={index} className="bg-white/80 p-4 rounded-xl border border-pastel-blue/20 flex justify-between items-center group shadow-sm">
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1 block">#{codigo}</span>
-                      <p className="font-bold text-slate-700 text-sm truncate pr-4">{curso?.nombre || "Cargando..."}</p>
+            {cursosActuales.filter(c => c !== "").length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+                {cursosActuales.filter(c => c !== "").map((codigo, index) => {
+                  const curso = pensum.find(c => c.codigo === codigo);
+                  return (
+                    <div key={index} className="bg-white p-4 rounded-2xl border border-slate-200 flex justify-between items-center group shadow-sm hover:shadow-md transition-all hover:border-slate-300">
+                      <div className="min-w-0 pr-4">
+                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wider mb-1 inline-block border border-emerald-100">#{codigo}</span>
+                        <p className="font-bold text-slate-800 text-sm truncate uppercase tracking-tight">{curso?.nombre || "Cargando nombre..."}</p>
+                      </div>
+                      <button
+                        onClick={() => eliminarCursoActual(index)}
+                        className="p-2.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => eliminarCursoActual(index)}
-                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mb-10 p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50">
+                <p className="text-slate-400 font-bold text-sm">No has agregado cursos para este semestre.</p>
+                <button onClick={cargarDesdeHorario} className="mt-3 text-xs font-black text-indigo-600 hover:underline">Importar de mi Horario Guardado</button>
+              </div>
+            )}
 
             <div className="flex gap-4">
               <button
                 onClick={vistaActiva === "calculadora" ? calcularNotasNecesarias : simularEscenarios}
                 disabled={loading}
-                className="flex-1 bg-slate-900 text-white py-5 rounded-xl font-black text-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl active:scale-95"
+                className="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl hover:-translate-y-1 active:scale-95 group"
               >
-                {loading ? <Loader2 className="animate-spin" size={24} /> : (vistaActiva === "calculadora" ? <Calculator size={24} /> : <Sparkles size={24} />)}
+                {loading ? <Loader2 className="animate-spin" size={24} /> : (vistaActiva === "calculadora" ? <Calculator size={24} className="group-hover:rotate-12 transition-transform" /> : <Sparkles size={24} className="group-hover:scale-110 transition-transform" />)}
                 {vistaActiva === "calculadora" ? "Calcular Notas Necesarias" : "Simular Todos los Escenarios"}
               </button>
               <button
                 onClick={limpiarTodo}
-                className="px-8 bg-white/40 border-[2px] border-soft-blue/50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                className="px-8 bg-white border-2 border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 rounded-2xl transition-all shadow-sm"
+                title="Limpiar todo"
               >
                 <Trash2 size={24} />
               </button>
@@ -444,30 +511,37 @@ const OptimizadorPromedio = () => {
 
           {/* Visualization Charts */}
           {(resultado || escenarios) && (
-            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner animate-fadeIn">
-              <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
-                <TrendingUp className="text-green-500" size={24} />
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl animate-fadeIn">
+              <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                <TrendingUp className="text-emerald-500" size={28} />
                 Análisis Proyectado
               </h2>
-              <div className="h-[320px]">
+              <div className="h-[360px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   {vistaActiva === "calculadora" && graficoNotas ? (
                     <BarChart data={graficoNotas}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="curso" tick={{ fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip cursor={{ fill: 'rgba(226, 232, 240, 0.4)' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="curso" tick={{ fontSize: 11, fontWeight: 800, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        cursor={{ fill: '#f8fafc' }}
+                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff' }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                      />
                       <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: 'bold' }} />
-                      <Bar dataKey="minima" name="Min. para aprobar (61+)" fill="#FDE2E4" radius={[8, 8, 8, 8]} barSize={40} />
-                      <Bar dataKey="sugerida" name="Sug. para Meta" fill="#DFEEF3" radius={[8, 8, 8, 8]} barSize={40} />
+                      <Bar dataKey="minima" name="Min. para aprobar (61+)" fill="#cbd5e1" radius={[8, 8, 8, 8]} barSize={50} />
+                      <Bar dataKey="sugerida" name="Sug. para Meta" fill="#10b981" radius={[8, 8, 8, 8]} barSize={50} />
                     </BarChart>
                   ) : graficoEscenarios ? (
                     <LineChart data={graficoEscenarios}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                      <Line type="monotone" dataKey="promedio" name="Promedio Final Estimado" stroke="#B8A7D1" strokeWidth={4} dot={{ r: 6, fill: "#B8A7D1", strokeWidth: 2, stroke: "#fff" }} activeDot={{ r: 8 }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="nombre" tick={{ fontSize: 11, fontWeight: 800, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', backgroundColor: '#1e293b', color: '#fff' }}
+                        itemStyle={{ color: '#fff' }}
+                      />
+                      <Line type="monotone" dataKey="promedio" name="Promedio Final Estimado" stroke="#0f172a" strokeWidth={5} dot={{ r: 6, fill: "#0f172a", strokeWidth: 3, stroke: "#fff" }} activeDot={{ r: 8, fill: "#10b981" }} />
                     </LineChart>
                   ) : <div />}
                 </ResponsiveContainer>
@@ -480,69 +554,75 @@ const OptimizadorPromedio = () => {
         <div className="lg:col-span-4 space-y-8">
           {/* Promedio Actual Card */}
           {promedioActual && (
-            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border-[3px] border-soft-blue shadow-inner relative overflow-hidden group">
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100/50 rounded-full blur-2xl group-hover:bg-blue-200/50 transition-colors" />
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 relative">Promedio de Cierre</h3>
-              <div className="flex items-baseline gap-2 relative">
-                <span className="text-6xl font-black text-slate-800 tracking-tighter">{promedioActual.promedio}</span>
-                <span className="text-xl font-bold text-blue-500">%</span>
+            <div className="bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-300 relative overflow-hidden group text-white">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-slate-800 rounded-full blur-3xl group-hover:bg-slate-700 transition-colors" />
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 relative">Promedio de Cierre</h3>
+              <div className="flex items-baseline gap-1 relative mb-6">
+                <span className="text-7xl font-black tracking-tighter">{promedioActual.promedio}</span>
+                <span className="text-2xl font-bold text-emerald-400">%</span>
               </div>
-              <div className="mt-6 flex gap-4 border-t border-pastel-blue/20 pt-4">
+              <div className="flex gap-4 border-t border-slate-700 pt-6">
                 <div className="flex-1">
-                  <p className="text-[10px] font-bold text-slate-400">CRÉDITOS</p>
-                  <p className="text-sm font-black text-slate-700">{promedioActual.creditos_totales || "0"}</p>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CRÉDITOS</p>
+                  <p className="text-xl font-black">{promedioActual.creditos_totales || "0"}</p>
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-bold text-slate-400">CURSOS</p>
-                  <p className="text-sm font-black text-slate-700">{promedioActual.cursos_count || "0"}</p>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CURSOS</p>
+                  <p className="text-xl font-black">{promedioActual.cursos_count || "0"}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Results Breakdown */}
-          <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-8 border border-soft-blue shadow-inner">
-            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <TrendingUp className="text-purple-500" size={24} />
-              Resumen de Metas
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl">
+            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+              <TrendingUp className="text-emerald-500" size={24} />
+              Resultados
             </h2>
 
             {!resultado && !escenarios ? (
               <div className="py-12 text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300 border border-slate-100">
                   <Target size={32} />
                 </div>
-                <p className="text-sm text-slate-400 font-medium max-w-[180px] mx-auto">Configura tus cursos y presiona <b>Calcular</b>.</p>
+                <p className="text-sm text-slate-400 font-bold max-w-[180px] mx-auto">Configura tus cursos y meta para ver la magia.</p>
               </div>
             ) : vistaActiva === "calculadora" && resultado ? (
               <div className="space-y-6">
                 {resultado.factible ? (
-                  <div className="bg-green-50/50 border border-green-100 p-5 rounded-xl flex gap-3">
-                    <CheckCircle className="text-green-500 shrink-0" size={24} />
-                    <p className="text-sm text-green-700 font-bold leading-tight">{resultado.mensaje}</p>
+                  <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-2xl flex gap-4 items-start shadow-sm">
+                    <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={24} />
+                    <div>
+                      <p className="text-emerald-900 font-black mb-1">¡Meta Alcanzable!</p>
+                      <p className="text-xs text-emerald-700 font-bold leading-relaxed">{resultado.mensaje}</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="bg-red-50/50 border border-red-100 p-5 rounded-xl flex gap-3">
-                    <XCircle className="text-red-500 shrink-0" size={24} />
-                    <p className="text-sm text-red-700 font-bold leading-tight">{resultado.mensaje}</p>
+                  <div className="bg-rose-50 border border-rose-100 p-6 rounded-2xl flex gap-4 items-start shadow-sm">
+                    <XCircle className="text-rose-500 shrink-0 mt-0.5" size={24} />
+                    <div>
+                      <p className="text-rose-900 font-black mb-1">Meta Desafiante</p>
+                      <p className="text-xs text-rose-700 font-bold leading-relaxed">{resultado.mensaje}</p>
+                    </div>
                   </div>
                 )}
 
                 <div className="space-y-3">
                   {resultado.notas_necesarias?.map((nota, idx) => (
-                    <div key={idx} className="bg-white/60 p-4 rounded-xl border border-pastel-blue/20">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-xs font-black text-slate-700">#{nota.codigo}</span>
-                        <span className="text-[10px] font-bold text-slate-400">{nota.creditos} Cr.</span>
+                    <div key={idx} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-slate-300 transition-colors">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight">#{nota.codigo}</span>
+                        <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100">{nota.creditos} Cr.</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center p-2 bg-red-50/50 rounded-xl">
-                          <p className="text-[9px] font-bold text-red-400 uppercase">Mínima</p>
-                          <p className="text-lg font-black text-red-600">{Math.max(61, nota.nota_minima).toFixed(1)}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Mínima</p>
+                          <p className="text-xl font-black text-slate-600">{Math.max(61, nota.nota_minima).toFixed(1)}</p>
                         </div>
-                        <div className="text-center p-2 bg-green-50/50 rounded-xl">
-                          <p className="text-[9px] font-bold text-green-400 uppercase">Sugerida</p>
-                          <p className="text-lg font-black text-green-600">{nota.nota_sugerida.toFixed(1)}</p>
+                        <div className="text-center p-3 bg-slate-900 rounded-xl shadow-lg shadow-slate-200">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Objetivo</p>
+                          <p className="text-xl font-black text-white">{nota.nota_sugerida.toFixed(1)}</p>
                         </div>
                       </div>
                     </div>
@@ -551,16 +631,16 @@ const OptimizadorPromedio = () => {
               </div>
             ) : escenarios ? (
               <div className="space-y-4">
-                <p className="text-xs font-bold text-slate-500 mb-4 px-1">Escenarios Sugeridos para Alcanzar:</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Escenarios Proyectados</p>
                 {escenarios.escenarios?.map((esc, idx) => (
-                  <div key={idx} className="bg-white/60 p-5 rounded-xl border border-pastel-blue/20 group hover:bg-white transition-all">
-                    <div className="flex justify-between items-start mb-3">
-                      <h4 className="font-black text-slate-700 text-sm">{esc.nombre}</h4>
-                      <span className="text-[10px] font-bold px-2 py-1 bg-pastel-purple/20 text-pastel-purple-dark rounded-lg">Prom. {esc.nota_promedio}</span>
+                  <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 group hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all cursor-default">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-black text-slate-700 text-xs uppercase tracking-tight">{esc.nombre}</h4>
+                      <span className="text-[9px] font-bold px-2 py-1 bg-slate-100 text-slate-500 rounded-lg group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">Nota Prom. {esc.nota_promedio}</span>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-slate-800">{esc.promedio_final.toFixed(2)}</span>
-                      <span className="text-sm font-bold text-slate-400">% final</span>
+                      <span className="text-4xl font-black text-slate-900 group-hover:text-emerald-600 transition-colors">{esc.promedio_final.toFixed(2)}</span>
+                      <span className="text-xs font-bold text-slate-400">% final</span>
                     </div>
                   </div>
                 ))}
