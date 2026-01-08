@@ -319,19 +319,19 @@ const OptimizadorPromedio = () => {
       )}
 
       {/* Header Section */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0" />
+      <div className="bg-gradient-to-r from-sky-500 to-blue-600 rounded-3xl p-8 shadow-xl relative overflow-hidden text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-bl-full -mr-16 -mt-16 z-0" />
         <div className="relative z-10 flex items-center gap-6">
-          <div className="p-4 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-200">
+          <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl text-white shadow-inner">
             <Target size={40} strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2">Optimizador de Promedio</h1>
-            <p className="text-slate-500 font-medium text-lg">Define tu meta académica y nosotros calculamos la estrategia perfecta.</p>
+            <h1 className="text-4xl font-black text-white tracking-tighter mb-2">Optimizador de Promedio</h1>
+            <p className="text-sky-100 font-medium text-lg">Define tu meta académica y nosotros calculamos la estrategia perfecta.</p>
           </div>
           <button
             onClick={() => setMostrarAyuda(true)}
-            className="ml-auto p-3 bg-slate-100 text-slate-500 rounded-full hover:bg-slate-200 hover:text-slate-800 transition-all active:scale-95"
+            className="ml-auto p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all active:scale-95"
             title="¿Cómo funciona?"
           >
             <HelpCircle size={24} />
@@ -377,7 +377,7 @@ const OptimizadorPromedio = () => {
               {/* BOTÓN MÁGICO DE IMPORTAR */}
               <button
                 onClick={cargarDesdeHorario}
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl hover:bg-indigo-100 transition-all font-bold text-xs border border-indigo-100 hover:shadow-sm"
+                className="flex items-center gap-2 px-5 py-2.5 bg-sky-50 text-sky-700 rounded-xl hover:bg-sky-100 transition-all font-bold text-xs border border-sky-100 hover:shadow-sm"
                 title="Importar cursos de tu Horario Guardado"
               >
                 <Download size={16} />
@@ -458,7 +458,7 @@ const OptimizadorPromedio = () => {
             ) : (
               <div className="mb-10 p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center bg-slate-50/50">
                 <p className="text-slate-400 font-bold text-sm">No has agregado cursos para este semestre.</p>
-                <button onClick={cargarDesdeHorario} className="mt-3 text-xs font-black text-indigo-600 hover:underline">Importar de mi Horario Guardado</button>
+                <button onClick={cargarDesdeHorario} className="mt-3 text-xs font-black text-sky-600 hover:underline">Importar de mi Horario Guardado</button>
               </div>
             )}
 
@@ -466,7 +466,7 @@ const OptimizadorPromedio = () => {
               <button
                 onClick={vistaActiva === "calculadora" ? calcularNotasNecesarias : simularEscenarios}
                 disabled={loading}
-                className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-black text-sm hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 active:scale-95 group uppercase tracking-wider"
+                className="flex-1 bg-sky-600 text-white py-3.5 rounded-xl font-black text-sm hover:bg-sky-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-sky-200 hover:-translate-y-1 active:scale-95 group uppercase tracking-wider"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : (vistaActiva === "calculadora" ? <Calculator size={18} className="group-hover:rotate-12 transition-transform" /> : <Sparkles size={18} className="group-hover:scale-110 transition-transform" />)}
                 {vistaActiva === "calculadora" ? "Calcular Notas" : "Simular Escenarios"}
@@ -526,20 +526,20 @@ const OptimizadorPromedio = () => {
         <div className="lg:col-span-4 space-y-8">
           {/* Promedio Actual Card */}
           {promedioActual && (
-            <div className="bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-300 relative overflow-hidden group text-white">
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-slate-800 rounded-full blur-3xl group-hover:bg-slate-700 transition-colors" />
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 relative">Promedio de Cierre</h3>
+            <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-3xl p-8 shadow-xl shadow-sky-200 relative overflow-hidden group text-white">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors" />
+              <h3 className="text-[10px] font-black text-sky-100 uppercase tracking-[0.2em] mb-6 relative">Promedio de Cierre</h3>
               <div className="flex items-baseline gap-1 relative mb-6">
                 <span className="text-7xl font-black tracking-tighter">{promedioActual.promedio}</span>
-                <span className="text-2xl font-bold text-emerald-400">%</span>
+                <span className="text-2xl font-bold text-sky-200">%</span>
               </div>
-              <div className="flex gap-4 border-t border-slate-700 pt-6">
+              <div className="flex gap-4 border-t border-white/20 pt-6">
                 <div className="flex-1">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CRÉDITOS</p>
+                  <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest">CRÉDITOS</p>
                   <p className="text-xl font-black">{promedioActual.creditos_totales || "0"}</p>
                 </div>
                 <div className="flex-1">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">CURSOS</p>
+                  <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest">CURSOS</p>
                   <p className="text-xl font-black">{promedioActual.cursos_count || "0"}</p>
                 </div>
               </div>
@@ -707,15 +707,15 @@ const OptimizadorPromedio = () => {
               {/* Calculadora de Notas */}
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100">
-                  <Calculator className="text-indigo-500" size={24} />
+                  <Calculator className="text-sky-500" size={24} />
                 </div>
                 <h3 className="text-lg font-black text-slate-900 mb-2">Calculadora de Notas</h3>
                 <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
                   Define una <strong>meta de promedio</strong> exacta y el sistema calculará qué nota mínima necesitas en cada curso actual para lograrla.
                 </p>
-                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                  <p className="text-xs text-indigo-800 font-bold">
-                    💡 <span className="underline decoration-indigo-300 decoration-2 underline-offset-2">Tip:</span> Úsalo al inicio del semestre para planificar tu esfuerzo.
+                <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
+                  <p className="text-xs text-sky-800 font-bold">
+                    💡 <span className="underline decoration-sky-300 decoration-2 underline-offset-2">Tip:</span> Úsalo al inicio del semestre para planificar tu esfuerzo.
                   </p>
                 </div>
               </div>
@@ -723,15 +723,15 @@ const OptimizadorPromedio = () => {
               {/* Simulador de Escenarios */}
               <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100">
-                  <Sparkles className="text-purple-500" size={24} />
+                  <Sparkles className="text-blue-500" size={24} />
                 </div>
                 <h3 className="text-lg font-black text-slate-900 mb-2">Simulador de Escenarios</h3>
                 <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
                   Proyecta tu promedio final en <strong>4 situaciones hipotéticas</strong>, desde aprobar con la mínima hasta un rendimiento perfecto.
                 </p>
-                <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
-                  <p className="text-xs text-purple-800 font-bold">
-                    🔮 <span className="underline decoration-purple-300 decoration-2 underline-offset-2">Tip:</span> Ideal para conocer tus límites superior e inferior rápidamente.
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                  <p className="text-xs text-blue-800 font-bold">
+                    🔮 <span className="underline decoration-blue-300 decoration-2 underline-offset-2">Tip:</span> Ideal para conocer tus límites superior e inferior rápidamente.
                   </p>
                 </div>
               </div>

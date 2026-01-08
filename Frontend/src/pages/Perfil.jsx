@@ -132,14 +132,14 @@ const Perfil = () => {
     };
 
     const dataPie = [
-        { name: 'Aprobados', value: stats.creditosAprobados, color: '#0f172a' }, // Slate-900
+        { name: 'Aprobados', value: stats.creditosAprobados, color: '#3b82f6' }, // Blue-500
         { name: 'Pendientes', value: Math.max(0, stats.creditosTotales - stats.creditosAprobados), color: '#cbd5e1' } // Slate-300
     ];
 
     if (loading) {
         return (
             <div className="min-h-[400px] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-800"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
             </div>
         );
     }
@@ -153,7 +153,7 @@ const Perfil = () => {
                     {formData.foto_banner ? (
                         <img src={formData.foto_banner} alt="Banner" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
                     ) : (
-                        <div className="w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-700 via-slate-900 to-black" />
+                        <div className="w-full h-full bg-gradient-to-r from-sky-400 via-blue-500 to-blue-600" />
                     )}
                     {editando && (
                         <button
@@ -174,7 +174,7 @@ const Perfil = () => {
                                 {formData.foto_perfil ? (
                                     <img src={formData.foto_perfil} alt="Perfil" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400">
+                                    <div className="w-full h-full bg-sky-50 flex items-center justify-center text-sky-400">
                                         <User size={80} strokeWidth={1} />
                                     </div>
                                 )}
@@ -212,7 +212,7 @@ const Perfil = () => {
                                     <button onClick={handleGuardar} disabled={guardando} className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-1">{guardando ? 'Guardando...' : 'Guardar Cambios'}</button>
                                 </div>
                             ) : (
-                                <button onClick={() => setEditando(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 shadow-xl hover:-translate-y-1 transition-all group/btn">
+                                <button onClick={() => setEditando(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-sky-500 text-white rounded-xl font-bold hover:bg-sky-600 shadow-xl shadow-sky-200 hover:-translate-y-1 transition-all group/btn">
                                     <Edit3 size={20} className="group-hover/btn:rotate-12 transition-transform" />
                                     Editar Perfil
                                 </button>
@@ -233,15 +233,15 @@ const Perfil = () => {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                             {[
-                                { label: 'Nombre Completo', icon: User, name: 'nombre', value: formData.nombre },
-                                { label: 'Carné / ID', icon: TrendingUp, name: 'carne', value: formData.carne, disabled: true },
-                                { label: 'Correo Electrónico', icon: Mail, name: 'email', value: formData.email },
-                                { label: 'Fecha de Nacimiento', icon: Calendar, name: 'fecha_nacimiento', value: formData.fecha_nacimiento, type: 'date' },
+                                { label: 'Nombre Completo', icon: User, name: 'nombre', value: formData.nombre, color: 'text-sky-500' },
+                                { label: 'Carné / ID', icon: TrendingUp, name: 'carne', value: formData.carne, disabled: true, color: 'text-emerald-500' },
+                                { label: 'Correo Electrónico', icon: Mail, name: 'email', value: formData.email, color: 'text-blue-500' },
+                                { label: 'Fecha de Nacimiento', icon: Calendar, name: 'fecha_nacimiento', value: formData.fecha_nacimiento, type: 'date', color: 'text-rose-500' },
                             ].map((field) => (
                                 <div key={field.name} className="space-y-2 group/input">
                                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">{field.label}</label>
                                     <div className="relative">
-                                        <field.icon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando && !field.disabled ? "text-slate-800" : "text-slate-400"}`} size={20} />
+                                        <field.icon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando && !field.disabled ? "text-slate-800" : field.color}`} size={20} />
                                         <input
                                             type={field.type || "text"}
                                             name={field.name}
@@ -259,7 +259,7 @@ const Perfil = () => {
                             <div className="md:col-span-2 space-y-2 group/input">
                                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">Carrera</label>
                                 <div className="relative">
-                                    <Book className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando ? "text-slate-800" : "text-slate-400"}`} size={20} />
+                                    <Book className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando ? "text-slate-800" : "text-amber-500"}`} size={20} />
                                     <input
                                         type="text"
                                         name="carrera"
@@ -295,7 +295,7 @@ const Perfil = () => {
                                             <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 11, fontWeight: 800 }} />
                                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                            <Radar name="Nivel" dataKey="A" stroke="#0f172a" strokeWidth={3} fill="#0f172a" fillOpacity={0.2} />
+                                            <Radar name="Nivel" dataKey="A" stroke="#38bdf8" strokeWidth={3} fill="#38bdf8" fillOpacity={0.3} />
                                             <Tooltip
                                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', backgroundColor: '#1e293b', color: '#fff' }}
                                                 itemStyle={{ color: '#fff' }}
@@ -318,7 +318,7 @@ const Perfil = () => {
                                         </div>
                                         <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                                             <div
-                                                className="h-full bg-slate-800 rounded-full transition-all duration-1000 ease-out group-hover:bg-emerald-500"
+                                                className="h-full bg-slate-800 rounded-full transition-all duration-1000 ease-out group-hover:bg-sky-500"
                                                 style={{ width: `${item.A}%` }}
                                             />
                                         </div>
@@ -374,7 +374,7 @@ const Perfil = () => {
                             <div className="h-40 w-full relative">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: parseFloat(stats.promedio) }]} startAngle={180} endAngle={0}>
-                                        <RadialBar dataKey="value" fill="#0f172a" cornerRadius={100} background={{ fill: '#f1f5f9' }} />
+                                        <RadialBar dataKey="value" fill="#3b82f6" cornerRadius={100} background={{ fill: '#f1f5f9' }} />
                                     </RadialBarChart>
                                 </ResponsiveContainer>
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8 flex flex-col items-center">
@@ -395,10 +395,10 @@ const Perfil = () => {
                             </div>
                         </div>
 
-                        <div className="bg-slate-900 p-6 rounded-2xl shadow-lg shadow-slate-200 text-center relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <Award className="text-amber-400 mx-auto mb-3" size={28} />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Curso Estrella</p>
+                        <div className="bg-gradient-to-br from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-200 text-center relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Award className="text-yellow-300 mx-auto mb-3" size={28} />
+                            <p className="text-[10px] font-black text-sky-100 uppercase tracking-widest mb-2">Curso Estrella</p>
                             <p className="text-lg font-black text-white leading-tight">{stats.mejorCurso}</p>
                         </div>
                     </div>

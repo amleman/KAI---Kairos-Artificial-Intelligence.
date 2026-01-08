@@ -251,7 +251,7 @@ const SemaforoCarga = () => {
   return (
     <div className="animate-fadeIn space-y-4 md:space-y-8 pb-12 w-full max-w-[1600px] mx-auto">
       {/* Header Vivid Card */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 md:p-8 shadow-lg text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-sky-500 to-blue-600 rounded-2xl p-6 md:p-8 shadow-lg text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
           <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl shadow-inner w-fit">
@@ -259,7 +259,7 @@ const SemaforoCarga = () => {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-1">Semáforo Académico</h1>
-            <p className="text-blue-100 font-medium text-sm md:text-base max-w-2xl">
+            <p className="text-sky-100 font-medium text-sm md:text-base max-w-2xl">
               Diseña tu semestre ideal. Equilibra la dificultad de tus cursos y genera horarios inteligentes.
             </p>
           </div>
@@ -272,7 +272,7 @@ const SemaforoCarga = () => {
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
-              <BookOpen className="text-blue-600" size={24} />
+              <BookOpen className="text-sky-600" size={24} />
               Catálogo de Cursos
               <span className="ml-auto text-xs font-normal bg-slate-100 px-3 py-1 rounded-full text-slate-500">
                 {cursosFiltrados.length} disponibles
@@ -288,7 +288,7 @@ const SemaforoCarga = () => {
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   placeholder="Buscar por nombre o código..."
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none"
                 />
               </div>
               <div className="relative w-full md:w-48">
@@ -296,7 +296,7 @@ const SemaforoCarga = () => {
                 <select
                   value={filtroNivel}
                   onChange={(e) => setFiltroNivel(e.target.value)}
-                  className="w-full pl-11 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer outline-none"
+                  className="w-full pl-11 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all appearance-none cursor-pointer outline-none"
                 >
                   <option value="todos">Todos los niveles</option>
                   <option value="1">🟢 Fácil</option>
@@ -313,7 +313,7 @@ const SemaforoCarga = () => {
                 className="w-full px-4 py-2 text-left font-semibold text-slate-600 text-xs md:text-sm flex items-center justify-between hover:bg-white rounded-lg transition-all"
               >
                 <span className="flex items-center gap-2">
-                  <Clock className="text-indigo-500" size={16} />
+                  <Clock className="text-sky-500" size={16} />
                   Filtros de Horario y Disponibilidad
                 </span>
                 <div className={`p-1 bg-slate-200 rounded text-slate-500 transition-transform ${mostrarFiltrosAvanzados ? 'rotate-180' : ''}`}>
@@ -326,31 +326,31 @@ const SemaforoCarga = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Lunes - Viernes
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500" /> Lunes - Viernes
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[10px] font-bold text-slate-500 mb-1 block">DESDE</label>
-                          <input type="time" value={filtrosAvanzados.horaInicioLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
+                          <input type="time" value={filtrosAvanzados.horaInicioLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-sky-500" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-slate-500 mb-1 block">HASTA</label>
-                          <input type="time" value={filtrosAvanzados.horaFinLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
+                          <input type="time" value={filtrosAvanzados.horaFinLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-sky-500" />
                         </div>
                       </div>
                     </div>
                     <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Sábados
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400" /> Sábados
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[10px] font-bold text-slate-500 mb-1 block">DESDE</label>
-                          <input type="time" value={filtrosAvanzados.horaInicioSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-purple-500" />
+                          <input type="time" value={filtrosAvanzados.horaInicioSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
                         </div>
                         <div>
                           <label className="text-[10px] font-bold text-slate-500 mb-1 block">HASTA</label>
-                          <input type="time" value={filtrosAvanzados.horaFinSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-purple-500" />
+                          <input type="time" value={filtrosAvanzados.horaFinSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
                         </div>
                       </div>
                     </div>
@@ -359,11 +359,11 @@ const SemaforoCarga = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 mb-1 block ml-1">CATEDRÁTICO</label>
-                      <input type="text" value={filtrosAvanzados.catedratico} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, catedratico: e.target.value })} placeholder="Ej: Perez" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500" />
+                      <input type="text" value={filtrosAvanzados.catedratico} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, catedratico: e.target.value })} placeholder="Ej: Perez" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-500" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 mb-1 block ml-1">MODALIDAD</label>
-                      <select value={filtrosAvanzados.modalidad} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, modalidad: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 cursor-pointer">
+                      <select value={filtrosAvanzados.modalidad} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, modalidad: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-500 cursor-pointer">
                         <option value="todos">Cualquiera</option>
                         <option value="presencial">Presencial</option>
                         <option value="virtual">Virtual</option>
@@ -378,7 +378,7 @@ const SemaforoCarga = () => {
             {/* Courses Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar content-start">
               {cursosFiltrados.map((curso) => (
-                <div key={curso.codigo} className="bg-white border border-slate-100 p-4 rounded-xl hover:shadow-lg hover:-translate-y-1 hover:border-blue-200 transition-all group shadow-sm flex flex-col h-full relative overflow-hidden">
+                <div key={curso.codigo} className="bg-white border border-slate-100 p-4 rounded-xl hover:shadow-lg hover:-translate-y-1 hover:border-sky-200 transition-all group shadow-sm flex flex-col h-full relative overflow-hidden">
                   <div className={`absolute top-0 left-0 w-1 h-full ${curso.nivel === 1 ? 'bg-emerald-400' : curso.nivel === 2 ? 'bg-amber-400' : 'bg-rose-400'}`} />
                   <div className="flex justify-between items-start mb-2 pl-2">
                     <span className="text-[10px] font-bold text-slate-400 font-mono">
@@ -393,7 +393,7 @@ const SemaforoCarga = () => {
                   </h4>
                   <button
                     onClick={() => toggleCurso(curso)}
-                    className="w-full py-2 bg-slate-50 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
+                    className="w-full py-2 bg-slate-50 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold hover:bg-sky-600 hover:text-white hover:border-sky-600 transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
                   >
                     Agregar +
                   </button>
@@ -412,7 +412,7 @@ const SemaforoCarga = () => {
               <button
                 onClick={analizarCarga}
                 disabled={Object.keys(cursosSeleccionados).length === 0 || loading}
-                className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 active:scale-[0.98]"
+                className="flex-1 bg-sky-600 text-white py-3.5 rounded-xl font-bold hover:bg-sky-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20 active:scale-[0.98]"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} className={Object.keys(cursosSeleccionados).length > 0 ? "text-yellow-400" : ""} />}
                 Analizar Carga ({Object.keys(cursosSeleccionados).length})
@@ -431,7 +431,7 @@ const SemaforoCarga = () => {
           {resultado && graficos && (
             <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-md animate-fadeIn">
               <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <BarChart3 className="text-purple-600" size={24} />
+                <BarChart3 className="text-sky-600" size={24} />
                 Estadísticas de Carga
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -517,7 +517,7 @@ const SemaforoCarga = () => {
           {/* Result Card */}
           <div className="bg-gradient-to-b from-white to-slate-50 rounded-2xl p-6 md:p-8 border border-white shadow-xl relative overflow-hidden">
             <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 relative z-10">
-              <TrendingUp className="text-indigo-600" size={24} />
+              <TrendingUp className="text-sky-600" size={24} />
               Diagnóstico
             </h2>
 
@@ -575,7 +575,7 @@ const SemaforoCarga = () => {
                   <button
                     onClick={generarHorario}
                     disabled={loadingHorario}
-                    className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+                    className="w-full bg-sky-600 text-white py-4 rounded-xl font-bold hover:bg-sky-700 shadow-lg shadow-sky-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                   >
                     {loadingHorario ? <Loader2 className="animate-spin" size={20} /> : <Clock size={20} />}
                     Generar Horario Inteligente

@@ -1,27 +1,136 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info } from "lucide-react";
+import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info, LayoutGrid, Network, HelpCircle, X, MousePointer2, Camera, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import UploadModal from "../components/dashboard/UploadModal";
 import GradesModal from "../components/dashboard/GradesModal";
+import PensumGraph from "../components/PensumGraph";
+
+const HelpModal = ({ isOpen, onClose }) => {
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden relative border border-white"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header Gradient */}
+                        <div className="bg-gradient-to-r from-sky-400 via-purple-400 to-pink-400 h-2 w-full" />
+
+                        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 p-2 rounded-full">
+                            <X size={20} />
+                        </button>
+
+                        <div className="p-8 md:p-10">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600">
+                                    <HelpCircle size={28} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Guía del Pensum</h2>
+                                    <p className="text-slate-500 font-medium text-sm text-balance">Todo lo que necesitas saber para gestionar tu progreso académico.</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-balance">
+                                {/* Section 1: Views */}
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                                        <LayoutGrid size={18} className="text-purple-500" /> Modos de Vista
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
+                                            <p className="font-bold text-xs text-slate-800">Grid (Cuadrícula)</p>
+                                            <p className="text-[11px] text-slate-500">Vista tradicional organizada por semestres. Ideal para una revisión rápida y secuencial.</p>
+                                        </div>
+                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
+                                            <p className="font-bold text-xs text-slate-800">Grafo (Interactiva)</p>
+                                            <p className="text-[11px] text-slate-500">Visualización dinámica de interconexiones. Los cursos se agrupan orgánicamente por sus dependencias.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Section 2: Colors */}
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                                        <Zap size={18} className="text-yellow-500" /> Código de Colores
+                                    </h3>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <div className="flex items-center gap-3 p-2 bg-emerald-50 rounded-lg border border-emerald-100">
+                                            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                            <span className="text-[11px] font-bold text-emerald-800">GANADO: Curso ya aprobado.</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
+                                            <div className="w-3 h-3 rounded-full bg-sky-500" />
+                                            <span className="text-[11px] font-bold text-sky-800">DISPONIBLE: Puedes asignarlo ahora.</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-2 bg-rose-50 rounded-lg border border-rose-100">
+                                            <div className="w-3 h-3 rounded-full bg-rose-400" />
+                                            <span className="text-[11px] font-bold text-rose-800">BLOQUEADO: Faltan prerrequisitos.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 3: More features */}
+                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200">
+                                <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                    <Camera size={18} className="text-sky-500" /> Tips Rápidos
+                                </h3>
+                                <ul className="space-y-3">
+                                    <li className="flex items-start gap-3">
+                                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">1</div>
+                                        <p className="text-xs text-slate-600">Usa el botón de <b>Subir Notas (OCR)</b> para cargar fotos de tus certificaciones y actualizar todo tu pensum en segundos.</p>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">2</div>
+                                        <p className="text-xs text-slate-600">En el Grafo, haz <b>click</b> en un curso disponible (azul) para ingresar tu nota y guardarla permanentemente.</p>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">3</div>
+                                        <p className="text-xs text-slate-600">Usa el sistema de <b>Zoom y Arrastre</b> en el Grafo para explorar las rutas académicas a largo plazo.</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
 
 const PensumPage = () => {
     const [pensum, setPensum] = useState([]);
     const [aprobados, setAprobados] = useState([]);
-    const [aprobadosDB, setAprobadosDB] = useState([]); // To track what is already saved
+    const [aprobadosData, setAprobadosData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [viewMode, setViewMode] = useState('grid');
+    const [showHelpModal, setShowHelpModal] = useState(false);
 
     // OCR & Upload State
+    const [showUploadModal, setShowUploadModal] = useState(false);
     const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
     const [procesandoImagenes, setProcesandoImagenes] = useState(false);
     const inputImagenesRef = useRef(null);
+    const [errorUpload, setErrorUpload] = useState("");
 
     // Grades Modal State
     const [showModalNotas, setShowModalNotas] = useState(false);
     const [cursosNuevos, setCursosNuevos] = useState([]);
     const [notasTemp, setNotasTemp] = useState({});
 
-    const [errorUpload, setErrorUpload] = useState("");
     const [usuarioData, setUsuarioData] = useState({ carne: "", carrera: "Ingeniería en Sistemas" });
 
     // Helper to normalize course objects
@@ -59,9 +168,9 @@ const PensumPage = () => {
                 fetch(`http://127.0.0.1:8000/aprobados/${parsed.carne}`)
                     .then(res => res.json())
                     .then(data => {
+                        setAprobadosData(data);
                         const codigos = data.map(c => c.codigo);
                         setAprobados(codigos);
-                        setAprobadosDB(codigos);
                     })
                     .catch(console.error);
             }
@@ -75,93 +184,89 @@ const PensumPage = () => {
     };
 
     const puedeLlevar = (curso) => {
-        if (!curso.pre_requisitos) return true;
+        if (!curso.pre_requisitos || curso.pre_requisitos === "Ninguno") return true;
         const prereqs = curso.pre_requisitos.replaceAll('"', "").split(",").map((r) => r.trim());
         return prereqs.every((p) => aprobados.includes(p));
     };
 
-    const guardarAprobados = async () => {
-        // Identify newly selected courses that aren't in DB
-        const nuevos = aprobados.filter(codigo => !aprobadosDB.includes(codigo));
+    // --- Save Logic for Grid View (Batch) ---
+    const guardarAprobadosBatch = async () => {
+        // Detect newly approved courses (in current 'aprobados' but not in DB data)
+        const newCoursesCodes = aprobados.filter(code => !aprobadosData.some(d => d.codigo === code));
 
-        if (nuevos.length > 0) {
-            // Find course details for the modal
-            const detallesNuevos = pensum.filter(c => nuevos.includes(c.codigo)).map(c => ({
-                codigo: c.codigo,
-                nombre: c.nombre_completo,
-                creditos: c.creditos
-            }));
-            setCursosNuevos(detallesNuevos);
+        if (newCoursesCodes.length > 0) {
+            // Prepare data for Grades Modal
+            const newCoursesObjects = newCoursesCodes.map(code => {
+                const info = pensum.find(p => p.codigo === code);
+                return {
+                    codigo: code,
+                    nombre: info?.nombre_completo || "",
+                    creditos: parseInt(info?.creditos) || 0
+                };
+            });
+
+            setCursosNuevos(newCoursesObjects);
+
+            // Initialize temp grades
+            const initialGrades = {};
+            newCoursesObjects.forEach(c => initialGrades[c.codigo] = 61);
+            setNotasTemp(initialGrades);
+
             setShowModalNotas(true);
         } else {
-            // Just save (maybe removal or update without new grades)
-            enviarDatosGuardado([]);
+            // No new additions, just removals or unchanged data -> Save directly
+            const payloadCursos = aprobados.map(codigo => {
+                const infoOriginal = aprobadosData.find(d => d.codigo === codigo);
+                const infoPensum = pensum.find(p => p.codigo === codigo) || {};
+                return {
+                    codigo,
+                    nombre: infoPensum.nombre_completo || "",
+                    creditos: parseInt(infoPensum.creditos) || 0,
+                    nota: infoOriginal ? infoOriginal.nota : 61
+                };
+            });
+            await enviarPayloadBackend(payloadCursos);
         }
     };
 
-    const confirmarNotas = () => {
-        const cursosConNotas = cursosNuevos.map(c => ({
-            codigo: c.codigo,
-            nota: notasTemp[c.codigo] || 61
-        }));
-        enviarDatosGuardado(cursosConNotas);
-    };
+    // --- Save Logic for Graph Modal (Single) ---
+    const handleSaveSingleCourse = async (cursoPayload, isApproved) => {
+        let nuevosAprobadosData = [...aprobadosData];
+        let nuevosAprobadosCodigos = [...aprobados];
 
-    const enviarDatosGuardado = async (nuevosCursosData = []) => {
-        try {
-            // Merge existing checked courses with new ones from OCR
-            const codigosNuevos = nuevosCursosData.map(nc => nc.codigo);
-            const todosLosCodigos = Array.from(new Set([...aprobados, ...codigosNuevos]));
+        if (isApproved) {
+            if (!nuevosAprobadosCodigos.includes(cursoPayload.codigo)) {
+                nuevosAprobadosCodigos.push(cursoPayload.codigo);
+            }
 
-            const payload = {
-                carne: usuarioData.carne,
-                cursos: todosLosCodigos.map(codigo => {
-                    const cursoInfo = pensum.find(c => c.codigo === codigo) || {};
-                    const esNuevo = nuevosCursosData.find(nc => nc.codigo === codigo);
-
-                    // Note: If it's an old course not in 'nuevosCursosData', we send 0/undefined as note.
-                    // The backend handles merging/not overwriting if we rely on its specific logic, 
-                    // but ideally the backend should interpret "0" as "keep existing".
-                    // Current backend implementation with 'merge_cursos_en_db' OVERWRITES logic:
-                    // cursos_dict[codigo] = curso. So we must be careful.
-                    // However, we are sending the full snapshot of *codes*.
-                    // If we want to safely add new courses without touching old grades, 
-                    // we should ONLY send the new courses in the payload?
-                    // User complained "it only saved 5". Because we only sent 'aprobados' (5).
-                    // If we send ALL (17+5), with note 0 for old ones, we might wipe old grades.
-
-                    // BETTER APPROACH for this specific user request context:
-                    // If we are coming from OCR (nuevosCursosData has length), send ONLY the new courses.
-                    // The backend acts as a MERGE for new entries. 
-                    // BUT 'aprobados' won't be updated in the backend if we uncheck them?
-                    // "Guardar Progreso" sends everything. "Confirmar Notas" sends new stuff.
-
-                    // Actually, let's keep it robust:
-                    // If this is a Save All (nuevosCursosData is empty), send all 'aprobados' with 0 (or whatever we have).
-                    // If this is an OCR Merge (nuevosCursosData has data), send ONLY nuevosCursosData?
-                    // AND merge them into local 'aprobados' state.
-
-                    // Let's stick to the MERGE logic which seems safer for consistency with the backend refactor:
-                    // We send the union.
-
-                    return {
-                        codigo,
-                        nombre: cursoInfo.nombre_completo || "",
-                        creditos: parseInt(cursoInfo.creditos) || 0,
-                        nota: esNuevo ? esNuevo.nota : 0
-                    };
-                })
+            const existingIndex = nuevosAprobadosData.findIndex(c => c.codigo === cursoPayload.codigo);
+            const fullCourseData = {
+                ...cursoPayload,
+                nombre: pensum.find(p => p.codigo === cursoPayload.codigo)?.nombre_completo || "",
+                creditos: parseInt(pensum.find(p => p.codigo === cursoPayload.codigo)?.creditos) || 0
             };
 
-            // Override payload to only send what we explicitly want to SAVE/UPDATE if using OCR flow?
-            // "cursos" in payload drives the backend loop.
-            // If we send everything, we re-save everything.
-            // Let's verify what the previous code did:
-            // cursos: aprobados.map...
+            if (existingIndex >= 0) {
+                nuevosAprobadosData[existingIndex] = fullCourseData;
+            } else {
+                nuevosAprobadosData.push(fullCourseData);
+            }
+        } else {
+            nuevosAprobadosCodigos = nuevosAprobadosCodigos.filter(c => c !== cursoPayload.codigo);
+            nuevosAprobadosData = nuevosAprobadosData.filter(c => c.codigo !== cursoPayload.codigo);
+        }
 
-            // To fix the "Only 5 saved" issue clearly:
-            // We just need to make sure the payload includes local 'aprobados' items AND 'nuevosCursosData' items.
-            // And update the state 'setAprobados'.
+        setAprobados(nuevosAprobadosCodigos);
+        setAprobadosData(nuevosAprobadosData);
+        await enviarPayloadBackend(nuevosAprobadosData);
+    };
+
+    const enviarPayloadBackend = async (listaCursos) => {
+        try {
+            const payload = {
+                carne: usuarioData.carne,
+                cursos: listaCursos
+            };
 
             const response = await fetch("http://127.0.0.1:8000/guardar_aprobados", {
                 method: "POST",
@@ -170,29 +275,83 @@ const PensumPage = () => {
             });
 
             if (response.ok) {
-                // Success feedback
-                const btn = document.getElementById("save-float-btn");
-                if (btn) {
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = `<span class="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Guardado!</span>`;
-                    setTimeout(() => btn.innerHTML = originalText, 2000);
-                }
-
-                // Update local state to reflect the union
-                setAprobados(todosLosCodigos);
-                setAprobadosDB(todosLosCodigos);
-
-                setShowModalNotas(false);
-                setCursosNuevos([]);
-                setNotasTemp({});
+                const data = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`).then(res => res.json());
+                setAprobadosData(data);
             } else {
-                alert("Error al guardar el progreso.");
+                alert("Error al guardar cambios.");
             }
         } catch (e) {
             console.error(e);
-            alert("Error de conexión.");
+            alert("Error de conexión al guardar.");
         }
     };
+
+    // --- OCR Logic Proxies ---
+    const confirmarNotasOCR = () => {
+        const cursosConNotas = cursosNuevos.map(c => ({
+            codigo: c.codigo,
+            nota: notasTemp[c.codigo] || 61,
+            nombre: c.nombre,
+            creditos: c.creditos
+        }));
+
+        const mergedData = [...aprobadosData];
+        cursosConNotas.forEach(nuevo => {
+            const idx = mergedData.findIndex(existing => existing.codigo === nuevo.codigo);
+            if (idx >= 0) mergedData[idx] = nuevo;
+            else mergedData.push(nuevo);
+        });
+
+        enviarPayloadBackend(mergedData).then(() => {
+            const newCodes = mergedData.map(c => c.codigo);
+            setAprobados(newCodes);
+            setAprobadosData(mergedData);
+            setShowModalNotas(false);
+            setCursosNuevos([]);
+        });
+    };
+
+    const handleSeleccionImagenes = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setImagenesSeleccionadas(prev => [...prev, ...Array.from(e.target.files)]);
+            setErrorUpload("");
+            if (e.target) e.target.value = "";
+        }
+    };
+
+    const procesarImagenesAprobados = async () => {
+        if (imagenesSeleccionadas.length === 0) { setErrorUpload("Selecciona imágenes."); return; }
+        setProcesandoImagenes(true);
+        setErrorUpload("");
+
+        const formData = new FormData();
+        imagenesSeleccionadas.forEach(file => formData.append("files", file));
+        formData.append("usuario", usuarioData.carne);
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/extraer_cursos", { method: "POST", body: formData });
+            if (!response.ok) throw new Error("Error procesando");
+            const data = await response.json();
+
+            if (data.cursos_extraidos?.length > 0) {
+                const validos = data.cursos_extraidos.map(ext => {
+                    const match = pensum.find(p => p.codigo === ext.codigo);
+                    return match ? { ...match, nota: ext.nota || 61 } : null;
+                }).filter(Boolean);
+
+                if (validos.length) {
+                    setCursosNuevos(validos);
+                    const map = {}; validos.forEach(c => map[c.codigo] = c.nota);
+                    setNotasTemp(map);
+                    setShowUploadModal(false);
+                    setShowModalNotas(true);
+                    setImagenesSeleccionadas([]);
+                } else { setErrorUpload("No se hallaron cursos válidos."); }
+            } else { setErrorUpload("No legible."); }
+        } catch (e) { setErrorUpload(e.message); }
+        finally { setProcesandoImagenes(false); }
+    };
+
 
     const semestresOrden = ["Primero", "Segundo", "Tercero", "Cuarto", "Quinto", "Sexto", "Séptimo", "Octavo", "Noveno", "Décimo"];
     const pensumPorSemestre = semestresOrden.map((sem, index) => ({
@@ -201,214 +360,149 @@ const PensumPage = () => {
         cursos: pensum.filter((c) => c.semestre === sem),
     }));
 
-    const scrollToSave = () => {
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth",
-        });
-    };
-
-    // --- OCR Logic ---
-    const handleSeleccionImagenes = (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            // Convert FileList to Array and APPEND to existing selection
-            const newFiles = Array.from(e.target.files);
-            setImagenesSeleccionadas(prev => [...prev, ...newFiles]);
-            setErrorUpload("");
-
-            // Allow re-selecting same file if needed by clearing input
-            if (e.target) e.target.value = "";
-        }
-    };
-
-    const procesarImagenesAprobados = async () => {
-        if (imagenesSeleccionadas.length === 0) {
-            setErrorUpload("Selecciona al menos una imagen.");
-            return;
-        }
-
-        setProcesandoImagenes(true);
-        setErrorUpload("");
-
-        const formData = new FormData();
-        imagenesSeleccionadas.forEach(file => {
-            formData.append("files", file);
-        });
-
-        // Add user info context if useful for backend logging (optional)
-        formData.append("usuario", usuarioData.carne);
-
-        try {
-            const response = await fetch("http://127.0.0.1:8000/extraer_cursos", {
-                method: "POST",
-                body: formData
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || "Error al procesar imágenes");
-            }
-
-            const data = await response.json();
-
-            // data.cursos_extraidos should follow format: [{ codigo: "0101", nota: 61, nombre: "..." }, ...]
-            if (data.cursos_extraidos && data.cursos_extraidos.length > 0) {
-                // Filter only courses that exist in current pensum to match IDs
-                const cursosValidos = [];
-
-                data.cursos_extraidos.forEach(extracted => {
-                    const match = pensum.find(c => c.codigo === extracted.codigo);
-                    if (match) {
-                        cursosValidos.push({
-                            codigo: match.codigo,
-                            nombre: match.nombre_completo,
-                            creditos: match.creditos,
-                            nota: extracted.nota || 61
-                        });
-                    }
-                });
-
-                if (cursosValidos.length > 0) {
-                    setCursosNuevos(cursosValidos);
-
-                    // Pre-fill grades temp state
-                    const notasPreFill = {};
-                    cursosValidos.forEach(c => notasPreFill[c.codigo] = c.nota);
-                    setNotasTemp(notasPreFill);
-
-                    setShowUploadModal(false);
-                    setShowModalNotas(true); // Go to confirmation step
-                    setImagenesSeleccionadas([]);
-                } else {
-                    setErrorUpload("No se detectaron cursos válidos del pensum actual.");
-                }
-            } else {
-                setErrorUpload("No se pudo extraer información legible. Intenta con una imagen más clara.");
-            }
-        } catch (error) {
-            console.error(error);
-            setErrorUpload(error.message || "Error de conexión con el servidor de análisis.");
-        } finally {
-            setProcesandoImagenes(false);
-        }
-    };
-
     return (
         <div className="animate-fadeIn flex flex-col h-[calc(100vh-120px)] space-y-6 relative">
-            {/* Headers Fixed */}
-            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border border-soft-blue shadow-inner relative overflow-hidden shrink-0">
-                <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-2">
-                        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                            <GraduationCap className="text-pastel-blue-dark" size={32} />
-                            Pensum
+            {/* Header Area */}
+            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border border-soft-blue shadow-inner shrink-0 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600 shadow-sm border border-sky-200">
+                        <GraduationCap size={28} />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                            Pensum Académico
                         </h1>
+                        <p className="text-slate-500 text-sm font-medium">
+                            Gestión inteligente de tu carrera.
+                        </p>
                     </div>
-                    <p className="text-slate-600 mt-2 text-sm">
-                        Visualiza tu camino académico. Marca los cursos aprobados para desbloquear los siguientes niveles.
-                    </p>
+                </div>
 
-                    <div className="flex flex-wrap gap-4 mt-4">
+                <div className="flex items-center gap-4">
+                    <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
                         <button
-                            onClick={() => setShowUploadModal(true)}
-                            className="px-4 py-2 bg-pastel-blue/20 text-slate-700 hover:bg-pastel-blue/40 border border-pastel-blue rounded-lg font-medium transition-all flex items-center gap-2 text-sm"
+                            onClick={() => setViewMode('grid')}
+                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            <UploadCloud size={16} />
-                            Subir notas
+                            <LayoutGrid size={18} /> GRID
                         </button>
-                        <div className="flex items-center gap-2 px-3 py-2 bg-[#E8DFF5] text-slate-700 rounded-xl text-xs border border-[#d4c5eb] font-semibold shadow-sm">
-                            <Info size={14} />
-                            <span>Selecciona un curso para marcarlo como aprobado.</span>
-                        </div>
+                        <button
+                            onClick={() => setViewMode('graph')}
+                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'graph' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            <Network size={18} /> GRAFO
+                        </button>
                     </div>
+
+                    <button
+                        onClick={() => setShowHelpModal(true)}
+                        className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center hover:bg-slate-700 transition-all shadow-lg shadow-slate-200"
+                        title="¿Cómo funciona?"
+                    >
+                        <HelpCircle size={22} />
+                    </button>
                 </div>
             </div>
 
-            {/* Scrollable Container */}
-            <div className="flex-1 bg-white/50 backdrop-blur-xl rounded-2xl border border-soft-blue shadow-[inset_0_0_20px_rgba(0,0,0,0.05)] flex flex-col min-h-0 overflow-hidden relative">
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar pb-24">
-                    {/* Semesters Grid */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        {pensumPorSemestre.map((sem) => (
-                            <div key={sem.nombre} className="bg-white/50 backdrop-blur-xl p-6 rounded-2xl border border-soft-blue shadow-inner relative overflow-hidden group hover:bg-white/60 transition-colors">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 font-black text-6xl text-slate-400 select-none group-hover:scale-110 transition-transform">
-                                    {sem.numero}
-                                </div>
+            {/* Action Bar */}
+            <div className="flex gap-4 px-2 shrink-0">
+                <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="px-5 py-2.5 bg-sky-500 text-white hover:bg-sky-600 rounded-xl font-black transition-all flex items-center gap-2 text-sm shadow-lg shadow-sky-100 uppercase tracking-wide"
+                >
+                    <UploadCloud size={18} />
+                    Auto-Completar con OCR
+                </button>
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-xs border border-slate-200 font-black shadow-sm ml-auto uppercase tracking-wider">
+                    <Info size={16} className="text-sky-500" />
+                    <span>Progreso: {aprobados.length} / {pensum.length} cursos</span>
+                </div>
+            </div>
 
-                                <h3 className="text-xl font-bold text-slate-700 mb-6 flex items-center gap-3 relative z-10">
-                                    <span className="w-8 h-8 rounded-full bg-pastel-blue flex items-center justify-center text-slate-700 text-sm font-bold shadow-sm">
+            {/* Main Content Area */}
+            <div className="flex-1 bg-white/50 backdrop-blur-xl rounded-3xl border border-soft-blue shadow-[inset_0_0_30px_rgba(0,0,0,0.02)] overflow-hidden relative">
+                {viewMode === 'grid' ? (
+                    <div className="absolute inset-0 overflow-y-auto p-6 md:p-8 custom-scrollbar pb-24">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            {pensumPorSemestre.map((sem) => (
+                                <div key={sem.nombre} className="bg-white/70 backdrop-blur-md p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden transition-all hover:shadow-xl group">
+                                    <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.05] transition-opacity font-black text-[12rem] text-slate-900 select-none pointer-events-none">
                                         {sem.numero}
-                                    </span>
-                                    {sem.nombre} Semestre
-                                </h3>
+                                    </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
-                                    {sem.cursos.map((curso) => {
-                                        const aprobado = aprobados.includes(curso.codigo);
-                                        const permitido = puedeLlevar(curso);
+                                    <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-4 relative z-10 uppercase tracking-widest">
+                                        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white shadow-lg border border-sky-300">
+                                            {sem.numero}
+                                        </span>
+                                        {sem.nombre} Semestre
+                                    </h3>
 
-                                        return (
-                                            <div
-                                                key={curso.codigo}
-                                                onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
-                                                className={`
-                                                    p-4 rounded-lg border transition-all duration-300 cursor-pointer relative overflow-hidden group/card
-                                                    hover:shadow-md hover:scale-[1.02]
-                                                    ${aprobado
-                                                        ? "bg-pastel-green/40 border-pastel-green shadow-sm"
-                                                        : permitido
-                                                            ? "bg-white/60 border-[2px] border-soft-blue/30 hover:bg-soft-blue/40 hover:border-soft-blue/80 hover:from-white hover:to-soft-blue/30 bg-gradient-to-br from-transparent to-transparent text-slate-700"
-                                                            : "bg-red-50/50 border-red-100/50 opacity-70 grayscale-[0.5] cursor-not-allowed hover:bg-red-100/80"
-                                                    }
-                                                `}
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${aprobado ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}>
-                                                        {curso.codigo}
-                                                    </span>
-                                                    {aprobado && <CheckCircle2 size={16} className="text-green-600" />}
-                                                    {!permitido && <AlertTriangle size={16} className="text-red-400 group-hover/card:text-red-500 transition-colors" />}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                        {sem.cursos.map((curso) => {
+                                            const aprobado = aprobados.includes(curso.codigo);
+                                            const permitido = puedeLlevar(curso);
+
+                                            return (
+                                                <div
+                                                    key={curso.codigo}
+                                                    onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
+                                                    className={`
+                                                        p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm
+                                                        ${aprobado
+                                                            ? "bg-emerald-50/80 border-emerald-200 shadow-emerald-50"
+                                                            : permitido
+                                                                ? "bg-white border-slate-100 hover:border-sky-400 hover:shadow-sky-100 hover:-translate-y-1"
+                                                                : "bg-slate-50/50 border-slate-100 italic opacity-60 cursor-not-allowed"
+                                                        }
+                                                    `}
+                                                >
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${aprobado ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
+                                                            {curso.codigo}
+                                                        </span>
+                                                        {aprobado && <CheckCircle2 size={18} className="text-emerald-500" />}
+                                                        {!permitido && <AlertTriangle size={16} className="text-rose-400" />}
+                                                    </div>
+                                                    <h4 className={`font-black text-sm leading-tight mb-3 ${aprobado ? 'text-emerald-900' : 'text-slate-800'}`}>
+                                                        {curso.nombre_completo}
+                                                    </h4>
+                                                    <div className="text-[10px] text-slate-400 font-black flex items-center gap-1.5 uppercase tracking-tighter">
+                                                        <Award size={12} className="text-sky-400" /> {curso.creditos} Créditos
+                                                    </div>
                                                 </div>
-
-                                                <h4 className="font-semibold px-0 text-slate-800 text-sm leading-tight mb-2">
-                                                    {curso.nombre_completo}
-                                                </h4>
-
-                                                <div className="text-xs text-slate-500 flex items-center gap-1">
-                                                    <Award size={12} />
-                                                    {curso.creditos} Créditos
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Floating Action Bar (NOW ABSOLUTE INSIDE CONTAINER) */}
-                <div className="absolute bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
-                    <div className="bg-white/80 backdrop-blur-xl border border-soft-blue shadow-2xl rounded-xl p-3 flex justify-between items-center max-w-2xl w-full mx-4 ring-1 ring-black/5 pointer-events-auto">
-                        <div className="flex items-center gap-3 ml-2">
-                            <div className="w-2 h-2 rounded-full bg-pastel-blue animate-pulse" />
-                            <span className="text-slate-600 font-bold text-sm">
-                                {aprobados.length} Cursos seleccionados
-                            </span>
+                            ))}
                         </div>
-                        <button
-                            id="save-float-btn"
-                            onClick={guardarAprobados}
-                            className="bg-slate-900 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-slate-800 hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-2 shadow-lg active:scale-95 text-sm"
-                        >
-                            <Save size={16} />
-                            Guardar Progreso
-                        </button>
+
+                        <div className="fixed bottom-10 left-0 right-0 flex justify-center z-20 pointer-events-none">
+                            <div className="pointer-events-auto p-1.5 bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl">
+                                <button
+                                    onClick={guardarAprobadosBatch}
+                                    className="bg-slate-900 text-white px-10 py-4 rounded-xl font-black hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-lg uppercase tracking-widest text-sm"
+                                >
+                                    <Save size={20} />
+                                    Guardar Cambios
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <PensumGraph
+                        pensum={pensum}
+                        aprobados={aprobados}
+                        aprobadosData={aprobadosData}
+                        onSaveSingleCourse={handleSaveSingleCourse}
+                    />
+                )}
             </div>
 
-
+            <HelpModal
+                isOpen={showHelpModal}
+                onClose={() => setShowHelpModal(false)}
+            />
 
             <UploadModal
                 showUploadModal={showUploadModal}
@@ -427,7 +521,7 @@ const PensumPage = () => {
                 cursosNuevos={cursosNuevos}
                 notasTemp={notasTemp}
                 setNotasTemp={setNotasTemp}
-                confirmarNotas={confirmarNotas}
+                confirmarNotas={confirmarNotasOCR}
             />
         </div>
     );

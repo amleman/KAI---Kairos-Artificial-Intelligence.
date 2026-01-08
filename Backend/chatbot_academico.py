@@ -2,6 +2,8 @@ import re
 import json
 import pandas as pd
 import numpy as np
+import glob
+import os
 from difflib import get_close_matches
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -29,31 +31,17 @@ class ChatbotAcademico:
     """
     
     def __init__(self, path_pensum='./Data/pensum_sistemas.csv'):
-        self.path_pensum = path_pensum
-        self.df_pensum = pd.read_csv(path_pensum)
+        # Cargar TODOS los pensums disponibles
+        self.pensums = {}
+        self._cargar_todos_los_pensums()
         
-        # Normalizar datos del pensum
-        self.df_pensum['codigo'] = self.df_pensum['codigo'].astype(str).str.zfill(4)
-        self.df_pensum['nombre_completo'] = self.df_pensum['nombre_completo'].str.upper()
-        
-        # Crear mapeo código -> información
-        self.cursos_info = {}
-        for _, row in self.df_pensum.iterrows():
-            # Parsear prerequisitos a lista
-            prereqs_str = str(row['pre_requisitos']) if pd.notna(row['pre_requisitos']) else ''
-            if prereqs_str and prereqs_str != 'Ninguno' and prereqs_str != 'nan':
-                # Separar por comas y limpiar
-                prereqs_list = [p.strip().zfill(4) for p in prereqs_str.split(',') if p.strip()]
-            else:
-                prereqs_list = []
-            
-            self.cursos_info[row['codigo']] = {
-                'nombre': row['nombre_completo'],
-                'creditos': int(row['creditos']) if pd.notna(row['creditos']) else 3,
-                'semestre': str(row['semestre']),
-                'prereqs': str(row['pre_requisitos']) if pd.notna(row['pre_requisitos']) else 'Ninguno',
-                'prerrequisitos': prereqs_list  # NUEVO: lista de códigos
-            }
+        # Por defecto usamos Sistemas como fallback
+        self.cursos_info = self.pensums.get('sistemas', {})
+        if not self.cursos_info and self.pensums:
+            # Si no hay sistemas, usar el primero que haya
+            self.cursos_info = list(self.pensums.values())[0]
+
+        # Stopwords en español
         
         # Stopwords en español
         if NLTK_AVAILABLE:
@@ -318,17 +306,86 @@ class ChatbotAcademico:
             texto = texto.replace(original, replacement)
         return texto
     
-    def _extraer_codigo_curso(self, mensaje):
-        """Extrae código de curso - ESTRICTO: requiere código o nombre casi completo."""
-        # 1. Buscar código directo (ej: "0796", "796") - SIEMPRE FUNCIONA
+    def _cargar_todos_los_pensums(self):
+        """Carga todos los archivos CSV de la carpeta Pensums."""
+        path_pensums = './Data/Pensums/*.csv'
+        archivos = glob.glob(path_pensums)
+        
+        for archivo in archivos:
+            try:
+                # Nombre de carrera basado en nombre de archivo (ej: 'sistemas.csv' -> 'sistemas')
+                nombre_carrera = os.path.basename(archivo).replace('.csv', '').lower()
+                df = pd.read_csv(archivo)
+                
+                # Normalizar
+                df['codigo'] = df['codigo'].astype(str).str.zfill(4)
+                df['nombre_completo'] = df['nombre_completo'].str.upper()
+                
+                cursos_dict = {}
+                for _, row in df.iterrows():
+                    prereqs_str = str(row['pre_requisitos']) if pd.notna(row['pre_requisitos']) else ''
+                    if prereqs_str and prereqs_str != 'Ninguno' and prereqs_str != 'nan':
+                        prereqs_list = [p.strip().zfill(4) for p in prereqs_str.split(',') if p.strip()]
+                    else:
+                        prereqs_list = []
+                    
+                    cursos_dict[row['codigo']] = {
+                        'nombre': row['nombre_completo'],
+                        'creditos': int(row['creditos']) if pd.notna(row['creditos']) else 3,
+                        'semestre': str(row['semestre']),
+                        'prereqs': str(row['pre_requisitos']) if pd.notna(row['pre_requisitos']) else 'Ninguno',
+                        'prerrequisitos': prereqs_list
+                    }
+                
+                self.pensums[nombre_carrera] = cursos_dict
+                print(f"✅ Pensum cargado: {nombre_carrera} ({len(cursos_dict)} cursos)")
+            except Exception as e:
+                print(f"❌ Error cargando pensum {archivo}: {e}")
+
+    def _get_pensum_activo(self, contexto):
+        """Retorna el diccionario de cursos apropiado según la carrera del usuario."""
+        if not contexto or 'carrera' not in contexto:
+            return self.cursos_info # Default (Sistemas)
+        
+        carrera_raw = self._normalizar_texto(contexto['carrera']).lower()
+        
+        # Mapeo simple de nombres de carrera a keys de pensums
+        mapa = {
+            'sistema': 'sistemas',
+            'civil': 'civil',
+            'industrial': 'industrial',
+            'mecanica': 'mecanica',
+            'electrica': 'electrica', # Ojo con mecanica_electrica
+            'electronica': 'electronica',
+            'quimica': 'quimica',
+            'ambiental': 'ambiental'
+        }
+        
+        # Claves compuestas primero para evitar match parcial incorrecto
+        if 'mecanica electrica' in carrera_raw or 'mecanica electrica' in carrera_raw:
+             return self.pensums.get('mecanica_electrica', self.cursos_info)
+        if 'mecanica industrial' in carrera_raw:
+             return self.pensums.get('mecanica_industrial', self.cursos_info)
+
+        for key, value in mapa.items():
+            if key in carrera_raw:
+                return self.pensums.get(value, self.cursos_info)
+        
+        return self.cursos_info
+
+    def _extraer_codigo_curso(self, mensaje, cursos_dict=None):
+        """Extrae código de curso buscando en el diccionario proporcionado."""
+        if cursos_dict is None:
+            cursos_dict = self.cursos_info
+            
+        # 1. Buscar código directo (ej: "0796", "796")
         match_codigo = re.search(r'\b\d{3,4}\b', mensaje)
         if match_codigo:
             codigo = match_codigo.group().zfill(4)
-            if codigo in self.cursos_info:
+            if codigo in cursos_dict:
                 return codigo
         
-        # 2. Buscar por nombre - REQUIERE NOMBRE CASI COMPLETO (70%+)
-        # Limpiar puntuación primero (para que "2?" se vuelva "2")
+        # 2. Buscar por nombre
         mensaje_limpio = re.sub(r'[^\w\s]', ' ', mensaje)
         mensaje_norm = self._normalizar_texto(mensaje_limpio.upper())
         palabras_mensaje = mensaje_norm.split()
@@ -336,31 +393,28 @@ class ChatbotAcademico:
         mejor_codigo = None
         mejor_porcentaje = 0
         
-        for codigo, info in self.cursos_info.items():
+        for codigo, info in cursos_dict.items():
             nombre_norm = self._normalizar_texto(info['nombre'].upper())
             palabras_nombre = nombre_norm.split()
             
-            # Contar palabras del NOMBRE que están en el MENSAJE
             coincidencias = sum(1 for p in palabras_nombre if p in palabras_mensaje)
-            
-            # Porcentaje de palabras del nombre que coinciden
             porcentaje = coincidencias / len(palabras_nombre) if palabras_nombre else 0
             
-            # ESTRICTO: Requiere al menos 60% de coincidencia
             if porcentaje > mejor_porcentaje and porcentaje >= 0.6:
                 mejor_porcentaje = porcentaje
                 mejor_codigo = codigo
         
         return mejor_codigo
     
-    def obtener_prerrequisitos(self, mensaje):
+    def obtener_prerrequisitos(self, mensaje, contexto=None):
         """Obtiene prerrequisitos de un curso."""
-        codigo = self._extraer_codigo_curso(mensaje)
+        cursos_dict = self._get_pensum_activo(contexto)
+        codigo = self._extraer_codigo_curso(mensaje, cursos_dict)
         
         if not codigo:
             return "🤔 No pude identificar el curso. Por favor especifica el código o el nombre completo."
         
-        info = self.cursos_info[codigo]
+        info = cursos_dict[codigo]
         prereqs = info['prereqs']
         
         respuesta = f"📚 {info['nombre']}\n🔢 Código: {codigo}\n\n"
@@ -372,21 +426,22 @@ class ChatbotAcademico:
             prereqs_lista = prereqs.split(',')
             for prereq in prereqs_lista:
                 prereq = prereq.strip().zfill(4)
-                if prereq in self.cursos_info:
-                    respuesta += f"  - {prereq}: {self.cursos_info[prereq]['nombre']}\n"
+                if prereq in cursos_dict:
+                    respuesta += f"  - {prereq}: {cursos_dict[prereq]['nombre']}\n"
                 else:
                     respuesta += f"  - {prereq}\n"
         
         return respuesta
     
-    def obtener_info_curso(self, mensaje):
+    def obtener_info_curso(self, mensaje, contexto=None):
         """Obtiene información completa de un curso."""
-        codigo = self._extraer_codigo_curso(mensaje)
+        cursos_dict = self._get_pensum_activo(contexto)
+        codigo = self._extraer_codigo_curso(mensaje, cursos_dict)
         
         if not codigo:
             return "🤔 ¿De qué curso quieres información? Dame el código o nombre completo."
         
-        info = self.cursos_info[codigo]
+        info = cursos_dict[codigo]
         
         respuesta = f"""📖 INFORMACIÓN DEL CURSO
 
@@ -398,18 +453,21 @@ class ChatbotAcademico:
 """
         return respuesta
     
-    def obtener_creditos(self, mensaje):
+    def obtener_creditos(self, mensaje, contexto=None):
         """Obtiene solo los créditos de un curso."""
-        codigo = self._extraer_codigo_curso(mensaje)
+        cursos_dict = self._get_pensum_activo(contexto)
+        codigo = self._extraer_codigo_curso(mensaje, cursos_dict)
         
         if not codigo:
             return "🤔 ¿De qué curso quieres saber los créditos? Dame el código o nombre completo."
         
-        info = self.cursos_info[codigo]
+        info = cursos_dict[codigo]
         return f"📚 {info['nombre']}\n⭐ Créditos: {info['creditos']}"
     
-    def buscar_por_nombre(self, mensaje):
+    def buscar_por_nombre(self, mensaje, contexto=None):
         """Busca cursos por nombre o palabras clave."""
+        cursos_dict = self._get_pensum_activo(contexto)
+        
         # Extraer palabras clave del mensaje
         mensaje_limpio = self._limpiar_texto(mensaje)
         palabras_busqueda = [p for p in mensaje_limpio.split() if len(p) > 3]
@@ -419,7 +477,7 @@ class ChatbotAcademico:
         
         # Buscar en nombres de cursos
         resultados = []
-        for codigo, info in self.cursos_info.items():
+        for codigo, info in cursos_dict.items():
             nombre = info['nombre']
             coincidencias = sum(1 for palabra in palabras_busqueda 
                               if palabra.upper() in nombre)

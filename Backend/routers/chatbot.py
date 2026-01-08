@@ -28,6 +28,14 @@ def chatbot():
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
+            
+            # 1. Obtener carrera del usuario
+            cursor.execute("SELECT carrera FROM usuarios_info WHERE usuario = ? OR carne = ?", (usuario, usuario))
+            row_info = cursor.fetchone()
+            if row_info and row_info[0]:
+                contexto['carrera'] = row_info[0]
+
+            # 2. Obtener cursos aprobados
             cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
             row = cursor.fetchone()
             conn.close()
@@ -39,7 +47,8 @@ def chatbot():
                     # Forzar conversión a int para evitar error str + int
                     contexto['creditos_acumulados'] = sum(int(c.get('creditos', 3)) for c in cursos_data)
                     contexto['lista_aprobados'] = cursos_data
-        except Exception:
+        except Exception as e:
+            print(f"Error obteniendo contexto chatbot: {e}")
             pass
     
     # Obtener respuesta del chatbot
