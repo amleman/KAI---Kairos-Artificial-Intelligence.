@@ -102,9 +102,9 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
   // Esto debe ir DESPUÉS de todos los hooks
   if (!listaHorario || listaHorario.length === 0) {
     return (
-      <div className="p-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300 mt-4">
-        <AlertCircle className="mx-auto text-gray-400 mb-2" size={32} />
-        <p className="text-gray-500">No hay cursos en este horario guardado.</p>
+      <div className="p-8 text-center bg-gray-50 dark:bg-slate-900/50 rounded-lg border border-dashed border-gray-300 dark:border-slate-700 mt-4">
+        <AlertCircle className="mx-auto text-gray-400 dark:text-gray-500 mb-2" size={32} />
+        <p className="text-gray-500 dark:text-gray-400">No hay cursos en este horario guardado.</p>
       </div>
     );
   }
@@ -139,31 +139,31 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-full">
+    <div className="bg-white dark:!bg-black border-gray-200 dark:border-slate-800 rounded-xl shadow-lg border overflow-hidden flex flex-col h-full transition-colors duration-300">
       {/* Header */}
       {/* Header (Always Visible) */}
-      <div className={`bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0 ${compact ? 'px-4 py-2' : 'px-6 py-4'}`}>
+      <div className={`bg-gray-50 dark:!bg-black border-b border-gray-200 dark:border-slate-800 flex justify-between items-center shrink-0 ${compact ? 'px-4 py-2' : 'px-6 py-4'}`}>
         <div className="flex flex-col">
-          <h3 className={`font-bold text-gray-700 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
-            <Calendar className="text-gray-500" size={compact ? 16 : 20} /> Visualización
+          <h3 className={`font-bold text-gray-700 dark:text-slate-200 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
+            <Calendar className="text-gray-500 dark:text-slate-400" size={compact ? 16 : 20} /> Visualización
           </h3>
           {fechaGuardado && (
-            <span className="text-[10px] text-gray-400 font-medium ml-7">
+            <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium ml-7">
               Guardado: {new Date(fechaGuardado).toLocaleDateString()} {new Date(fechaGuardado).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
-        <div className="flex p-1 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="flex p-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm">
           <button
             onClick={() => setVista("calendario")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "calendario" ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:bg-gray-50"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "calendario" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               }`}
           >
             <Calendar size={14} /> Calendario
           </button>
           <button
             onClick={() => setVista("lista")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "lista" ? "bg-slate-900 text-white shadow-md" : "text-slate-500 hover:bg-gray-50"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "lista" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               }`}
           >
             <List size={14} /> Lista
@@ -171,15 +171,15 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
         </div>
       </div>
 
-      <div className="p-6 overflow-auto">
+      <div className="p-6 overflow-auto bg-white dark:!bg-black">
         {vista === "lista" ? (
           /* --- VISTA LISTA --- */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {listaHorario.map((curso, idx) => (
-              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white group`}>
+              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white dark:bg-slate-800 dark:border-slate-700 group`}>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
                       {getNombre(curso)}
                     </h4>
                   </div>
@@ -188,7 +188,7 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
                   </span>
                 </div>
 
-                <div className="space-y-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-900/50 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock size={14} className="text-blue-500" />
                     <span className="font-mono font-medium">{getInicio(curso)} - {getFinal(curso)}</span>
@@ -202,7 +202,7 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
                     <span className="truncate">{getProfe(curso)}</span>
                   </div>
                 </div>
-                <div className="mt-3 pt-2 border-t border-gray-100 text-xs font-bold text-gray-500 flex gap-2">
+                <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-700 text-xs font-bold text-gray-500 dark:text-gray-400 flex gap-2">
                   <Calendar size={14} />
                   {parsearDias(curso).join(", ")}
                 </div>
@@ -211,15 +211,15 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
           </div>
         ) : (
           /* --- VISTA CUADRÍCULA (NUEVA ESTRUCTURA) --- */
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto bg-white dark:!bg-black">
             <div className="min-w-[800px]">
               {/* Grid Header */}
               <div className="grid grid-cols-7 gap-2 mb-2">
-                <div className="bg-slate-800 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center">
+                <div className="bg-slate-800 dark:bg-slate-900 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center">
                   Horario
                 </div>
                 {DIAS_SEMANA.map((dia) => (
-                  <div key={dia} className="bg-slate-800 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest">
+                  <div key={dia} className="bg-slate-800 dark:bg-slate-900 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest">
                     {dia}
                   </div>
                 ))}
@@ -243,7 +243,7 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
                 ].map((bloque, idx) => (
                   <div key={idx} className="grid grid-cols-7 gap-2">
                     {/* Time Label */}
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-xs font-bold text-slate-500">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs flex items-center justify-center">
                       {bloque.start} - {bloque.end}
                     </div>
 
@@ -292,7 +292,7 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
 
                       // Empty Slot
                       return (
-                        <div key={dia} className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50" />
+                        <div key={dia} className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50" />
                       );
                     })}
                   </div>
@@ -305,16 +305,16 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
 
       {/* --- FOOTER CON ANÁLISIS FINANCIERO (独立 / Independent) --- */}
       {analisis && !compact && (
-        <div className="bg-gray-50 border-t border-gray-200">
+        <div className="bg-gray-50 dark:!bg-black border-t border-gray-200 dark:border-slate-800">
           {mostrarAnalisis && (
             <div className={`px-6 py-4 animate-fadeIn ${compact ? 'text-xs' : ''}`}>
-              <div className={`rounded-lg border-l-4 p-4 ${analisis.tipo_alerta === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
+              <div className={`rounded-lg border-l-4 p-4 ${analisis.tipo_alerta === 'success' ? 'bg-green-50 dark:!bg-black border-green-500' : 'bg-red-50 dark:!bg-black border-red-500'}`}>
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className={`font-bold ${analisis.tipo_alerta === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                    <h4 className={`font-bold ${analisis.tipo_alerta === 'success' ? 'text-green-800 dark:!text-green-300' : 'text-red-800 dark:!text-red-300'}`}>
                       {analisis.mensaje_alerta}
                     </h4>
-                    <p className={`text-gray-600 mt-1 ${compact ? 'text-[10px]' : 'text-sm'}`}>
+                    <p className={`text-gray-600 dark:!text-gray-100 mt-1 ${compact ? 'text-[10px]' : 'text-sm'}`}>
                       {analisis.tipo_alerta === 'success'
                         ? "¡Gran elección! Esta combinación maximiza tus oportunidades académicas."
                         : `Impacto económico estimado: Q${analisis.costo_proyectado_total?.toLocaleString()} por retraso de ${analisis.meses_atraso_estimado} meses.`
@@ -331,7 +331,7 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
 
           <button
             onClick={() => setMostrarAnalisis(!mostrarAnalisis)}
-            className={`w-full text-sm font-semibold text-gray-500 hover:text-blue-600 hover:bg-white transition-colors border-t border-transparent hover:border-gray-200 flex items-center justify-center gap-2 ${compact ? 'py-2 text-[11px]' : 'py-3'}`}
+            className={`w-full text-sm font-semibold text-gray-500 dark:!text-white hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-900 transition-colors border-t border-transparent hover:border-gray-200 dark:hover:border-slate-700 flex items-center justify-center gap-2 ${compact ? 'py-2 text-[11px]' : 'py-3'}`}
           >
             {mostrarAnalisis ? "Ocultar Análisis" : "Ver Impacto Económico (Costo de Oportunidad)"}
           </button>

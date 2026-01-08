@@ -14,14 +14,14 @@ import HorarioVisualizer from "../components/HorarioVisualizer";
 const StatCard = ({ title, value, subtitle, icon: Icon, bgClass, iconClass, subtitleClass }) => (
   <div className={`backdrop-blur-xl border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden ${bgClass}`}>
     <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-xl bg-white/60 text-slate-800 ${iconClass}`}>
-        <Icon size={24} className="text-slate-700" />
+      <div className={`p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 ${iconClass}`}>
+        <Icon size={24} className="text-slate-700 dark:text-current" />
       </div>
       {subtitle && <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${subtitleClass}`}>{subtitle}</span>}
     </div>
     <div>
-      <h3 className="text-3xl font-black text-slate-800 mb-1 tracking-tight group-hover:scale-105 transition-transform origin-left">{value}</h3>
-      <p className="text-slate-600 font-bold text-sm">{title}</p>
+      <h3 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1 tracking-tight group-hover:scale-105 transition-transform origin-left">{value}</h3>
+      <p className="text-slate-600 dark:text-slate-400 font-bold text-sm">{title}</p>
     </div>
   </div>
 );
@@ -214,10 +214,10 @@ const Dashboard = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
             Hola, {userData.nombre.split(" ")[0]} 👋
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Aquí tienes el resumen de tu progreso académico actual.
           </p>
         </div>
@@ -233,8 +233,8 @@ const Dashboard = () => {
           title="Promedio General"
           value={stats.promedio}
           icon={TrendingUp}
-          bgClass="bg-indigo-50 border-indigo-200"
-          iconClass="text-indigo-600 shadow-indigo-100"
+          bgClass="bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800"
+          iconClass="text-indigo-600 dark:text-indigo-400 shadow-indigo-100"
           subtitle="Acumulado"
           subtitleClass="bg-indigo-100 text-indigo-700"
         />
@@ -242,24 +242,24 @@ const Dashboard = () => {
           title="Créditos Ganados"
           value={stats.creditos}
           icon={Award}
-          bgClass="bg-rose-50 border-rose-200"
-          iconClass="text-rose-600 shadow-rose-100"
+          bgClass="bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800"
+          iconClass="text-rose-600 dark:text-rose-400 shadow-rose-100"
           subtitleClass="hidden"
         />
         <StatCard
           title="Avance de Carrera"
           value={`${stats.avance}%`}
           icon={Zap}
-          bgClass="bg-amber-50 border-amber-200"
-          iconClass="text-amber-600 shadow-amber-100"
+          bgClass="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+          iconClass="text-amber-600 dark:text-amber-400 shadow-amber-100"
           subtitleClass="hidden"
         />
         <StatCard
           title="Cursos Actuales"
           value={computedStats.courses}
           icon={BookOpen}
-          bgClass="bg-violet-50 border-violet-200"
-          iconClass="text-violet-600 shadow-violet-100"
+          bgClass="bg-violet-50 dark:bg-violet-900/20 border-violet-200 dark:border-violet-800"
+          iconClass="text-violet-600 dark:text-violet-400 shadow-violet-100"
           subtitle="Asignados"
           subtitleClass="bg-violet-100 text-violet-700"
         />
@@ -267,8 +267,8 @@ const Dashboard = () => {
           title="Horas Semanales"
           value={computedStats.weeklyHours + " H"}
           icon={Clock}
-          bgClass="bg-emerald-50 border-emerald-200"
-          iconClass="text-emerald-600 shadow-emerald-100"
+          bgClass="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+          iconClass="text-emerald-600 dark:text-emerald-400 shadow-emerald-100"
           subtitle="Carga Total"
           subtitleClass="bg-emerald-100 text-emerald-700"
         />
@@ -280,17 +280,17 @@ const Dashboard = () => {
             </span>
           }
           icon={Calendar}
-          bgClass="bg-sky-50 border-sky-200"
-          iconClass="text-sky-600 shadow-sky-100"
+          bgClass="bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800"
+          iconClass="text-sky-600 dark:text-sky-400 shadow-sky-100"
           subtitle={nextClassInfo.status}
           subtitleClass={nextClassInfo.badgeColor}
         />
       </div>
 
       {/* Schedule Section */}
-      <section className="bg-white/50 backdrop-blur-xl border border-soft-blue rounded-2xl p-8 shadow-inner">
+      <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-soft-blue dark:border-slate-700 rounded-2xl p-8 shadow-inner transition-colors duration-300">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-pastel-blue-dark" />
             Mi Horario Guardado
           </h2>
@@ -303,7 +303,7 @@ const Dashboard = () => {
 
         {horarioGuardado ? (
           <>
-            <div className="rounded-xl overflow-hidden border-[2px] border-soft-blue/30 shadow-inner bg-white/40">
+            <div className="rounded-xl overflow-hidden border-[2px] border-soft-blue/30 dark:border-slate-700 shadow-inner bg-white/40 dark:bg-slate-800/40">
               <HorarioVisualizer horario={horarioGuardado} compact={true} />
             </div>
 

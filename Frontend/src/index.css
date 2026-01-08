@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-pastel-blue/20 transition-colors duration-300 min-h-screen text-slate-800 dark:text-slate-100;
+  }
+
+  html.dark body {
+    @apply bg-slate-950;
+    background: linear-gradient(to bottom, #0f172a, #1e293b) fixed;
+  }
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(400px);
