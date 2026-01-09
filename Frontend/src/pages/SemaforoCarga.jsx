@@ -5,6 +5,7 @@ import {
   X, AlertTriangle, Search, Filter, Info, Sparkles
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import API_URL from "../api/apiConfig";
 
 const SemaforoCarga = () => {
   const getUserData = () => {
@@ -70,7 +71,7 @@ const SemaforoCarga = () => {
   const cargarCursosClasificados = async () => {
     try {
       if (!userData.carne) return;
-      const response = await fetch(`http://127.0.0.1:8000/cursos_clasificados/${userData.carne}`);
+      const response = await fetch(`${API_URL}/cursos_clasificados/${userData.carne}`);
       const data = await response.json();
       setCursosDisponibles(data);
     } catch (error) {
@@ -109,7 +110,7 @@ const SemaforoCarga = () => {
     setHorarioGenerado(null);
     try {
       const codigos = Object.keys(cursosSeleccionados);
-      const response = await fetch("http://127.0.0.1:8000/analizar_semaforo", {
+      const response = await fetch(`${API_URL}/analizar_semaforo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cursos: codigos })
@@ -148,7 +149,7 @@ const SemaforoCarga = () => {
           modalidad: filtrosAvanzados.modalidad === "todos" ? "TODAS" : filtrosAvanzados.modalidad.toUpperCase()
         }
       };
-      const response = await fetch("http://127.0.0.1:8000/generar_horario_custom", {
+      const response = await fetch(`${API_URL}/generar_horario_custom`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -250,16 +251,15 @@ const SemaforoCarga = () => {
 
   return (
     <div className="animate-fadeIn space-y-4 md:space-y-8 pb-12 w-full max-w-[1600px] mx-auto">
-      {/* Header Vivid Card */}
-      <div className="bg-gradient-to-r from-sky-500 to-blue-600 rounded-2xl p-6 md:p-8 shadow-lg text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none" />
+      {/* Header Glass Card */}
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-3xl p-8 shadow-sm relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
-          <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl shadow-inner w-fit">
-            <TrafficCone size={32} className="text-white" />
+          <div className="p-3 bg-white/50 dark:bg-slate-700/50 backdrop-blur-md rounded-xl shadow-sm border border-white/50 w-fit">
+            <TrafficCone size={32} className="text-emerald-500" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-1">Semáforo Académico</h1>
-            <p className="text-sky-100 font-medium text-sm md:text-base max-w-2xl">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 mb-1">Semáforo Académico</h1>
+            <p className="text-slate-600 dark:text-slate-300 font-medium text-sm md:text-base max-w-2xl">
               Diseña tu semestre ideal. Equilibra la dificultad de tus cursos y genera horarios inteligentes.
             </p>
           </div>
@@ -270,8 +270,8 @@ const SemaforoCarga = () => {
 
         {/* Left Column: Input Selection (7/12) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/40 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-shadow">
+            <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700/50 pb-4">
               <BookOpen className="text-sky-600" size={24} />
               Catálogo de Cursos
               <span className="ml-auto text-xs font-normal bg-slate-100 px-3 py-1 rounded-full text-slate-500">
@@ -280,7 +280,7 @@ const SemaforoCarga = () => {
             </h2>
 
             {/* Filters Bar */}
-            <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-6 sticky top-0 bg-white z-10 py-2">
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-6 sticky top-0 bg-transparent z-10 py-2">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
@@ -288,7 +288,7 @@ const SemaforoCarga = () => {
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   placeholder="Buscar por nombre o código..."
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 dark:text-slate-100 dark:placeholder:text-slate-400 transition-all outline-none"
                 />
               </div>
               <div className="relative w-full md:w-48">
@@ -296,7 +296,7 @@ const SemaforoCarga = () => {
                 <select
                   value={filtroNivel}
                   onChange={(e) => setFiltroNivel(e.target.value)}
-                  className="w-full pl-11 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all appearance-none cursor-pointer outline-none"
+                  className="w-full pl-11 pr-8 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 dark:text-slate-100 transition-all appearance-none cursor-pointer outline-none"
                 >
                   <option value="todos">Todos los niveles</option>
                   <option value="1">🟢 Fácil</option>
@@ -307,10 +307,10 @@ const SemaforoCarga = () => {
             </div>
 
             {/* Advanced Filters Toggle */}
-            <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-1 border border-slate-200 mb-6">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-700 dark:to-slate-800 rounded-xl p-1 border border-slate-200 dark:border-slate-600 mb-6">
               <button
                 onClick={() => setMostrarFiltrosAvanzados(!mostrarFiltrosAvanzados)}
-                className="w-full px-4 py-2 text-left font-semibold text-slate-600 text-xs md:text-sm flex items-center justify-between hover:bg-white rounded-lg transition-all"
+                className="w-full px-4 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 text-xs md:text-sm flex items-center justify-between hover:bg-white dark:hover:bg-slate-600/50 rounded-lg transition-all"
               >
                 <span className="flex items-center gap-2">
                   <Clock className="text-sky-500" size={16} />
@@ -324,33 +324,33 @@ const SemaforoCarga = () => {
               {mostrarFiltrosAvanzados && (
                 <div className="p-4 space-y-4 animate-fadeIn">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <div className="bg-white dark:!bg-slate-800/60 backdrop-blur-xl p-3 md:p-4 rounded-xl border border-slate-200 dark:!border-slate-700/50 shadow-sm transition-colors">
+                      <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-sky-500" /> Lunes - Viernes
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] font-bold text-slate-500 mb-1 block">DESDE</label>
-                          <input type="time" value={filtrosAvanzados.horaInicioLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-sky-500" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">DESDE</label>
+                          <input type="time" value={filtrosAvanzados.horaInicioLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:!bg-slate-700/50 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600/50 text-xs outline-none focus:border-sky-500 dark:color-scheme-dark" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold text-slate-500 mb-1 block">HASTA</label>
-                          <input type="time" value={filtrosAvanzados.horaFinLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-sky-500" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">HASTA</label>
+                          <input type="time" value={filtrosAvanzados.horaFinLV} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinLV: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:!bg-slate-700/50 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600/50 text-xs outline-none focus:border-sky-500 dark:color-scheme-dark" />
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
-                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <div className="bg-white dark:!bg-slate-800/60 backdrop-blur-xl p-3 md:p-4 rounded-xl border border-slate-200 dark:!border-slate-700/50 shadow-sm transition-colors">
+                      <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-400" /> Sábados
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[10px] font-bold text-slate-500 mb-1 block">DESDE</label>
-                          <input type="time" value={filtrosAvanzados.horaInicioSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">DESDE</label>
+                          <input type="time" value={filtrosAvanzados.horaInicioSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaInicioSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:!bg-slate-700/50 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600/50 text-xs outline-none focus:border-blue-500 dark:color-scheme-dark" />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold text-slate-500 mb-1 block">HASTA</label>
-                          <input type="time" value={filtrosAvanzados.horaFinSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 rounded border border-slate-200 text-xs outline-none focus:border-blue-500" />
+                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">HASTA</label>
+                          <input type="time" value={filtrosAvanzados.horaFinSabado} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, horaFinSabado: e.target.value })} className="w-full px-2 py-1.5 bg-slate-50 dark:!bg-slate-700/50 dark:text-slate-200 rounded border border-slate-200 dark:border-slate-600/50 text-xs outline-none focus:border-blue-500 dark:color-scheme-dark" />
                         </div>
                       </div>
                     </div>
@@ -358,12 +358,12 @@ const SemaforoCarga = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 mb-1 block ml-1">CATEDRÁTICO</label>
-                      <input type="text" value={filtrosAvanzados.catedratico} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, catedratico: e.target.value })} placeholder="Ej: Perez" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-500" />
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block ml-1">CATEDRÁTICO</label>
+                      <input type="text" value={filtrosAvanzados.catedratico} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, catedratico: e.target.value })} placeholder="Ej: Perez" className="w-full px-3 py-2 bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-600/50 rounded-lg text-sm dark:text-slate-200 outline-none focus:border-sky-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 mb-1 block ml-1">MODALIDAD</label>
-                      <select value={filtrosAvanzados.modalidad} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, modalidad: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-500 cursor-pointer">
+                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block ml-1">MODALIDAD</label>
+                      <select value={filtrosAvanzados.modalidad} onChange={(e) => setFiltrosAvanzados({ ...filtrosAvanzados, modalidad: e.target.value })} className="w-full px-3 py-2 bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-600/50 rounded-lg text-sm dark:text-slate-200 outline-none focus:border-sky-500 cursor-pointer">
                         <option value="todos">Cualquiera</option>
                         <option value="presencial">Presencial</option>
                         <option value="virtual">Virtual</option>
@@ -378,29 +378,29 @@ const SemaforoCarga = () => {
             {/* Courses Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar content-start">
               {cursosFiltrados.map((curso) => (
-                <div key={curso.codigo} className="bg-white border border-slate-100 p-4 rounded-xl hover:shadow-lg hover:-translate-y-1 hover:border-sky-200 transition-all group shadow-sm flex flex-col h-full relative overflow-hidden">
+                <div key={curso.codigo} className="bg-white dark:!bg-slate-800/60 backdrop-blur-xl border border-slate-100 dark:!border-slate-700/50 p-4 rounded-xl hover:shadow-lg hover:-translate-y-1 hover:border-sky-200 dark:hover:border-sky-500/30 transition-all group shadow-sm flex flex-col h-full relative overflow-hidden">
                   <div className={`absolute top-0 left-0 w-1 h-full ${curso.nivel === 1 ? 'bg-emerald-400' : curso.nivel === 2 ? 'bg-amber-400' : 'bg-rose-400'}`} />
                   <div className="flex justify-between items-start mb-2 pl-2">
-                    <span className="text-[10px] font-bold text-slate-400 font-mono">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono">
                       #{curso.codigo}
                     </span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ring-1 ${getNivelBadge(curso.nivel)}`}>
                       {getNivelTexto(curso.nivel)}
                     </span>
                   </div>
-                  <h4 className="text-slate-800 font-bold text-sm mb-4 line-clamp-3 flex-1 pl-2" title={curso.nombre}>
+                  <h4 className="text-slate-800 dark:text-slate-100 font-bold text-sm mb-4 line-clamp-3 flex-1 pl-2" title={curso.nombre}>
                     {curso.nombre}
                   </h4>
                   <button
                     onClick={() => toggleCurso(curso)}
-                    className="w-full py-2 bg-slate-50 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold hover:bg-sky-600 hover:text-white hover:border-sky-600 transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
+                    className="w-full py-2 bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600/50 rounded-lg text-xs font-bold hover:bg-sky-600 hover:text-white hover:border-sky-600 dark:hover:bg-sky-600 dark:hover:text-white dark:hover:border-sky-600 transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
                   >
                     Agregar +
                   </button>
                 </div>
               ))}
               {cursosFiltrados.length === 0 && (
-                <div className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                <div className="col-span-full py-12 text-center text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700">
                   <Search size={32} className="mx-auto mb-2 opacity-50" />
                   <p>No se encontraron cursos con esos filtros.</p>
                 </div>
@@ -429,37 +429,37 @@ const SemaforoCarga = () => {
 
           {/* Visualization Charts Section */}
           {resultado && graficos && (
-            <div className="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-md animate-fadeIn">
-              <h2 className="text-lg md:text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-white/40 dark:border-slate-700/50 shadow-md animate-fadeIn">
+              <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
                 <BarChart3 className="text-sky-600" size={24} />
                 Estadísticas de Carga
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="h-64 flex flex-col items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 uppercase mb-2">Distribución de Dificultad</span>
+                <div className="h-64 flex flex-col items-center p-4 bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md rounded-2xl border border-slate-100 dark:!border-slate-700/50">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Distribución de Dificultad</span>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={graficos.pieData} innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
                         {graficos.pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '8px 12px', fontSize: '12px' }}
-                        itemStyle={{ color: '#1e293b', fontWeight: 'bold' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '8px 12px', fontSize: '12px', backgroundColor: '#1e293b', color: '#f1f5f9' }}
+                        itemStyle={{ color: '#f1f5f9', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="h-64 flex flex-col items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 uppercase mb-2">Cantidad por Nivel</span>
+                <div className="h-64 flex flex-col items-center p-4 bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md rounded-2xl border border-slate-100 dark:!border-slate-700/50">
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Cantidad por Nivel</span>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={graficos.barData} barSize={32}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                       <XAxis dataKey="nivel" tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip
-                        cursor={{ fill: '#f1f5f9', radius: 4 }}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                        cursor={{ fill: '#334155', radius: 4 }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px', backgroundColor: '#1e293b', color: '#f1f5f9' }}
                       />
                       <Bar dataKey="cantidad" radius={[6, 6, 6, 6]} animationDuration={1000} />
                     </BarChart>
@@ -473,8 +473,8 @@ const SemaforoCarga = () => {
         {/* Right Column: Selections & Result (5/12) */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-6">
           {/* Selected Courses List */}
-          <div className="bg-slate-50 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-slate-200 shadow-inner">
-            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center justify-between">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-5 md:p-6 border border-white/40 dark:border-slate-700/50 shadow-inner">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <CheckCircle className="text-emerald-500" size={22} />
                 Selección
@@ -485,26 +485,26 @@ const SemaforoCarga = () => {
             </h2>
 
             {Object.keys(cursosSeleccionados).length === 0 ? (
-              <div className="py-8 flex flex-col items-center justify-center text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">
+              <div className="py-8 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 border-dashed">
                 <Info size={32} className="mb-2 opacity-30" />
                 <p className="text-xs text-center px-4">Añade cursos del catálogo para analizar tu carga</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {Object.values(cursosSeleccionados).map((curso) => (
-                  <div key={curso.codigo} className="bg-white p-3 rounded-xl border border-slate-200 flex justify-between items-center group shadow-sm transition-all hover:border-red-200 hover:shadow-md">
+                  <div key={curso.codigo} className="bg-white dark:!bg-slate-800/60 backdrop-blur-xl p-3 rounded-xl border border-slate-200 dark:!border-slate-700/50 flex justify-between items-center group shadow-sm transition-all hover:border-red-200 hover:shadow-md">
                     <div className="min-w-0 flex items-center gap-3">
                       <div className={`w-1.5 h-8 rounded-full shrink-0 ${curso.nivel === 1 ? 'bg-emerald-400' : curso.nivel === 2 ? 'bg-amber-400' : 'bg-rose-400'}`} />
                       <div className="overflow-hidden">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono font-bold text-slate-400">#{curso.codigo}</span>
+                          <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-500">#{curso.codigo}</span>
                         </div>
-                        <p className="text-xs font-bold text-slate-700 truncate">{curso.nombre}</p>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{curso.nombre}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => toggleCurso(curso)}
-                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shrink-0"
+                      className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -515,8 +515,8 @@ const SemaforoCarga = () => {
           </div>
 
           {/* Result Card */}
-          <div className="bg-gradient-to-b from-white to-slate-50 rounded-2xl p-6 md:p-8 border border-white shadow-xl relative overflow-hidden">
-            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 relative z-10">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-white/40 dark:border-slate-700/50 shadow-xl relative overflow-hidden">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2 relative z-10">
               <TrendingUp className="text-sky-600" size={24} />
               Diagnóstico
             </h2>
@@ -550,9 +550,9 @@ const SemaforoCarga = () => {
                   <div className={`h-1 w-16 rounded-full mt-2 bg-gradient-to-r ${getSemaforoColor(resultado.semaforo)}`} />
                 </div>
 
-                <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-200" />
-                  <p className="text-sm text-slate-600 leading-relaxed font-medium italic relative z-10">
+                <div className="bg-white dark:!bg-slate-800/40 backdrop-blur-md p-5 rounded-xl border border-slate-100 dark:!border-slate-700/50 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 dark:bg-slate-600" />
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium italic relative z-10">
                     "{resultado.mensaje}"
                   </p>
                   <div className="absolute top-2 right-2 text-slate-100 -z-0">
@@ -561,13 +561,13 @@ const SemaforoCarga = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Dificultad Prom.</span>
-                    <span className="text-xl font-black text-slate-700">{resultado.nivel_promedio.toFixed(2)}</span>
+                  <div className="bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md p-3 rounded-xl border border-slate-100 dark:!border-slate-700/50 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Dificultad Prom.</span>
+                    <span className="text-xl font-black text-slate-700 dark:text-slate-200">{resultado.nivel_promedio.toFixed(2)}</span>
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Cursos</span>
-                    <span className="text-xl font-black text-slate-700">{Object.keys(cursosSeleccionados).length}</span>
+                  <div className="bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md p-3 rounded-xl border border-slate-100 dark:!border-slate-700/50 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Total Cursos</span>
+                    <span className="text-xl font-black text-slate-700 dark:text-slate-200">{Object.keys(cursosSeleccionados).length}</span>
                   </div>
                 </div>
 

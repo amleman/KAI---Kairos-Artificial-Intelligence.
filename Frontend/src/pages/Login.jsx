@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import API_URL from "../api/apiConfig";
 
 const Login = () => {
     const [usuario, setUsuario] = useState("");
@@ -10,7 +11,7 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const response = await fetch("http://127.0.0.1:8000/login", {
+        const response = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -21,10 +22,10 @@ const Login = () => {
 
         if (response.ok) {
             const data = await response.json();
-            
+
             // Guardar el username del usuario en localStorage
             localStorage.setItem("usuario", data.usuario);
-            
+
             // Si el usuario tiene información completa, guardarla también
             if (data.tiene_info && data.carne) {
                 localStorage.setItem("userData", JSON.stringify({
@@ -37,7 +38,7 @@ const Login = () => {
                 // Limpiar userData si no tiene info completa
                 localStorage.removeItem("userData");
             }
-            
+
             navigate("/dashboard");
         } else {
             setError("Usuario o contraseña incorrectos");

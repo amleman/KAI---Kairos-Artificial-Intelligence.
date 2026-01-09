@@ -308,40 +308,40 @@ const PensumGraph = ({ pensum, aprobados, onSaveSingleCourse, aprobadosData = []
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative"
+                            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative border border-white/20 dark:border-slate-700/50"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <button onClick={() => setSelectedCourse(null)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
-                                <X size={24} />
+                            <button onClick={() => setSelectedCourse(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                                <X size={20} />
                             </button>
 
-                            <div className="p-8 pb-4">
+                            <div className="p-6 pb-2">
                                 {/* Header Tags */}
-                                <div className="flex gap-2 mb-4">
-                                    <span className="bg-slate-100 text-slate-600 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Code: {selectedCourse.codigo}</span>
-                                    <span className="bg-blue-50 text-blue-600 text-[10px] uppercase font-black px-2 py-0.5 rounded shadow-sm">Semestre {selectedCourse.semestre}</span>
+                                <div className="flex gap-2 mb-3">
+                                    <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">Code: {selectedCourse.codigo}</span>
+                                    <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[9px] uppercase font-black px-2 py-0.5 rounded shadow-sm">Semestre {selectedCourse.semestre}</span>
                                 </div>
 
                                 {/* Title */}
-                                <h2 className="text-2xl font-bold text-slate-800 mb-6 leading-tight pr-6">
+                                <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-4 leading-tight pr-6">
                                     {selectedCourse.nombre_completo}
                                 </h2>
 
-                                {/* Toggle switch */}
-                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center justify-between mb-4 shadow-inner">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${modalAprobado ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}>
-                                            <CheckCircle2 size={20} />
+                                {/* Toggle switch Compact */}
+                                <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl p-2.5 flex items-center justify-between mb-3 shadow-inner">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${modalAprobado ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-200 text-slate-400 dark:bg-slate-700 dark:text-slate-500'}`}>
+                                            <CheckCircle2 size={14} />
                                         </div>
-                                        <span className="font-bold text-slate-600 text-sm">¿Curso Aprobado?</span>
+                                        <span className="font-bold text-slate-600 dark:text-slate-300 text-xs">¿Curso Aprobado?</span>
                                     </div>
                                     <div
                                         onClick={() => setModalAprobado(!modalAprobado)}
-                                        className={`w-14 h-8 rounded-full p-1 cursor-pointer transition-colors relative shadow-inner ${modalAprobado ? 'bg-emerald-400' : 'bg-slate-300'}`}
+                                        className={`w-10 h-6 rounded-full p-0.5 cursor-pointer transition-colors relative shadow-inner ${modalAprobado ? 'bg-emerald-400 dark:bg-emerald-600' : 'bg-slate-300 dark:bg-slate-600'}`}
                                     >
                                         <motion.div
-                                            className="w-6 h-6 bg-white rounded-full shadow-md absolute top-1"
-                                            animate={{ left: modalAprobado ? 28 : 4 }}
+                                            className="w-5 h-5 bg-white rounded-full shadow-md absolute top-0.5"
+                                            animate={{ left: modalAprobado ? 18 : 2 }}
                                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                         />
                                     </div>
@@ -354,47 +354,47 @@ const PensumGraph = ({ pensum, aprobados, onSaveSingleCourse, aprobadosData = []
                                         animate={{ height: modalAprobado ? "auto" : 0, opacity: modalAprobado ? 1 : 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wide px-1">Nota Final (61-100)</div>
-                                        <div className="relative mb-6">
-                                            <Award className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                        <div className="mb-1 text-[9px] font-bold text-slate-400 uppercase tracking-wide px-1">Nota Final (61-100)</div>
+                                        <div className="relative mb-4">
+                                            <Award className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                             <input
                                                 type="number"
                                                 value={modalNota}
                                                 onChange={(e) => setModalNota(e.target.value)}
-                                                className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-12 pr-4 font-bold text-slate-700 focus:border-emerald-400 outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                                                className="w-full bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 pl-9 pr-3 font-bold text-sm text-slate-700 dark:text-slate-100 focus:border-emerald-400 dark:focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 shadow-sm"
                                                 placeholder="0"
                                             />
                                         </div>
                                     </motion.div>
                                 </AnimatePresence>
 
-                                {/* Save Button */}
+                                {/* Save Button Compact */}
                                 <button
                                     onClick={handleGuardar}
                                     disabled={guardando || !isValidGrade}
-                                    className={`w-full py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95
-                                        ${isValidGrade ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none border border-slate-200'}
-                                    `}
+                                    className={`w-full py-2.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95
+                                            ${isValidGrade ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800 dark:hover:bg-emerald-800/60' : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none border border-slate-200 dark:bg-slate-800 dark:text-slate-600 dark:border-slate-700'}
+                                        `}
                                 >
                                     {guardando ? 'Guardando...' : (
                                         <>
-                                            <Save size={20} /> Guardar Progreso
+                                            <Save size={16} /> Guardar Progreso
                                         </>
                                     )}
                                 </button>
                             </div>
 
-                            {/* Dependencies List */}
-                            <div className="bg-slate-50 p-8 border-t border-slate-100">
-                                <h4 className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 mb-4 tracking-wider">
-                                    <ArrowRight size={14} /> Habilita Siguientes Cursos
+                            {/* Dependencies List Scrollable */}
+                            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 border-t border-slate-100 dark:border-slate-700/50">
+                                <h4 className="flex items-center gap-2 text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 mb-2 tracking-wider">
+                                    <ArrowRight size={12} /> Habilita {selectedCourse.habilita?.length || 0} cursos
                                 </h4>
-                                <div className="flex flex-col gap-2 pr-2">
+                                <div className="flex flex-col gap-2 pr-2 max-h-[120px] overflow-y-auto custom-scrollbar">
                                     {selectedCourse.habilita && selectedCourse.habilita.length > 0 ? (
                                         selectedCourse.habilita.map(h => (
-                                            <div key={h.codigo} className="bg-sky-50/50 p-2 rounded-xl border border-sky-100 shadow-sm flex flex-col gap-0.5">
-                                                <div className="font-bold text-slate-700 text-xs">{h.nombre_completo}</div>
-                                                <div className="text-[9px] text-slate-400 font-bold flex gap-2 uppercase">
+                                            <div key={h.codigo} className="bg-sky-50/50 dark:bg-sky-900/10 p-2 rounded-lg border border-sky-100 dark:border-sky-800/30 shadow-sm flex flex-col gap-0.5 shrink-0">
+                                                <div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{h.nombre_completo}</div>
+                                                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold flex gap-2 uppercase">
                                                     <span>{h.codigo}</span>
                                                     <span>•</span>
                                                     <span>Semestre {h.semestre}</span>
@@ -402,7 +402,7 @@ const PensumGraph = ({ pensum, aprobados, onSaveSingleCourse, aprobadosData = []
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="text-slate-400 text-[10px] italic">No habilita otros cursos directos.</div>
+                                        <div className="text-slate-400 dark:text-slate-600 text-[10px] italic">No habilita otros cursos directos.</div>
                                     )}
                                 </div>
                             </div>

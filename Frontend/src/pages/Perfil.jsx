@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Mail, Calendar, Book, Save, Edit3, Award, TrendingUp, Shield, Camera, Brain, Zap } from 'lucide-react';
+import { User, Mail, Calendar, Book, Save, Edit3, Award, TrendingUp, Shield, Camera, Brain, Zap, Crown, Sparkles, Rocket } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, RadialBarChart, RadialBar } from 'recharts';
+import API_URL from "../api/apiConfig";
+import PricingModal from '../components/PricingModal';
 
 const Perfil = () => {
     const [usuario, setUsuario] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editando, setEditando] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    const [showPricingModal, setShowPricingModal] = useState(false);
+    const [userPlan, setUserPlan] = useState({ plan: 'free', nombre_plan: 'Gratuito', limites: {} });
 
     const [formData, setFormData] = useState({
         nombre: '',
@@ -34,7 +38,7 @@ const Perfil = () => {
                 if (!usuarioNombre) return;
                 setUsuario({ usuario: usuarioNombre });
 
-                const resPerfil = await fetch(`http://127.0.0.1:8000/api/perfil/${usuarioNombre}`);
+                const resPerfil = await fetch(`${API_URL}/api/perfil/${usuarioNombre}`);
                 if (resPerfil.ok) {
                     const dataPerfil = await resPerfil.json();
                     setFormData({
@@ -48,7 +52,7 @@ const Perfil = () => {
                     });
                 }
 
-                const resCursos = await fetch('http://127.0.0.1:8000/cursos_aprobados', {
+                const resCursos = await fetch(`${API_URL}/cursos_aprobados`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ usuario: usuarioNombre })
@@ -74,6 +78,13 @@ const Perfil = () => {
                         setRadarData(dataCursos.competencias_ia);
                     }
                 }
+
+                // Cargar plan del usuario
+                const resPlan = await fetch(`${API_URL}/api/plan/${usuarioNombre}`);
+                if (resPlan.ok) {
+                    const dataPlan = await resPlan.json();
+                    setUserPlan(dataPlan);
+                }
             } catch (error) {
                 console.error("Error cargando perfil:", error);
             } finally {
@@ -91,7 +102,7 @@ const Perfil = () => {
         if (!usuario) return;
         setGuardando(true);
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/perfil/${usuario.usuario}`, {
+            const res = await fetch(`${API_URL}/api/perfil/${usuario.usuario}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
@@ -115,7 +126,7 @@ const Perfil = () => {
         uploadData.append('usuario', usuario.usuario);
         uploadData.append('tipo', tipo);
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/upload', {
+            const res = await fetch(`${API_URL}/api/upload`, {
                 method: 'POST',
                 body: uploadData
             });
@@ -147,7 +158,7 @@ const Perfil = () => {
     return (
         <div className="animate-fadeIn space-y-8 pb-12">
             {/* Profile Header Card */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
                 {/* Banner */}
                 <div className="h-64 bg-slate-800 relative overflow-hidden">
                     {formData.foto_banner ? (
@@ -192,14 +203,14 @@ const Perfil = () => {
 
                         {/* Name & Title */}
                         <div className="flex-1 text-center md:text-left mb-2">
-                            <h1 className="text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter mb-2">
+                            <h1 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tighter mb-2">
                                 {formData.nombre || 'Usuario'}
                             </h1>
                             <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-                                <span className="text-xl font-bold text-slate-500">@{usuario?.usuario}</span>
-                                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-300" />
-                                <div className="bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200">
-                                    <span className="text-sm font-black text-slate-700 uppercase tracking-widest">{formData.carrera}</span>
+                                <span className="text-xl font-bold text-slate-500 dark:text-slate-400">@{usuario?.usuario}</span>
+                                <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                                <div className="bg-slate-100 dark:bg-slate-700/50 px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-600">
+                                    <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{formData.carrera}</span>
                                 </div>
                             </div>
                         </div>
@@ -226,10 +237,10 @@ const Perfil = () => {
                 {/* Information Column (8/12) */}
                 <div className="lg:col-span-8 space-y-8">
                     {/* Personal Info */}
-                    <div className="bg-white rounded-3xl p-10 border border-slate-200 shadow-lg relative overflow-hidden hover:shadow-xl transition-shadow duration-500">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-bl-full -mr-16 -mt-16 z-0" />
-                        <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3 relative z-10">
-                            <Shield className="text-slate-900" /> Información Personal
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-10 border border-white/40 dark:border-slate-700/50 shadow-lg relative overflow-hidden hover:shadow-xl transition-shadow duration-500">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 dark:bg-slate-700/20 rounded-bl-full -mr-16 -mt-16 z-0" />
+                        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-3 relative z-10">
+                            <Shield className="text-slate-900 dark:text-slate-100" /> Información Personal
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                             {[
@@ -249,8 +260,8 @@ const Perfil = () => {
                                             onChange={handleChange}
                                             disabled={field.disabled || !editando}
                                             className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando && !field.disabled
-                                                ? "bg-slate-50 border-2 border-slate-200 text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 shadow-inner"
-                                                : "bg-slate-50 border-transparent text-slate-500 cursor-default"
+                                                ? "bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-500 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-400 focus:ring-0 shadow-inner"
+                                                : "bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default"
                                                 }`}
                                         />
                                     </div>
@@ -267,8 +278,8 @@ const Perfil = () => {
                                         onChange={handleChange}
                                         disabled={!editando}
                                         className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando
-                                            ? "bg-slate-50 border-2 border-slate-200 text-slate-900 focus:bg-white focus:border-slate-900 focus:ring-0 shadow-inner"
-                                            : "bg-slate-50 border-transparent text-slate-500 cursor-default"
+                                            ? "bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-500 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-400 focus:ring-0 shadow-inner"
+                                            : "bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default"
                                             }`}
                                     />
                                 </div>
@@ -277,9 +288,9 @@ const Perfil = () => {
                     </div>
 
                     {/* Radar Chart */}
-                    <div className="bg-white rounded-3xl p-10 border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-500">
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-10 border border-white/40 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow duration-500">
                         <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
                                 <Brain className="text-emerald-600" /> Análisis de Competencias
                             </h2>
                             <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
@@ -312,9 +323,9 @@ const Perfil = () => {
                             <div className="w-full xl:w-72 space-y-5">
                                 {radarData.map((item, idx) => (
                                     <div key={idx} className="space-y-2 group">
-                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500">
-                                            <span className="group-hover:text-slate-800 transition-colors">{item.subject}</span>
-                                            <span className="text-slate-900">{item.A}%</span>
+                                        <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                                            <span className="group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">{item.subject}</span>
+                                            <span className="text-slate-900 dark:text-slate-100">{item.A}%</span>
                                         </div>
                                         <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                                             <div
@@ -331,20 +342,99 @@ const Perfil = () => {
 
                 {/* Vertical Sidebar Column (4/12) */}
                 <div className="lg:col-span-4 space-y-8">
-                    {/* Progress Chart */}
-                    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg text-center hover:shadow-xl transition-all duration-500 group">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8 group-hover:text-slate-600 transition-colors">Progreso de Carrera</h3>
-                        <div className="h-64 relative transform group-hover:scale-105 transition-transform duration-500 ease-out">
+                    {/* Plan / Subscription Card - MOVED TO TOP */}
+                    {/* Plan / Subscription Card - COMPACT */}
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/40 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow duration-500 relative overflow-hidden">
+                        {/* Background decoration */}
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-100/50 to-orange-100/50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-bl-full blur-2xl" />
+
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tu Suscripción</h3>
+                                <div className={`
+                                    px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5
+                                    ${userPlan.plan === 'premium'
+                                        ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white shadow-lg shadow-amber-200 dark:shadow-amber-900/30'
+                                        : userPlan.plan === 'daily'
+                                            ? 'bg-gradient-to-r from-violet-400 to-purple-500 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/30'
+                                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                                    }
+                                `}>
+                                    {userPlan.plan === 'premium' && <Crown size={10} />}
+                                    {userPlan.plan === 'daily' && <Zap size={10} />}
+                                    {userPlan.plan === 'daily' ? 'Day Pass' : userPlan.nombre_plan || userPlan.plan.toUpperCase()}
+                                </div>
+                            </div>
+
+                            {userPlan.plan === 'free' ? (
+                                <>
+                                    <div className="text-center py-2">
+                                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">¡Desbloquea todo el potencial!</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
+                                            IA ilimitada, horarios automáticos y más.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowPricingModal(true)}
+                                        className="w-full py-3 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Crown size={14} />
+                                        Mejorar a Premium
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-3 mb-4">
+                                        {userPlan.fecha_fin && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 dark:text-slate-400">
+                                                    {userPlan.plan === 'daily' ? 'Expira hoy a las' : 'Válido hasta'}
+                                                </span>
+                                                <span className="font-bold text-slate-800 dark:text-slate-100">
+                                                    {userPlan.plan === 'daily'
+                                                        ? new Date(userPlan.fecha_fin).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })
+                                                        : new Date(userPlan.fecha_fin).toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
+                                            <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">Activo</p>
+                                            <ul className="space-y-1 text-xs text-emerald-600 dark:text-emerald-300">
+                                                <li className="flex items-center gap-2">
+                                                    <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                                                    {userPlan.plan === 'premium' ? 'Todo ilimitado' : 'Chatbot ilimitado'}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {userPlan.plan !== 'premium' && (
+                                        <button
+                                            onClick={() => setShowPricingModal(true)}
+                                            className="w-full py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-600 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Crown size={14} />
+                                            Mejorar a Premium
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    {/* Progress Chart - COMPACT */}
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/40 dark:border-slate-700/50 shadow-lg text-center hover:shadow-xl transition-all duration-500 group">
+                        <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">Progreso de Carrera</h3>
+                        <div className="h-48 relative transform group-hover:scale-105 transition-transform duration-500 ease-out">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={dataPie}
                                         cx="50%" cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={100}
+                                        innerRadius={60}
+                                        outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
-                                        cornerRadius={8}
+                                        cornerRadius={6}
                                         stroke="none"
                                     >
                                         {dataPie.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
@@ -353,57 +443,70 @@ const Perfil = () => {
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-6xl font-black text-slate-800 tracking-tighter">{stats.creditosAprobados}</span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase mt-2">Créditos Ganados</span>
+                                <span className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tighter">{stats.creditosAprobados}</span>
+                                <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-1">Créditos</span>
                             </div>
                         </div>
-                        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                            <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
-                                Faltan <span className="text-slate-900">{Math.max(0, stats.creditosTotales - stats.creditosAprobados)}</span> créditos
+                        <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-700/40 rounded-xl border border-slate-100 dark:border-slate-600/50">
+                            <p className="text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-wider">
+                                Faltan <span className="text-slate-900 dark:text-slate-100">{Math.max(0, stats.creditosTotales - stats.creditosAprobados)}</span> créditos
                             </p>
-                            <div className="w-full h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
-                                <div className="h-full bg-slate-400 rounded-full" style={{ width: `${(stats.creditosAprobados / stats.creditosTotales) * 100}%` }} />
+                            <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full mt-2 overflow-hidden">
+                                <div className="h-full bg-slate-400 dark:bg-slate-300 rounded-full" style={{ width: `${(stats.creditosAprobados / stats.creditosTotales) * 100}%` }} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats Breakdown */}
-                    <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-lg space-y-8 hover:shadow-xl transition-shadow duration-500">
+                    {/* Stats Breakdown - COMPACT */}
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/40 dark:border-slate-700/50 shadow-lg space-y-6 hover:shadow-xl transition-shadow duration-500">
                         <div className="flex flex-col items-center text-center">
-                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Promedio General</h3>
-                            <div className="h-40 w-full relative">
+                            <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Promedio General</h3>
+                            <div className="h-32 w-full relative">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadialBarChart innerRadius="70%" outerRadius="100%" data={[{ value: parseFloat(stats.promedio) }]} startAngle={180} endAngle={0}>
                                         <RadialBar dataKey="value" fill="#3b82f6" cornerRadius={100} background={{ fill: '#f1f5f9' }} />
                                     </RadialBarChart>
                                 </ResponsiveContainer>
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-8 flex flex-col items-center">
-                                    <span className="text-6xl font-black text-slate-800 tracking-tighter">{stats.promedio}</span>
-                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 mt-2">Puntos</span>
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-6 flex flex-col items-center">
+                                    <span className="text-5xl font-black text-slate-800 dark:text-slate-100 tracking-tighter">{stats.promedio}</span>
+                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-1.5 py-0.5 rounded-md border border-emerald-100 dark:border-emerald-800 mt-1">Puntos</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center group hover:bg-white hover:border-slate-300 hover:shadow-md transition-all">
-                                <span className="text-3xl font-black text-slate-800 mb-1 group-hover:scale-110 transition-transform">{stats.cursosAprobados}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Cursos</span>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 dark:bg-slate-700/40 p-4 rounded-xl border border-slate-200 dark:border-slate-600/50 flex flex-col items-center group hover:bg-white dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-md transition-all">
+                                <span className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-0.5 group-hover:scale-110 transition-transform">{stats.cursosAprobados}</span>
+                                <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tight">Cursos</span>
                             </div>
-                            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col items-center group hover:bg-white hover:border-slate-300 hover:shadow-md transition-all">
-                                <span className="text-3xl font-black text-slate-800 mb-1 group-hover:scale-110 transition-transform">{stats.mejorNota}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">Max Nota</span>
+                            <div className="bg-slate-50 dark:bg-slate-700/40 p-4 rounded-xl border border-slate-200 dark:border-slate-600/50 flex flex-col items-center group hover:bg-white dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-md transition-all">
+                                <span className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-0.5 group-hover:scale-110 transition-transform">{stats.mejorNota}</span>
+                                <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tight">Max Nota</span>
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-sky-500 to-blue-600 p-6 rounded-2xl shadow-lg shadow-sky-200 text-center relative overflow-hidden group">
+                        <div className="bg-gradient-to-br from-sky-500 to-blue-600 p-4 rounded-xl shadow-lg shadow-sky-200 text-center relative overflow-hidden group">
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <Award className="text-yellow-300 mx-auto mb-3" size={28} />
-                            <p className="text-[10px] font-black text-sky-100 uppercase tracking-widest mb-2">Curso Estrella</p>
-                            <p className="text-lg font-black text-white leading-tight">{stats.mejorCurso}</p>
+                            <Award className="text-yellow-300 mx-auto mb-2" size={24} />
+                            <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest mb-1">Curso Estrella</p>
+                            <p className="text-sm font-black text-white leading-tight">{stats.mejorCurso}</p>
                         </div>
                     </div>
+
+
                 </div>
             </div>
+
+            {/* Pricing Modal */}
+            <PricingModal
+                isOpen={showPricingModal}
+                onClose={() => setShowPricingModal(false)}
+                currentPlan={userPlan.plan}
+                onUpgrade={(newPlan) => {
+                    console.log('Upgrade to:', newPlan);
+                    setShowPricingModal(false);
+                }}
+            />
         </div>
     );
 };

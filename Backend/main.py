@@ -8,6 +8,7 @@ from routers.courses import courses_bp
 from routers.schedules import schedules_bp
 from routers.academic import academic_bp
 from routers.chatbot import chatbot_bp
+from routers.plan import plan_bp
 
 app = Flask(__name__)
 
@@ -24,6 +25,7 @@ app.register_blueprint(courses_bp)
 app.register_blueprint(schedules_bp)
 app.register_blueprint(academic_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(plan_bp)
 
 @app.errorhandler(Exception)
 def handle_exception(e):

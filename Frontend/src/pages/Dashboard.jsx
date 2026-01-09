@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import HorarioVisualizer from "../components/HorarioVisualizer";
+import API_URL from "../api/apiConfig";
 
 const StatCard = ({ title, value, subtitle, icon: Icon, bgClass, iconClass, subtitleClass }) => (
   <div className={`backdrop-blur-xl border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden ${bgClass}`}>
@@ -51,7 +52,7 @@ const Dashboard = () => {
 
       // Cargar estadísticas
       if (parsedUser.carne) {
-        fetch(`http://127.0.0.1:8000/aprobados/${parsedUser.carne}`)
+        fetch(`${API_URL}/aprobados/${parsedUser.carne}`)
           .then(res => res.json())
           .then(data => {
             const cursos = data || [];
@@ -66,7 +67,7 @@ const Dashboard = () => {
           .catch(err => console.error("Error loading stats", err));
 
         // Cargar Horario Guardado
-        fetch(`http://127.0.0.1:8000/obtener_horario_guardado/${parsedUser.carne}`)
+        fetch(`${API_URL}/obtener_horario_guardado/${parsedUser.carne}`)
           .then(res => res.json())
           .then(data => {
             if (data.existe) setHorarioGuardado(data.horario);
@@ -212,18 +213,19 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+      {/* Header Section */}
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
             Hola, {userData.nombre.split(" ")[0]} 👋
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-slate-600 dark:text-slate-300 mt-1 font-medium">
             Aquí tienes el resumen de tu progreso académico actual.
           </p>
         </div>
         <div className="text-right hidden md:block">
-          <p className="text-sm text-slate-400 font-medium">Ciclo 2026 - Semestre 1</p>
-          <p className="text-xs text-slate-300 font-mono mt-1">{userData.carne}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-bold bg-white/50 dark:bg-slate-900/50 px-3 py-1 rounded-lg">Ciclo 2026 - Semestre 1</p>
+          <p className="text-xs text-slate-400 font-mono mt-1 font-bold tracking-wider">{userData.carne}</p>
         </div>
       </div>
 

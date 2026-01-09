@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import UploadModal from "../components/dashboard/UploadModal";
 import GradesModal from "../components/dashboard/GradesModal";
 import PensumGraph from "../components/PensumGraph";
+import API_URL from "../api/apiConfig";
 
 const HelpModal = ({ isOpen, onClose }) => {
     return (
@@ -150,7 +151,7 @@ const PensumPage = () => {
 
             // Load Pensum
             const carreraQuery = parsed.carrera ? `?carrera=${encodeURIComponent(parsed.carrera)}` : "";
-            fetch(`http://127.0.0.1:8000/pensum${carreraQuery}`)
+            fetch(`${API_URL}/pensum${carreraQuery}`)
                 .then(res => res.text())
                 .then(csv => {
                     Papa.parse(csv, {
@@ -165,7 +166,7 @@ const PensumPage = () => {
 
             // Load Aprobados
             if (parsed.carne) {
-                fetch(`http://127.0.0.1:8000/aprobados/${parsed.carne}`)
+                fetch(`${API_URL}/aprobados/${parsed.carne}`)
                     .then(res => res.json())
                     .then(data => {
                         setAprobadosData(data);
@@ -268,14 +269,14 @@ const PensumPage = () => {
                 cursos: listaCursos
             };
 
-            const response = await fetch("http://127.0.0.1:8000/guardar_aprobados", {
+            const response = await fetch(`${API_URL}/guardar_aprobados`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-                const data = await fetch(`http://127.0.0.1:8000/aprobados/${usuarioData.carne}`).then(res => res.json());
+                const data = await fetch(`${API_URL}/aprobados/${usuarioData.carne}`).then(res => res.json());
                 setAprobadosData(data);
             } else {
                 alert("Error al guardar cambios.");
@@ -329,7 +330,7 @@ const PensumPage = () => {
         formData.append("usuario", usuarioData.carne);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/extraer_cursos", { method: "POST", body: formData });
+            const response = await fetch(`${API_URL}/extraer_cursos`, { method: "POST", body: formData });
             if (!response.ok) throw new Error("Error procesando");
             const data = await response.json();
 
@@ -363,32 +364,32 @@ const PensumPage = () => {
     return (
         <div className="animate-fadeIn flex flex-col h-[calc(100vh-120px)] space-y-6 relative">
             {/* Header Area */}
-            <div className="bg-white/50 backdrop-blur-xl rounded-2xl p-6 border border-soft-blue shadow-inner shrink-0 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+            <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-soft-blue dark:border-slate-700/50 shadow-inner shrink-0 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600 shadow-sm border border-sky-200">
+                    <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm border border-sky-200 dark:border-sky-800/30">
                         <GraduationCap size={28} />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                        <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
                             Pensum Académico
                         </h1>
-                        <p className="text-slate-500 text-sm font-medium">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
                             Gestión inteligente de tu carrera.
                         </p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex gap-2 bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                         >
                             <LayoutGrid size={18} /> GRID
                         </button>
                         <button
                             onClick={() => setViewMode('graph')}
-                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'graph' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'graph' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                         >
                             <Network size={18} /> GRAFO
                         </button>
@@ -396,7 +397,7 @@ const PensumPage = () => {
 
                     <button
                         onClick={() => setShowHelpModal(true)}
-                        className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center hover:bg-slate-700 transition-all shadow-lg shadow-slate-200"
+                        className="w-10 h-10 bg-slate-800 dark:bg-slate-700 text-white rounded-xl flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-200 dark:shadow-none"
                         title="¿Cómo funciona?"
                     >
                         <HelpCircle size={22} />
@@ -413,24 +414,24 @@ const PensumPage = () => {
                     <UploadCloud size={18} />
                     Auto-Completar con OCR
                 </button>
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-xs border border-slate-200 font-black shadow-sm ml-auto uppercase tracking-wider">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-xl text-xs border border-slate-200 dark:border-slate-700 font-black shadow-sm ml-auto uppercase tracking-wider">
                     <Info size={16} className="text-sky-500" />
                     <span>Progreso: {aprobados.length} / {pensum.length} cursos</span>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-white/50 backdrop-blur-xl rounded-3xl border border-soft-blue shadow-[inset_0_0_30px_rgba(0,0,0,0.02)] overflow-hidden relative">
+            <div className="flex-1 bg-white/50 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-soft-blue dark:border-slate-700/50 shadow-[inset_0_0_30px_rgba(0,0,0,0.02)] overflow-hidden relative">
                 {viewMode === 'grid' ? (
                     <div className="absolute inset-0 overflow-y-auto p-6 md:p-8 custom-scrollbar pb-24">
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             {pensumPorSemestre.map((sem) => (
-                                <div key={sem.nombre} className="bg-white/70 backdrop-blur-md p-8 rounded-[2rem] border border-slate-100 relative overflow-hidden transition-all hover:shadow-xl group">
-                                    <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.05] transition-opacity font-black text-[12rem] text-slate-900 select-none pointer-events-none">
+                                <div key={sem.nombre} className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-8 rounded-[2rem] border border-white/40 dark:border-slate-700/50 relative overflow-hidden transition-all hover:shadow-xl group">
+                                    <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.05] transition-opacity font-black text-[12rem] text-slate-900 dark:text-slate-100 select-none pointer-events-none">
                                         {sem.numero}
                                     </div>
 
-                                    <h3 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-4 relative z-10 uppercase tracking-widest">
+                                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-4 relative z-10 uppercase tracking-widest">
                                         <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white shadow-lg border border-sky-300">
                                             {sem.numero}
                                         </span>
@@ -449,25 +450,25 @@ const PensumPage = () => {
                                                     className={`
                                                         p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm
                                                         ${aprobado
-                                                            ? "bg-emerald-50/80 border-emerald-200 shadow-emerald-50"
+                                                            ? "bg-emerald-50/80 border-emerald-200 shadow-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:shadow-none"
                                                             : permitido
-                                                                ? "bg-white border-slate-100 hover:border-sky-400 hover:shadow-sky-100 hover:-translate-y-1"
-                                                                : "bg-slate-50/50 border-slate-100 italic opacity-60 cursor-not-allowed"
+                                                                ? "bg-white border-slate-100 hover:border-sky-400 hover:shadow-sky-100 hover:-translate-y-1 dark:!bg-slate-800/60 dark:border-slate-700 dark:hover:border-sky-500 dark:hover:shadow-sky-900/20"
+                                                                : "bg-slate-50/50 border-slate-100 italic opacity-60 cursor-not-allowed dark:bg-slate-800/30 dark:border-slate-700/30"
                                                         }
                                                     `}
                                                 >
                                                     <div className="flex justify-between items-start mb-3">
-                                                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${aprobado ? 'bg-emerald-200 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
+                                                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${aprobado ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400'}`}>
                                                             {curso.codigo}
                                                         </span>
-                                                        {aprobado && <CheckCircle2 size={18} className="text-emerald-500" />}
-                                                        {!permitido && <AlertTriangle size={16} className="text-rose-400" />}
+                                                        {aprobado && <CheckCircle2 size={18} className="text-emerald-500 dark:text-emerald-400" />}
+                                                        {!permitido && <AlertTriangle size={16} className="text-rose-400 dark:text-rose-500" />}
                                                     </div>
-                                                    <h4 className={`font-black text-sm leading-tight mb-3 ${aprobado ? 'text-emerald-900' : 'text-slate-800'}`}>
+                                                    <h4 className={`font-black text-sm leading-tight mb-3 ${aprobado ? 'text-emerald-900 dark:text-emerald-100' : 'text-slate-800 dark:text-slate-200'}`}>
                                                         {curso.nombre_completo}
                                                     </h4>
-                                                    <div className="text-[10px] text-slate-400 font-black flex items-center gap-1.5 uppercase tracking-tighter">
-                                                        <Award size={12} className="text-sky-400" /> {curso.creditos} Créditos
+                                                    <div className="text-[10px] text-slate-400 dark:text-slate-400 font-black flex items-center gap-1.5 uppercase tracking-tighter">
+                                                        <Award size={12} className="text-sky-400 dark:text-sky-500" /> {curso.creditos} Créditos
                                                     </div>
                                                 </div>
                                             );

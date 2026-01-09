@@ -13,6 +13,38 @@
   }
 }
 
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    /* slate-300 */
+    border-radius: 9999px;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #000000;
+    /* Black as requested */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+    /* slate-400 */
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #334155;
+    /* slate-700 */
+  }
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(400px);

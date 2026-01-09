@@ -27,7 +27,14 @@ def inicializar_base_datos():
             nombre TEXT,
             carne TEXT UNIQUE,
             fecha_nacimiento TEXT,
-            carrera TEXT
+            carrera TEXT,
+            plan TEXT DEFAULT 'free',
+            plan_fecha_inicio TEXT,
+            plan_fecha_fin TEXT,
+            chatbot_count_today INTEGER DEFAULT 0,
+            chatbot_last_reset TEXT,
+            generador_count INTEGER DEFAULT 0,
+            ocr_count INTEGER DEFAULT 0
         )
     """)
 

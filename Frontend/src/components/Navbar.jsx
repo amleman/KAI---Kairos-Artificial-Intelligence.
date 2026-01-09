@@ -11,8 +11,14 @@ import {
   Sun,
   Moon,
   LogOut,
-  Menu
+  Menu,
+  Crown,
+  Sparkles,
+  Zap,
+  Clock
 } from "lucide-react";
+import PricingModal from "./PricingModal";
+import API_URL from "../api/apiConfig";
 
 const Navbar = () => {
   const location = useLocation();
@@ -20,6 +26,27 @@ const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(true);
   const [isDark, setIsDark] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [userPlan, setUserPlan] = useState({ plan: 'free', nombre_plan: 'Gratuito' });
+
+  // Cargar plan del usuario
+  useEffect(() => {
+    const cargarPlan = async () => {
+      const usuario = localStorage.getItem('usuario');
+      if (!usuario) return;
+
+      try {
+        const res = await fetch(`${API_URL}/api/plan/${usuario}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUserPlan(data);
+        }
+      } catch (error) {
+        console.error('Error cargando plan:', error);
+      }
+    };
+    cargarPlan();
+  }, []);
 
   useEffect(() => {
     if (isDark) {
@@ -87,13 +114,53 @@ const Navbar = () => {
       `}>
         <div className="p-6 h-full flex flex-col">
           {/* Logo Section */}
-          <div className="flex items-center gap-3 mb-10 pl-2">
-            <div className="w-10 h-10 rounded-xl bg-pastel-pink dark:bg-rose-900/50 flex items-center justify-center text-slate-700 dark:text-rose-200 shadow-sm">
-              <GraduationCap className="w-6 h-6" />
+          <div className="flex items-center justify-between mb-10 pl-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-pastel-pink dark:bg-rose-900/50 flex items-center justify-center text-slate-700 dark:text-rose-200 shadow-sm">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                KAI
+              </h1>
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-              KAI
-            </h1>
+
+            {/* Plan Badge - Clickeable */}
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={() => setShowPricingModal(true)}
+                className={`
+                  group relative px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider
+                  transition-all duration-300 hover:scale-105 hover:shadow-lg
+                  ${userPlan.plan === 'premium'
+                    ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/30'
+                    : userPlan.plan === 'daily'
+                      ? 'bg-gradient-to-r from-violet-400 to-purple-500 text-white shadow-md shadow-violet-200 dark:shadow-violet-900/30'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }
+                `}
+              >
+                <span className="flex items-center gap-1">
+                  {userPlan.plan === 'premium' && <Crown size={10} />}
+                  {userPlan.plan === 'daily' && <Zap size={10} />}
+                  {userPlan.plan === 'free' ? 'FREE' : userPlan.plan === 'daily' ? '24H' : userPlan.plan.toUpperCase()}
+                </span>
+
+                {/* Tooltip on hover */}
+                {userPlan.plan === 'free' && (
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    ¡Mejora tu plan!
+                  </span>
+                )}
+              </button>
+
+              {/* Day Pass Expiration Time */}
+              {userPlan.plan === 'daily' && userPlan.fecha_fin && (
+                <div className="flex items-center gap-1 text-[9px] text-violet-600 dark:text-violet-400 font-medium">
+                  <Clock size={10} />
+                  <span>Hasta {new Date(userPlan.fecha_fin).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation */}
@@ -204,6 +271,17 @@ const Navbar = () => {
           </div>
         </div>
       </aside>
+
+      {/* Pricing Modal */}
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        currentPlan={userPlan.plan}
+        onUpgrade={(newPlan) => {
+          console.log('Upgrade to:', newPlan);
+          setShowPricingModal(false);
+        }}
+      />
     </>
   );
 };
