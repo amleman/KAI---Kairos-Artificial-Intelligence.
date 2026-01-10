@@ -1,17 +1,14 @@
 """
-Script de migración para agregar campos de suscripción a usuarios_info
-Ejecutar una sola vez: python migrar_plan.py
+Script de migración para agregar campos de plan a usuarios existentes.
 """
-import sqlite3
-
-DB = "usuarios.db"
+from config import get_db_connection, execute_query, USE_POSTGRES
 
 def migrar():
-    conn = sqlite3.connect(DB)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Lista de columnas nuevas a agregar
-    nuevas_columnas = [
+    # Lista de columnas a agregar si no existen
+    columnas_nuevas = [
         ("plan", "TEXT DEFAULT 'free'"),
         ("plan_fecha_inicio", "TEXT"),
         ("plan_fecha_fin", "TEXT"),
@@ -21,25 +18,24 @@ def migrar():
         ("ocr_count", "INTEGER DEFAULT 0")
     ]
     
-    for nombre_columna, tipo in nuevas_columnas:
+    for col_name, col_def in columnas_nuevas:
         try:
-            cursor.execute(f"ALTER TABLE usuarios_info ADD COLUMN {nombre_columna} {tipo}")
-            print(f"✓ Columna '{nombre_columna}' agregada exitosamente")
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" in str(e).lower():
-                print(f"⚠ Columna '{nombre_columna}' ya existe, omitiendo...")
+            if USE_POSTGRES:
+                # PostgreSQL syntax
+                execute_query(cursor, f"ALTER TABLE usuarios_info ADD COLUMN IF NOT EXISTS {col_name} {col_def}")
             else:
-                print(f"✗ Error al agregar '{nombre_columna}': {e}")
-    
-    # Actualizar usuarios existentes que no tienen plan definido
-    cursor.execute("UPDATE usuarios_info SET plan = 'free' WHERE plan IS NULL")
-    affected = cursor.rowcount
-    if affected > 0:
-        print(f"✓ {affected} usuarios actualizados a plan 'free'")
+                # SQLite syntax (no tiene IF NOT EXISTS para columnas)
+                execute_query(cursor, f"ALTER TABLE usuarios_info ADD COLUMN {col_name} {col_def}")
+            print(f"✅ Columna {col_name} agregada")
+        except Exception as e:
+            if "duplicate" in str(e).lower() or "already exists" in str(e).lower():
+                print(f"⏭️ Columna {col_name} ya existe")
+            else:
+                print(f"⚠️ Error con {col_name}: {e}")
     
     conn.commit()
     conn.close()
-    print("\n✓ Migración completada")
+    print("\n✅ Migración completada")
 
 if __name__ == "__main__":
     migrar()

@@ -233,7 +233,6 @@ const ResultadoHorario = () => {
                         {/* We use HorarioVisualizer with compact=true because this page has its own controls */}
                         <HorarioVisualizer
                             horario={{ horario: cursoActuales }}
-                            vista={vista}
                             compact={true}
                         />
                     </div>

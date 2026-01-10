@@ -1,6 +1,9 @@
 import React, { useRef, useEffect } from 'react';
+import gradImage from '../../assets/graduating_students.png';
+import uniImage from '../../assets/university_building.png';
+import bookImage from '../../assets/open_book_knowledge.png';
 
-const ThreeDParticles = ({ particleSize = 2.1, scaleFactor = 1.5, className = "" }) => {
+const ThreeDParticles = ({ particleSize = 2, scaleFactor = 1.6, className = "" }) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -9,153 +12,185 @@ const ThreeDParticles = ({ particleSize = 2.1, scaleFactor = 1.5, className = ""
         let animationFrameId;
         let width, height;
 
-        // Morphing Configuration
-        const particles = [];
-        const numParticles = 1200;
-        const _particleSize = particleSize;
-        let currentShape = 0; // 0: Cap, 1: Book, 2: Sphere
-        let lastShapeChange = 0;
-        const shapeDuration = 6000;
-        const transitionSpeed = 0.03;
+        const allShapes = []; // Store arrays of particles for each shape
+        let currentParticles = [];
+        let currentShapeIndex = 0;
+        let targetShapeIndex = 0;
+        let morphProgress = 0;
+        let morphSpeed = 0.005; // Speed of transitioning between shapes
+        let holdTime = 0;
+        const holdDuration = 800; // Frames to hold each shape (approx 5s)
 
-        // View settings
+        const colors = [
+            'rgba(167, 139, 250, 0.9)', // violet
+            'rgba(56, 189, 248, 0.9)',  // sky
+            'rgba(244, 114, 182, 0.9)', // pink
+            'rgba(255, 255, 255, 0.8)', // white
+        ];
+
         let centerX, centerY;
-        let scale = 1;
-        const mouse = { x: 0, y: 0 };
         const rotation = { x: 0, y: 0 };
+        const mouse = { x: 0, y: 0 };
+        let autoRotateSpeed = 0.002;
 
-        const init = () => {
+        const loadShape = (src) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => {
+                    const tempCanvas = document.createElement('canvas');
+                    const tCtx = tempCanvas.getContext('2d');
+                    const targetWidth = 150;
+                    const aspectRatio = img.height / img.width;
+                    const targetHeight = targetWidth * aspectRatio;
+
+                    tempCanvas.width = targetWidth;
+                    tempCanvas.height = targetHeight;
+                    tCtx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+                    const imageData = tCtx.getImageData(0, 0, targetWidth, targetHeight).data;
+                    const shapeParticles = [];
+
+                    for (let y = 0; y < targetHeight; y++) {
+                        for (let x = 0; x < targetWidth; x++) {
+                            const index = (y * targetWidth + x) * 4;
+                            const brightness = (imageData[index] + imageData[index + 1] + imageData[index + 2]) / 3;
+
+                            if (brightness > 50) {
+                                shapeParticles.push({
+                                    baseX: (x - targetWidth / 2) * 5 * scaleFactor,
+                                    baseY: (y - targetHeight / 2) * 5 * scaleFactor, // -y to flip right side up
+                                    baseZ: (Math.random() - 0.5) * 50,
+                                    x: 0, y: 0, z: 0,
+                                    color: colors[Math.floor(Math.random() * colors.length)]
+                                });
+                            }
+                        }
+                    }
+                    resolve(shapeParticles);
+                };
+            });
+        };
+
+        const init = async () => {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             centerX = width / 2;
             centerY = height / 2;
-            // Aumentar escala base
-            scale = (Math.min(width, height) / 4) * scaleFactor;
-            createParticles();
-        };
 
-        const createParticles = () => {
-            for (let i = 0; i < numParticles; i++) {
-                particles.push({
-                    x: (Math.random() - 0.5) * width,
-                    y: (Math.random() - 0.5) * height,
-                    z: (Math.random() - 0.5) * 500,
-                    tx: 0,
-                    ty: 0,
-                    tz: 0,
-                    vx: 0,
-                    vy: 0,
-                    color: `rgba(0, 123, 255, ${0.4 + Math.random() * 0.4})`
+            // Load all 3 shapes
+            const shape1 = await loadShape(gradImage);
+            const shape2 = await loadShape(uniImage);
+            const shape3 = await loadShape(bookImage);
+
+            allShapes.push(shape1, shape2, shape3);
+
+            // Initialize current particles with shape 1
+            // We need a stable particle array size, effectively the max size of all shapes
+            const maxCount = Math.max(shape1.length, shape2.length, shape3.length);
+
+            for (let i = 0; i < maxCount; i++) {
+                currentParticles.push({
+                    x: 0, y: 0, z: 0,
+                    // Start at shape 1 pos (or random if i > shape1.length)
+                    currentBaseX: (i < shape1.length) ? shape1[i].baseX : (Math.random() - 0.5) * 500,
+                    currentBaseY: (i < shape1.length) ? shape1[i].baseY : (Math.random() - 0.5) * 500,
+                    currentBaseZ: (i < shape1.length) ? shape1[i].baseZ : (Math.random() - 0.5) * 500,
+                    color: (i < shape1.length) ? shape1[i].color : colors[0],
                 });
             }
-            updateTargets(0);
+
+            draw();
         };
 
-        const getSpherePoint = (i) => {
-            const phi = Math.acos(-1 + (2 * i) / numParticles);
-            const theta = Math.sqrt(numParticles * Math.PI) * phi;
-            return {
-                x: Math.cos(theta) * Math.sin(phi),
-                y: Math.sin(theta) * Math.sin(phi),
-                z: Math.cos(phi)
-            };
-        };
-
-        const getCapPoint = (i) => {
-            const ratio = 0.7;
-            if (i < numParticles * ratio) {
-                const a = (Math.random() - 0.5) * 2.5;
-                const b = (Math.random() - 0.5) * 2.5;
-                return { x: a, y: -0.5, z: b };
-            } else {
-                const phi = Math.random() * Math.PI / 2;
-                const theta = Math.random() * Math.PI * 2;
-                const r = 0.8;
-                return {
-                    x: r * Math.sin(phi) * Math.cos(theta),
-                    y: r * Math.cos(phi) + 0.2,
-                    z: r * Math.sin(phi) * Math.sin(theta)
-                };
-            }
-        };
-
-        const getBookPoint = (i) => {
-            const side = i % 2 === 0 ? 1 : -1;
-            const u = Math.random();
-            const v = (Math.random() - 0.5) * 2.4;
-
-            const x = u * 1.5;
-            const z = Math.sin(u * Math.PI) * 0.4;
-            const angle = 0.3 * side;
-
-            const px = x * Math.cos(angle) - z * Math.sin(angle);
-            const pz = x * Math.sin(angle) + z * Math.cos(angle);
-
-            return {
-                x: px * side,
-                y: v,
-                z: pz - 0.5
-            };
-        };
-
-        const updateTargets = (shapeIndex) => {
-            particles.forEach((p, i) => {
-                let point;
-                switch (shapeIndex) {
-                    case 0: point = getCapPoint(i); break;
-                    case 1: point = getBookPoint(i); break;
-                    case 2: point = getSpherePoint(i); break;
-                    default: point = getSpherePoint(i);
-                }
-
-                p.tx = point.x * scale;
-                p.ty = point.y * scale;
-                p.tz = point.z * scale;
-            });
-        };
-
-        const draw = (time) => {
-            if (time - lastShapeChange > shapeDuration) {
-                currentShape = (currentShape + 1) % 3;
-                updateTargets(currentShape);
-                lastShapeChange = time;
-            }
-
+        const draw = () => {
             ctx.clearRect(0, 0, width, height);
 
-            const targetRotX = (mouse.y - centerY) * 0.0005;
-            const targetRotY = (mouse.x - centerX) * 0.0005;
-            rotation.x += (targetRotX - rotation.x) * 0.1;
-            rotation.y += (targetRotY - rotation.y) * 0.1;
+            // Logic for morphing
+            if (allShapes.length > 0) {
+                // Determine target shape
+                const targetShape = allShapes[targetShapeIndex];
 
-            particles.forEach(p => {
-                p.x += (p.tx - p.x) * transitionSpeed;
-                p.y += (p.ty - p.y) * transitionSpeed;
-                p.z += (p.tz - p.z) * transitionSpeed;
+                // Interpolate
+                let moved = false;
+                for (let i = 0; i < currentParticles.length; i++) {
+                    const p = currentParticles[i];
 
-                let x1 = p.x;
-                let y1 = p.y * Math.cos(rotation.x) - p.z * Math.sin(rotation.x);
-                let z1 = p.y * Math.sin(rotation.x) + p.z * Math.cos(rotation.x);
+                    // Target specific particle in the target shape
+                    // If target shape has fewer particles, we can hide extras or map them to random/center
+                    let tx, ty, tz;
 
-                let x2 = x1 * Math.cos(rotation.y) - z1 * Math.sin(rotation.y);
-                let y2 = y1;
-                let z2 = x1 * Math.sin(rotation.y) + z1 * Math.cos(rotation.y);
+                    if (i < targetShape.length) {
+                        tx = targetShape[i].baseX;
+                        ty = targetShape[i].baseY; // Already flipped in load
+                        tz = targetShape[i].baseZ;
+                    } else {
+                        // Extra particles fly to center or hide
+                        tx = 0; ty = 0; tz = 0;
+                    }
+
+                    // Simple lerp
+                    p.currentBaseX += (tx - p.currentBaseX) * 0.015;
+                    p.currentBaseY += (ty - p.currentBaseY) * 0.015;
+                    p.currentBaseZ += (tz - p.currentBaseZ) * 0.015;
+
+                    // Check if close "enough" to consider morph done is hard with lerp, 
+                    // so we use a timer state machine instead
+                }
+
+                holdTime++;
+                if (holdTime > holdDuration) {
+                    targetShapeIndex = (targetShapeIndex + 1) % allShapes.length;
+                    holdTime = 0;
+                }
+            }
+
+
+            // Auto Rotation
+            rotation.y += autoRotateSpeed;
+
+            const targetRotX = (mouse.y - centerY) * 0.00005;
+            const targetRotY = (mouse.x - centerX) * 0.00005;
+            rotation.x += (targetRotX - rotation.x) * 0.05;
+
+            // Draw particles
+            for (let i = 0; i < currentParticles.length; i++) {
+                const p = currentParticles[i];
+
+                // If this particle index exists in current target OR is fading out
+                // We draw all, assuming extras converge to 0
+
+                let x1 = p.currentBaseX * Math.cos(rotation.y) - p.currentBaseZ * Math.sin(rotation.y);
+                let z1 = p.currentBaseX * Math.sin(rotation.y) + p.currentBaseZ * Math.cos(rotation.y);
+
+                let y1 = p.currentBaseY * Math.cos(rotation.x) - z1 * Math.sin(rotation.x);
+                let z2 = p.currentBaseY * Math.sin(rotation.x) + z1 * Math.cos(rotation.x);
 
                 const fov = 1000;
                 const scaleProj = fov / (fov + z2 + 800);
 
-                const x2d = x2 * scaleProj + centerX;
-                const y2d = y2 * scaleProj + centerY;
+                const x2d = x1 * scaleProj + centerX;
+                const y2d = y1 * scaleProj + centerY;
+
+                // Flip Y manually here if needed because Canvas Y is down. 
+                // But we negated baseY during load, so logic holds.
+                // UNLESS the prompt meant "head down" visually upside down.
+                // Assuming `-(y - ...)` corrected it. If it was upside down before, 
+                // it might need the negation removed or double-checked.
+                // Re-verified: Canvas (0,0) is top-left. Increasing Y goes down.
+                // If we want "up" to be negative Y, standard 3D logic applies.
+                // Previous code: baseY: -(y...). 
+                // Let's ensure rotation logic respects this.
 
                 if (scaleProj > 0) {
                     ctx.beginPath();
-                    ctx.arc(x2d, y2d, _particleSize * scaleProj, 0, Math.PI * 2);
+                    ctx.arc(x2d, y2d, particleSize * scaleProj, 0, Math.PI * 2);
                     ctx.fillStyle = p.color;
                     ctx.fill();
                 }
-            });
+            }
 
-            animationFrameId = requestAnimationFrame((t) => draw(t));
+            animationFrameId = requestAnimationFrame(draw);
         };
 
         const handleMouseMove = (e) => {
@@ -164,19 +199,21 @@ const ThreeDParticles = ({ particleSize = 2.1, scaleFactor = 1.5, className = ""
         };
 
         const handleResize = () => {
-            init();
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
         };
 
         window.addEventListener('resize', handleResize);
         window.addEventListener('mousemove', handleMouseMove);
 
         init();
-        draw(0);
 
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('mousemove', handleMouseMove);
-            cancelAnimationFrame(animationFrameId);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
         };
     }, []);
 

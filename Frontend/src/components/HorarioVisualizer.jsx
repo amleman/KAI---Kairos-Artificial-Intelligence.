@@ -176,19 +176,19 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
           /* --- VISTA LISTA --- */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {listaHorario.map((curso, idx) => (
-              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white dark:bg-slate-800 dark:border-slate-700 group`}>
+              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white dark:!bg-slate-800 dark:!border-slate-700 group`}>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 dark:text-gray-200 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
+                    <h4 className="font-bold text-gray-800 dark:!text-gray-200 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
                       {getNombre(curso)}
                     </h4>
                   </div>
-                  <span className="ml-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded border border-blue-200 shrink-0">
+                  <span className="ml-2 bg-blue-100 dark:!bg-blue-900/40 text-blue-700 dark:!text-blue-300 text-xs font-bold px-2 py-1 rounded border border-blue-200 dark:!border-blue-800 shrink-0">
                     Sec. {getSeccion(curso)}
                   </span>
                 </div>
 
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-900/50 p-3 rounded-lg">
+                <div className="space-y-2 text-sm text-gray-600 dark:!text-gray-400 bg-gray-50 dark:!bg-slate-900/50 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock size={14} className="text-blue-500" />
                     <span className="font-mono font-medium">{getInicio(curso)} - {getFinal(curso)}</span>

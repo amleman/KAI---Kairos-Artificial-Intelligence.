@@ -313,10 +313,13 @@ const PensumPage = () => {
     };
 
     const handleSeleccionImagenes = (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setImagenesSeleccionadas(prev => [...prev, ...Array.from(e.target.files)]);
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const newFiles = Array.from(files);
+            setImagenesSeleccionadas(prev => [...prev, ...newFiles]);
             setErrorUpload("");
-            if (e.target) e.target.value = "";
+            // Clear input value to allow selecting the same file again if needed
+            e.target.value = "";
         }
     };
 

@@ -6,7 +6,7 @@ import SemaforoCarga from "./pages/SemaforoCarga";
 import OptimizadorPromedio from "./pages/OptimizadorPromedio";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResultadoHorario from "./pages/ResultadoHorario";
-import About from './pages/About';
+// import About from './pages/About'; // Removed
 import ChatbotAcademico from './pages/ChatbotAcademico';
 import Perfil from './pages/Perfil';
 
@@ -38,7 +38,7 @@ function App() {
           <Route path="/perfil" element={<Perfil />} />
         </Route>
 
-        <Route path="/que-es-sioa" element={<About />} />
+        {/* Route removed: /que-es-sioa */}
         <Route path="/glass-demo" element={<GlassDemo />} />
       </Routes>
     </BrowserRouter>

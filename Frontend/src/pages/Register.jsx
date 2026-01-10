@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API_URL from "../api/apiConfig";
+import AuthBackground from "../components/auth/AuthBackground";
 
 const Register = () => {
   const [usuario, setUsuario] = useState("");
@@ -53,34 +54,47 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-teal-500 to-blue-500 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-opacity-95">
+    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4">
+      <AuthBackground />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Crear Cuenta</h2>
-            <p className="text-gray-500">Únete a nuestra comunidad</p>
+            <Link to="/" className="inline-block mb-6">
+              <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">
+                KAI USAC
+              </span>
+            </Link>
+            <h2 className="text-2xl font-bold text-white mb-2">Crear Cuenta</h2>
+            <p className="text-gray-400 text-sm">Únete a la revolución académica</p>
           </div>
 
           {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg animate-pulse">
-              <p className="font-medium">{error}</p>
+            <div className="bg-red-500/10 border border-red-500/20 text-red-200 p-4 mb-6 rounded-xl flex items-center gap-3 animate-pulse">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="font-medium text-sm">{error}</p>
             </div>
           )}
 
           {success && (
-            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
-              <p className="font-medium">{success}</p>
+            <div className="bg-green-500/10 border border-green-500/20 text-green-200 p-4 mb-6 rounded-xl flex items-center gap-3">
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <p className="font-medium text-sm">{success}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Usuario
               </label>
               <input
                 type="text"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
                 placeholder="Elige un nombre de usuario"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
@@ -89,12 +103,12 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Email
               </label>
               <input
                 type="email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
                 placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -103,12 +117,12 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Contraseña
               </label>
               <input
                 type="password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -117,12 +131,12 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Confirmar Contraseña
               </label>
               <input
                 type="password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-200 outline-none"
+                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -132,18 +146,18 @@ const Register = () => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:from-teal-600 hover:to-blue-600 transform hover:scale-105 transition duration-200 shadow-lg"
+              className="w-full bg-gradient-to-br from-sky-500 to-blue-600 text-white font-bold py-4 rounded-xl hover:from-sky-400 hover:to-blue-500 transform hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-sky-900/20 mt-4"
             >
-              Registrarse
+              Crear Cuenta
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="mt-8 text-center border-t border-white/5 pt-6">
+            <p className="text-gray-500 text-sm">
               ¿Ya tienes cuenta?{" "}
               <Link
                 to="/login"
-                className="text-teal-600 hover:text-teal-700 font-semibold hover:underline"
+                className="text-sky-400 hover:text-sky-300 font-semibold transition-colors"
               >
                 Inicia sesión
               </Link>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API_URL from "../api/apiConfig";
+import AuthBackground from "../components/auth/AuthBackground";
 
 const Login = () => {
     const [usuario, setUsuario] = useState("");
@@ -46,29 +47,39 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm bg-opacity-95">
+        <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center p-4">
+            <AuthBackground />
+
+            <div className="w-full max-w-md relative z-10">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8">
                     <div className="text-center mb-8">
-                        <h2 className="text-3xl font-bold text-gray-800 mb-2">¡Bienvenido!</h2>
-                        <p className="text-gray-500">Inicia sesión en tu cuenta</p>
+                        <Link to="/" className="inline-block mb-6">
+                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">
+                                KAI USAC
+                            </span>
+                        </Link>
+                        <h2 className="text-2xl font-bold text-white mb-2">¡Bienvenido de nuevo!</h2>
+                        <p className="text-gray-400 text-sm">Ingresa tus credenciales para continuar</p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
-                            <p className="font-medium">{error}</p>
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-200 p-4 mb-6 rounded-xl flex items-center gap-3">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p className="text-sm font-medium">{error}</p>
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                                 Usuario
                             </label>
                             <input
                                 type="text"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
-                                placeholder="Ingresa tu usuario"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
+                                placeholder="Ej. estudiante2024"
                                 value={usuario}
                                 onChange={(e) => setUsuario(e.target.value)}
                                 required
@@ -76,12 +87,12 @@ const Login = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                                 Contraseña
                             </label>
                             <input
                                 type="password"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200 outline-none"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -91,20 +102,20 @@ const Login = () => {
 
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition duration-200 shadow-lg"
+                            className="w-full bg-gradient-to-br from-sky-500 to-blue-600 text-white font-bold py-4 rounded-xl hover:from-sky-400 hover:to-blue-500 transform hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-sky-900/20"
                         >
-                            Ingresar
+                            Iniciar Sesión
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-gray-600">
-                            ¿No tienes cuenta?{" "}
+                    <div className="mt-8 text-center border-t border-white/5 pt-6">
+                        <p className="text-gray-500 text-sm">
+                            ¿Aún no tienes una cuenta?{" "}
                             <Link
                                 to="/register"
-                                className="text-purple-600 hover:text-purple-700 font-semibold hover:underline"
+                                className="text-sky-400 hover:text-sky-300 font-semibold transition-colors"
                             >
-                                Regístrate aquí
+                                Regístrate gratis
                             </Link>
                         </p>
                     </div>

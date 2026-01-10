@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { User, CreditCard, Cake, Briefcase, LogOut } from "lucide-react";
 
 const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario }) => {
+    const [localData, setLocalData] = useState(usuarioData);
+
+    useEffect(() => {
+        setLocalData(usuarioData);
+    }, [usuarioData]);
+
+    const handleChange = (field, value) => {
+        setLocalData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleBlur = () => {
+        setUsuarioData(localData);
+    };
+
+    const onSave = () => {
+        setUsuarioData(localData);
+        handleGuardarUsuario();
+    };
+
     return (
         <div className="flex items-center justify-center min-h-screen p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border-t-4 border-blue-600 relative">
@@ -41,8 +60,9 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                                 <select
                                     name="carrera"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                                    onChange={(e) => setUsuarioData({ ...usuarioData, carrera: e.target.value })}
-                                    value={usuarioData.carrera || ""}
+                                    onChange={(e) => handleChange("carrera", e.target.value)}
+                                    onBlur={handleBlur}
+                                    value={localData.carrera || ""}
                                 >
                                     <option value="">Seleccione su carrera</option>
                                     <option>Ing. Sistemas</option>
@@ -58,16 +78,18 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                                     type="date"
                                     name="fechaNacimiento"
                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-                                    onChange={(e) => setUsuarioData({ ...usuarioData, fechaNacimiento: e.target.value })}
-                                    value={usuarioData.fechaNacimiento || ""}
+                                    onChange={(e) => handleChange("fechaNacimiento", e.target.value)}
+                                    onBlur={handleBlur}
+                                    value={localData.fechaNacimiento || ""}
                                 />
                             ) : (
                                 <input
                                     name={field === "carné" ? "carne" : "nombre"}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
                                     placeholder={field === "carné" ? "Ej: 2024001" : "Tu nombre completo"}
-                                    onChange={(e) => setUsuarioData({ ...usuarioData, [field === "carné" ? "carne" : "nombre"]: e.target.value })}
-                                    value={field === "carné" ? usuarioData.carne : usuarioData.nombre || ""}
+                                    onChange={(e) => handleChange(field === "carné" ? "carne" : "nombre", e.target.value)}
+                                    onBlur={handleBlur}
+                                    value={field === "carné" ? localData.carne : localData.nombre || ""}
                                 />
                             )}
                         </div>
@@ -76,7 +98,7 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
 
                 <button
                     className="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-800 transition-all shadow-lg"
-                    onClick={handleGuardarUsuario}
+                    onClick={onSave}
                 >
                     Guardar y Continuar
                 </button>

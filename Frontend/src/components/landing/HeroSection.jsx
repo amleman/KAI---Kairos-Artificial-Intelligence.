@@ -1,56 +1,89 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ThreeDParticles from './ThreeDParticles';
+import { motion } from 'framer-motion';
 
 const HeroSection = () => {
     return (
-        <section className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-gray-50">
-            {/* Canvas de Fondo Componentizado con mayor tamaño */}
-            <ThreeDParticles particleSize={2.1} scaleFactor={1.5} className="opacity-60" />
+        <section className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-black">
+            {/* Canvas de Fondo */}
+            <ThreeDParticles particleSize={2.5} scaleFactor={1.6} className="opacity-70" />
 
             {/* Contenido */}
-            <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-[-5vh]">
-                <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-sm font-bold mb-6 animate-fade-in-up border border-blue-200">
-                    Potenciado con Inteligencia Artificial
-                </span>
+            <div className="relative z-10 text-center px-4 max-w-6xl mx-auto mt-[-5vh]">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                >
+                </motion.div>
 
-                <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
-                    SIOA: Sistema Inteligente de <br />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                        Optimización Académica
-                    </span>
-                </h1>
+                <motion.h1
+                    className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-tight mb-4"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                    KAI <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">USAC</span>
+                </motion.h1>
 
-                <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto font-light leading-relaxed">
-                    Automatiza tu futuro académico. Genera horarios sin choques, analiza riesgos de asignación y proyecta tu promedio ideal con nuestros algoritmos avanzados.
-                </p>
+                <motion.h2
+                    className="text-2xl md:text-4xl font-light text-gray-400 mb-8 tracking-wide"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                    Kairos Artificial Intelligence
+                </motion.h2>
 
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <motion.p
+                    className="text-lg md:text-xl text-gray-400 mb-12 max-w-3xl mx-auto font-light leading-relaxed"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
+                >
+                    Revolucionando la gestión académica con el poder de la Inteligencia Artificial y Python.
+                    <br className="hidden md:block" /> Optimización de horarios, proyecciones y análisis de datos en una plataforma unificada.
+                </motion.p>
+
+                <motion.div
+                    className="flex flex-col sm:flex-row justify-center items-center gap-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.8 }}
+                >
                     <Link
                         to="/login"
-                        className="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl flex items-center justify-center ring-2 ring-transparent hover:ring-blue-500/50"
+                        className="group relative px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold overflow-hidden shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1"
                     >
-                        Laboratorio IA
-                        <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
+                        <span className="relative z-10 flex items-center gap-2">
+                            Ingresar a la Plataforma
+                            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </Link>
 
                     <Link
                         to="/register"
-                        className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center shadow-sm hover:shadow-md"
+                        className="px-8 py-4 bg-white/5 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/10 transition-all hover:scale-105 shadow-lg flex items-center justify-center"
                     >
-                        Empezar Ahora
+                        Crear Cuenta
                     </Link>
-                </div>
+                </motion.div>
             </div>
 
-            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-gray-400">
-                <span className="text-xs font-semibold uppercase tracking-widest mb-2 block text-center">Explorar</span>
-                <svg className="w-6 h-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-            </div>
+            <motion.div
+                className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-gray-400"
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+            >
+                <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-[0.2em]">Descubre Más</span>
+                    <div className="w-[1px] h-12 bg-gradient-to-b from-gray-400 to-transparent"></div>
+                </div>
+            </motion.div>
         </section>
     );
 };

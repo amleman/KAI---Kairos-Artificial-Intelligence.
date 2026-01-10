@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify, send_file
-import sqlite3
 import json
 import os
 import re
-from config import DB, CAREER_FILE_MAP, get_user_career, get_db_connection
+from config import CAREER_FILE_MAP, get_user_career, get_db_connection, execute_query
 import csv
 
 # Optional imports
@@ -101,9 +100,14 @@ def merge_cursos_en_db(carne: str, nuevos_cursos: list):
     try:
         cursor = conn.cursor()
 
-        cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+        execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
         row = cursor.fetchone()
-        cursos_existentes = json.loads(row[0]) if row and row[0] else []
+        
+        if row:
+            raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+            cursos_existentes = json.loads(raw_data) if raw_data else []
+        else:
+            cursos_existentes = []
 
         cursos_dict = {c.get("codigo"): c for c in cursos_existentes if c.get("codigo")}
         
@@ -116,9 +120,9 @@ def merge_cursos_en_db(carne: str, nuevos_cursos: list):
         cursos_json = json.dumps(cursos_finales)
 
         if row:
-            cursor.execute("UPDATE cursos_aprobados SET cursos_data = ? WHERE carne = ?", (cursos_json, carne))
+            execute_query(cursor, "UPDATE cursos_aprobados SET cursos_data = ? WHERE carne = ?", (cursos_json, carne))
         else:
-            cursor.execute("INSERT INTO cursos_aprobados (carne, cursos_data) VALUES (?, ?)", (carne, cursos_json))
+            execute_query(cursor, "INSERT INTO cursos_aprobados (carne, cursos_data) VALUES (?, ?)", (carne, cursos_json))
 
         conn.commit()
         return cursos_finales
@@ -324,13 +328,17 @@ def obtener_aprobados(carne):
     try:
         cursor = conn.cursor()
         
-        cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+        execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
         row = cursor.fetchone()
         
-        if not row or not row[0]:
+        if not row:
             return jsonify([]), 200
         
-        cursos = json.loads(row[0])
+        raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+        if not raw_data:
+            return jsonify([]), 200
+        
+        cursos = json.loads(raw_data)
         
         resultado = []
         for curso in cursos:
@@ -402,28 +410,32 @@ def obtener_cursos_aprobados_endpoint():
     try:
         cursor = conn.cursor()
         
-        cursor.execute("SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario_req,))
+        execute_query(cursor, "SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario_req,))
         info_row = cursor.fetchone()
         
         carne_busqueda = usuario_req
-        if info_row and info_row[0]:
-            carne_busqueda = info_row[0] 
+        if info_row:
+            carne_val = info_row['carne'] if hasattr(info_row, 'keys') else info_row[0]
+            if carne_val:
+                carne_busqueda = carne_val
         
-        cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne_busqueda,))
+        execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne_busqueda,))
         row = cursor.fetchone()
         
         aprobados = []
-        if row and row[0]:
-            try:
-                aprobados_raw = json.loads(row[0])
-                for c in aprobados_raw:
-                    try:
-                        c["creditos"] = int(c.get("creditos", 0))
-                    except:
-                        c["creditos"] = 0
-                    aprobados.append(c)
-            except:
-                aprobados = []
+        if row:
+            raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+            if raw_data:
+                try:
+                    aprobados_raw = json.loads(raw_data)
+                    for c in aprobados_raw:
+                        try:
+                            c["creditos"] = int(c.get("creditos", 0))
+                        except:
+                            c["creditos"] = 0
+                        aprobados.append(c)
+                except:
+                    aprobados = []
                 
         competencias_ia = analizar_competencias_ia(aprobados)
                 

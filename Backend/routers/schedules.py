@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify
-import sqlite3
 import json
 import os
 from datetime import datetime
-from config import DB, CAREER_FILE_MAP, get_user_career, get_db_connection
+from config import CAREER_FILE_MAP, get_user_career, get_db_connection, execute_query
 from motor_generador import GeneradorHorarios
 from motor_custom import GeneradorHorarioCustom
 
@@ -26,7 +25,7 @@ def generar_horario():
         cursor = conn.cursor()
         
         # Obtener cursos aprobados desde la nueva estructura JSON
-        cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
+        execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (carne,))
         row = cursor.fetchone()
     finally:
         conn.close()
@@ -40,39 +39,41 @@ def generar_horario():
     pensum_file = CAREER_FILE_MAP.get(carrera, "sistemas.csv")
     pensum_path = os.path.join("Data/Pensums", pensum_file)
     
-    if row and row[0]:
-        try:
-            cursos_json = json.loads(row[0])
-            # Extraer códigos
-            aprobados = [curso["codigo"] for curso in cursos_json]
-            
-            # Calcular promedio de los últimos 6 cursos
-            ultimos_cursos = cursos_json[-6:] if len(cursos_json) > 6 else cursos_json
-            notas = []
-            for c in ultimos_cursos:
-                try:
-                    n = float(c.get("nota", 0))
-                    if n > 0: notas.append(n)
-                except:
-                    pass
-            
-            if notas:
-                promedio = sum(notas) / len(notas)
+    if row:
+        raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+        if raw_data:
+            try:
+                cursos_json = json.loads(raw_data)
+                # Extraer códigos
+                aprobados = [curso["codigo"] for curso in cursos_json]
                 
-            # Determinar límite de cursos basado en promedio
-            if promedio > 77:
-                limite_cursos = 7
-            elif promedio > 67:
-                limite_cursos = 6
-            elif promedio >= 61:
-                limite_cursos = 4
-            else:
-                limite_cursos = 4 # < 61 también restringido
+                # Calcular promedio de los últimos 6 cursos
+                ultimos_cursos = cursos_json[-6:] if len(cursos_json) > 6 else cursos_json
+                notas = []
+                for c in ultimos_cursos:
+                    try:
+                        n = float(c.get("nota", 0))
+                        if n > 0: notas.append(n)
+                    except:
+                        pass
                 
-            print(f"Promedio calculado: {promedio}, Limite cursos: {limite_cursos}")
-            
-        except json.JSONDecodeError:
-            aprobados = []
+                if notas:
+                    promedio = sum(notas) / len(notas)
+                    
+                # Determinar límite de cursos basado en promedio
+                if promedio > 77:
+                    limite_cursos = 7
+                elif promedio > 67:
+                    limite_cursos = 6
+                elif promedio >= 61:
+                    limite_cursos = 4
+                else:
+                    limite_cursos = 4 # < 61 también restringido
+                    
+                print(f"Promedio calculado: {promedio}, Limite cursos: {limite_cursos}")
+                
+            except json.JSONDecodeError:
+                aprobados = []
 
     # Preparar config de trabajo si existe
     config_trabajo = None
@@ -134,12 +135,14 @@ def generar_horario_custom_endpoint():
             conn = get_db_connection()
             try:
                 cursor = conn.cursor()
-                cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
+                execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
                 row = cursor.fetchone()
                 
-                if row and row[0]:
-                    cursos_json = json.loads(row[0])
-                    aprobados = [c["codigo"] for c in cursos_json]
+                if row:
+                    raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+                    if raw_data:
+                        cursos_json = json.loads(raw_data)
+                        aprobados = [c["codigo"] for c in cursos_json]
             except Exception as e:
                 print(f"Error obteniendo aprobados para costo oportunidad: {e}")
             finally:
@@ -198,13 +201,13 @@ def guardar_horario_final():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Convertimos la lista de objetos JS a String para SQLite
+        # Convertimos la lista de objetos JS a String para la DB
         json_string = json.dumps(horario_seleccionado)
         
         # Eliminar horario anterior del usuario para mantener solo 1 por perfil (evita bloat de DB)
-        cursor.execute("DELETE FROM horarios_guardados WHERE usuario = ?", (usuario,))
+        execute_query(cursor, "DELETE FROM horarios_guardados WHERE usuario = ?", (usuario,))
         
-        cursor.execute(
+        execute_query(cursor,
             "INSERT INTO horarios_guardados (usuario, nombre_horario, data_json) VALUES (?, ?, ?)",
             (usuario, nombre_personalizado, json_string)
         )
@@ -226,14 +229,15 @@ def obtener_horario_guardado(usuario):
         cursor = conn.cursor()
         
         # 1. Verificamos si existe ALGO en la tabla para ese usuario
-        cursor.execute("SELECT count(*) FROM horarios_guardados WHERE usuario = ?", (usuario,))
-        count = cursor.fetchone()[0]
+        execute_query(cursor, "SELECT count(*) as count FROM horarios_guardados WHERE usuario = ?", (usuario,))
+        count_row = cursor.fetchone()
+        count = count_row['count'] if hasattr(count_row, 'keys') else count_row[0]
 
         if count == 0:
             return jsonify({"existe": False, "mensaje": "Usuario no tiene registros"}), 200
 
         # 2. Obtenemos el último guardado
-        cursor.execute("""
+        execute_query(cursor, """
             SELECT data_json, nombre_horario, fecha_guardado
             FROM horarios_guardados 
             WHERE usuario = ? 
@@ -243,9 +247,14 @@ def obtener_horario_guardado(usuario):
         row = cursor.fetchone()
         
         if row:
-            raw_json = row[0]
-            nombre = row[1]
-            fecha = row[2]
+            if hasattr(row, 'keys'):
+                raw_json = row['data_json']
+                nombre = row['nombre_horario']
+                fecha = row['fecha_guardado']
+            else:
+                raw_json = row[0]
+                nombre = row[1]
+                fecha = row[2]
             
             try:
                 horario_lista = json.loads(raw_json)
@@ -259,7 +268,7 @@ def obtener_horario_guardado(usuario):
                 
                 # Inyectar fecha_guardado al objeto para que el visualizador lo vea
                 if isinstance(final_data, dict):
-                    final_data["fecha_guardado"] = fecha
+                    final_data["fecha_guardado"] = str(fecha) if fecha else None
 
                 return jsonify({
                     "existe": True, 
@@ -271,7 +280,7 @@ def obtener_horario_guardado(usuario):
         else:
             return jsonify({"existe": False}), 200
     except Exception as e:
+        print(f"Error en obtener_horario_guardado: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
-

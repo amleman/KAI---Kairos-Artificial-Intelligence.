@@ -2,36 +2,32 @@
 Router para manejo de planes de suscripción
 """
 from flask import Blueprint, request, jsonify
-import sqlite3
 from datetime import datetime, timedelta
-from config import DB, get_db_connection
+from config import get_db_connection, execute_query
 
 plan_bp = Blueprint('plan', __name__)
 
-# -----------------------------------------------------------
-# CONFIGURACIÓN DE PLANES
-# -----------------------------------------------------------
 PLANES_CONFIG = {
     "free": {
         "nombre": "Plan Gratuito",
         "precio": 0,
         "chatbot_limite_diario": 5,
-        "generador_manual_limite": 3,  # 3 horarios manuales por semestre
-        "generador_ia_limite": 0,      # Sin acceso a generador IA
-        "ocr_limite": 2,               # 2 escaneos OCR totales
-        "tiene_analisis_financiero": True,  # Gratis para motivar estudiantes
-        "tiene_optimizador": True,          # Gratis
-        "tiene_simulador": False,           # Solo Premium
-        "tiene_pensum_grafo": False         # Solo Premium
+        "generador_manual_limite": 3,
+        "generador_ia_limite": 0,
+        "ocr_limite": 2,
+        "tiene_analisis_financiero": True,
+        "tiene_optimizador": True,
+        "tiene_simulador": False,
+        "tiene_pensum_grafo": False
     },
     "daily": {
         "nombre": "Day Pass",
         "precio": 10,
         "duracion_horas": 24,
-        "chatbot_limite_diario": -1,   # Ilimitado
-        "generador_manual_limite": -1, # Ilimitado
-        "generador_ia_limite": -1,     # Ilimitado (IA)
-        "ocr_limite": -1,              # Ilimitado
+        "chatbot_limite_diario": -1,
+        "generador_manual_limite": -1,
+        "generador_ia_limite": -1,
+        "ocr_limite": -1,
         "tiene_analisis_financiero": True,
         "tiene_optimizador": True,
         "tiene_simulador": True,
@@ -40,26 +36,23 @@ PLANES_CONFIG = {
     "premium": {
         "nombre": "Premium",
         "precio": 29,
-        "chatbot_limite_diario": -1,   # Ilimitado
-        "generador_manual_limite": -1, # Ilimitado
-        "generador_ia_limite": -1,     # Ilimitado (IA)
-        "ocr_limite": -1,              # Ilimitado
+        "chatbot_limite_diario": -1,
+        "generador_manual_limite": -1,
+        "generador_ia_limite": -1,
+        "ocr_limite": -1,
         "tiene_analisis_financiero": True,
         "tiene_optimizador": True,
-        "tiene_simulador": True,       # Simulador de escenarios
-        "tiene_pensum_grafo": True     # Vista grafo del pensum
+        "tiene_simulador": True,
+        "tiene_pensum_grafo": True
     }
 }
 
-# -----------------------------------------------------------
-# OBTENER PLAN DEL USUARIO
-# -----------------------------------------------------------
 @plan_bp.route("/api/plan/<usuario>", methods=['GET'])
 def obtener_plan(usuario):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("""
+        execute_query(cursor, """
             SELECT plan, plan_fecha_inicio, plan_fecha_fin, 
                    chatbot_count_today, chatbot_last_reset,
                    generador_count, ocr_count
@@ -70,22 +63,32 @@ def obtener_plan(usuario):
         if not row:
             return jsonify({"error": "Usuario no encontrado"}), 404
         
-        plan = row[0] or "free"
-        fecha_fin = row[2]
+        if hasattr(row, 'keys'):
+            plan = row['plan'] or "free"
+            fecha_fin = row['plan_fecha_fin']
+            fecha_inicio = row['plan_fecha_inicio']
+            ultimo_reset = row['chatbot_last_reset']
+            chatbot_count = row['chatbot_count_today'] or 0
+            generador_usado = row['generador_count'] or 0
+            ocr_usado = row['ocr_count'] or 0
+        else:
+            plan = row[0] or "free"
+            fecha_fin = row[2]
+            fecha_inicio = row[1]
+            ultimo_reset = row[4]
+            chatbot_count = row[3] or 0
+            generador_usado = row[5] or 0
+            ocr_usado = row[6] or 0
         
-        # Verificar si el plan expiró (soporta fecha o datetime)
         if fecha_fin:
             try:
-                # Intentar primero con datetime completo (para day pass)
                 try:
                     expiracion = datetime.strptime(fecha_fin, "%Y-%m-%d %H:%M:%S")
                 except:
-                    # Si falla, intentar solo fecha
                     expiracion = datetime.strptime(fecha_fin, "%Y-%m-%d")
                 
                 if expiracion < datetime.now():
-                    # Plan expirado, regresar a free
-                    cursor.execute("""
+                    execute_query(cursor, """
                         UPDATE usuarios_info 
                         SET plan = 'free', plan_fecha_fin = NULL 
                         WHERE usuario = ?
@@ -96,13 +99,9 @@ def obtener_plan(usuario):
             except:
                 pass
         
-        # Resetear contador de chatbot si es nuevo día
         hoy = datetime.now().strftime("%Y-%m-%d")
-        ultimo_reset = row[4]
-        chatbot_count = row[3] or 0
-        
         if ultimo_reset != hoy:
-            cursor.execute("""
+            execute_query(cursor, """
                 UPDATE usuarios_info 
                 SET chatbot_count_today = 0, chatbot_last_reset = ?
                 WHERE usuario = ?
@@ -116,16 +115,16 @@ def obtener_plan(usuario):
             "plan": plan,
             "nombre_plan": config["nombre"],
             "precio": config["precio"],
-            "fecha_inicio": row[1],
+            "fecha_inicio": fecha_inicio,
             "fecha_fin": fecha_fin,
             "limites": {
                 "chatbot_diario": config["chatbot_limite_diario"],
                 "chatbot_usado": chatbot_count,
                 "generador_manual_total": config["generador_manual_limite"],
                 "generador_ia_total": config["generador_ia_limite"],
-                "generador_usado": row[5] or 0,
+                "generador_usado": generador_usado,
                 "ocr_total": config["ocr_limite"],
-                "ocr_usado": row[6] or 0
+                "ocr_usado": ocr_usado
             },
             "features": {
                 "analisis_financiero": config["tiene_analisis_financiero"],
@@ -137,15 +136,12 @@ def obtener_plan(usuario):
     finally:
         conn.close()
 
-# -----------------------------------------------------------
-# VERIFICAR SI PUEDE USAR FEATURE
-# -----------------------------------------------------------
 @plan_bp.route("/api/plan/<usuario>/verificar/<feature>", methods=['GET'])
 def verificar_feature(usuario, feature):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("""
+        execute_query(cursor, """
             SELECT plan, chatbot_count_today, chatbot_last_reset,
                    generador_count, ocr_count
             FROM usuarios_info WHERE usuario = ?
@@ -155,19 +151,28 @@ def verificar_feature(usuario, feature):
         if not row:
             return jsonify({"permitido": False, "razon": "Usuario no encontrado"}), 404
         
-        plan = row[0] or "free"
-        config = PLANES_CONFIG.get(plan, PLANES_CONFIG["free"])
+        if hasattr(row, 'keys'):
+            plan = row['plan'] or "free"
+            chatbot_count = row['chatbot_count_today'] or 0
+            ultimo_reset = row['chatbot_last_reset']
+            generador_count = row['generador_count'] or 0
+            ocr_count = row['ocr_count'] or 0
+        else:
+            plan = row[0] or "free"
+            chatbot_count = row[1] or 0
+            ultimo_reset = row[2]
+            generador_count = row[3] or 0
+            ocr_count = row[4] or 0
         
+        config = PLANES_CONFIG.get(plan, PLANES_CONFIG["free"])
         hoy = datetime.now().strftime("%Y-%m-%d")
         
         if feature == "chatbot":
             limite = config["chatbot_limite_diario"]
             if limite == -1:
                 return jsonify({"permitido": True})
-            
-            # Resetear si es nuevo día
-            if row[2] != hoy:
-                cursor.execute("""
+            if ultimo_reset != hoy:
+                execute_query(cursor, """
                     UPDATE usuarios_info 
                     SET chatbot_count_today = 0, chatbot_last_reset = ?
                     WHERE usuario = ?
@@ -175,14 +180,12 @@ def verificar_feature(usuario, feature):
                 conn.commit()
                 usado = 0
             else:
-                usado = row[1] or 0
-            
+                usado = chatbot_count
             if usado >= limite:
                 return jsonify({
                     "permitido": False,
                     "razon": f"Has alcanzado tu límite de {limite} mensajes diarios",
-                    "limite": limite,
-                    "usado": usado
+                    "limite": limite, "usado": usado
                 })
             return jsonify({"permitido": True, "restante": limite - usado})
         
@@ -190,15 +193,13 @@ def verificar_feature(usuario, feature):
             limite = config["generador_manual_limite"]
             if limite == -1:
                 return jsonify({"permitido": True})
-            usado = row[3] or 0
-            if usado >= limite:
+            if generador_count >= limite:
                 return jsonify({
                     "permitido": False,
                     "razon": f"Has alcanzado tu límite de {limite} horarios manuales",
-                    "limite": limite,
-                    "usado": usado
+                    "limite": limite, "usado": generador_count
                 })
-            return jsonify({"permitido": True, "restante": limite - usado})
+            return jsonify({"permitido": True, "restante": limite - generador_count})
         
         elif feature == "generador_ia":
             limite = config["generador_ia_limite"]
@@ -216,22 +217,15 @@ def verificar_feature(usuario, feature):
             limite = config["ocr_limite"]
             if limite == -1:
                 return jsonify({"permitido": True})
-            usado = row[4] or 0
-            if usado >= limite:
+            if ocr_count >= limite:
                 return jsonify({
                     "permitido": False,
                     "razon": f"Has alcanzado tu límite de {limite} escaneos OCR",
-                    "limite": limite,
-                    "usado": usado
+                    "limite": limite, "usado": ocr_count
                 })
-            return jsonify({"permitido": True, "restante": limite - usado})
+            return jsonify({"permitido": True, "restante": limite - ocr_count})
         
-        elif feature == "analisis_financiero":
-            # Ahora es gratis para todos
-            return jsonify({"permitido": True})
-        
-        elif feature == "optimizador":
-            # Ahora es gratis para todos
+        elif feature in ["analisis_financiero", "optimizador"]:
             return jsonify({"permitido": True})
         
         elif feature == "simulador":
@@ -256,44 +250,31 @@ def verificar_feature(usuario, feature):
     finally:
         conn.close()
 
-# -----------------------------------------------------------
-# INCREMENTAR CONTADOR DE USO
-# -----------------------------------------------------------
 @plan_bp.route("/api/plan/<usuario>/usar/<feature>", methods=['POST'])
 def incrementar_uso(usuario, feature):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        
         if feature == "chatbot":
             hoy = datetime.now().strftime("%Y-%m-%d")
-            cursor.execute("""
+            execute_query(cursor, """
                 UPDATE usuarios_info 
-                SET chatbot_count_today = chatbot_count_today + 1,
-                    chatbot_last_reset = ?
+                SET chatbot_count_today = chatbot_count_today + 1, chatbot_last_reset = ?
                 WHERE usuario = ?
             """, (hoy, usuario))
         elif feature == "generador":
-            cursor.execute("""
-                UPDATE usuarios_info 
-                SET generador_count = generador_count + 1
-                WHERE usuario = ?
+            execute_query(cursor, """
+                UPDATE usuarios_info SET generador_count = generador_count + 1 WHERE usuario = ?
             """, (usuario,))
         elif feature == "ocr":
-            cursor.execute("""
-                UPDATE usuarios_info 
-                SET ocr_count = ocr_count + 1
-                WHERE usuario = ?
+            execute_query(cursor, """
+                UPDATE usuarios_info SET ocr_count = ocr_count + 1 WHERE usuario = ?
             """, (usuario,))
-        
         conn.commit()
         return jsonify({"message": "Contador actualizado"})
     finally:
         conn.close()
 
-# -----------------------------------------------------------
-# ACTIVAR PLAN (para uso manual o después de pago)
-# -----------------------------------------------------------
 @plan_bp.route("/api/plan/<usuario>/activar", methods=['POST'])
 def activar_plan(usuario):
     data = request.get_json()
@@ -306,17 +287,14 @@ def activar_plan(usuario):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        
         fecha_inicio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # Day pass: 24 horas desde ahora
         if nuevo_plan == "daily":
             fecha_fin = (datetime.now() + timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
         else:
-            # Planes mensuales/semestrales
             fecha_fin = (datetime.now() + timedelta(days=duracion_meses * 30)).strftime("%Y-%m-%d")
         
-        cursor.execute("""
+        execute_query(cursor, """
             UPDATE usuarios_info 
             SET plan = ?, plan_fecha_inicio = ?, plan_fecha_fin = ?,
                 generador_count = 0, ocr_count = 0
@@ -327,7 +305,6 @@ def activar_plan(usuario):
             return jsonify({"error": "Usuario no encontrado"}), 404
         
         conn.commit()
-        
         return jsonify({
             "message": f"Plan {nuevo_plan} activado exitosamente",
             "plan": nuevo_plan,
@@ -337,9 +314,6 @@ def activar_plan(usuario):
     finally:
         conn.close()
 
-# -----------------------------------------------------------
-# OBTENER INFO DE PLANES DISPONIBLES
-# -----------------------------------------------------------
 @plan_bp.route("/api/planes", methods=['GET'])
 def obtener_planes():
     return jsonify(PLANES_CONFIG)

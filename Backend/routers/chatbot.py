@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
-import sqlite3
 import json
-from config import DB, get_chatbot_academico, get_db_connection
+from config import get_chatbot_academico, get_db_connection, execute_query
 
 chatbot_bp = Blueprint('chatbot', __name__)
 
@@ -30,19 +29,22 @@ def chatbot():
             cursor = conn.cursor()
             
             # 1. Obtener carrera del usuario
-            cursor.execute("SELECT carrera FROM usuarios_info WHERE usuario = ? OR carne = ?", (usuario, usuario))
+            execute_query(cursor, "SELECT carrera FROM usuarios_info WHERE usuario = ? OR carne = ?", (usuario, usuario))
             row_info = cursor.fetchone()
-            if row_info and row_info[0]:
-                contexto['carrera'] = row_info[0]
+            if row_info:
+                carrera_val = row_info['carrera'] if hasattr(row_info, 'keys') else row_info[0]
+                if carrera_val:
+                    contexto['carrera'] = carrera_val
 
             # 2. Obtener cursos aprobados
-            cursor.execute("SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
+            execute_query(cursor, "SELECT cursos_data FROM cursos_aprobados WHERE carne = ?", (usuario,))
             row = cursor.fetchone()
             conn.close()
             
             if row:
-                if row[0]:
-                    cursos_data = json.loads(row[0])
+                raw_data = row['cursos_data'] if hasattr(row, 'keys') else row[0]
+                if raw_data:
+                    cursos_data = json.loads(raw_data)
                     contexto['cursos_aprobados'] = len(cursos_data)
                     # Forzar conversión a int para evitar error str + int
                     contexto['creditos_acumulados'] = sum(int(c.get('creditos', 3)) for c in cursos_data)

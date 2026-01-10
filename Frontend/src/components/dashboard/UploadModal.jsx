@@ -82,11 +82,21 @@ const UploadModal = ({
                     {!!imagenesSeleccionadas.length && (
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
                             <p className="font-bold mb-3 text-slate-700">Archivos listos para procesar:</p>
-                            <div className="flex flex-wrap gap-2">
-                                {imagenesSeleccionadas.map((file) => (
-                                    <span key={file.name} className="bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm flex items-center gap-2">
-                                        {file.name}
-                                    </span>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {imagenesSeleccionadas.map((file, index) => (
+                                    <div key={`${file.name}-${index}`} className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden border border-slate-300 shadow-sm">
+                                        <img
+                                            src={URL.createObjectURL(file)}
+                                            alt={file.name}
+                                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                            onLoad={(e) => URL.revokeObjectURL(e.target.src)}
+                                        />
+                                        <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                            <p className="text-white text-[10px] font-medium truncate w-full">
+                                                {file.name}
+                                            </p>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         </div>
