@@ -79,6 +79,7 @@ const ThreeDParticles = ({ particleSize = 2, scaleFactor = 1.6, className = "" }
             centerY = height / 2;
 
             // Load all 3 shapes
+            // Load all 3 shapes
             const shape1 = await loadShape(gradImage);
             const shape2 = await loadShape(uniImage);
             const shape3 = await loadShape(bookImage);

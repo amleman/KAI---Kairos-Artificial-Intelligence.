@@ -17,7 +17,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config["PROPAGATE_EXCEPTIONS"] = True
 
 # CORS
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:3000", "https://kaiusac.netlify.app"]}}, supports_credentials=True)
 
 # Registrar Blueprints
 app.register_blueprint(auth_bp)
