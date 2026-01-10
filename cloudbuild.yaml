@@ -37,3 +37,7 @@ steps:
 # Define qué imágenes se guardan como artefactos de esta compilación
 images:
   - 'gcr.io/$PROJECT_ID/kai-backend'
+
+# Configuración adicional para logging (necesario si se especifica service_account o configs nuevas)
+options:
+  logging: CLOUD_LOGGING_ONLY
