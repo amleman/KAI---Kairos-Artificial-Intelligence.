@@ -1,0 +1,39 @@
+steps:
+  # -----------------------------------------------------------------------------
+  # 1. Construir la imagen de Docker
+  # Usamos './Backend' como el contexto de construcción para que encuentre
+  # el Dockerfile y el requirements.txt correctamente.
+  # -----------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/kai-backend', './Backend']
+
+  # -----------------------------------------------------------------------------
+  # 2. Subir la imagen al Container Registry del proyecto
+  # -----------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/kai-backend']
+
+  # -----------------------------------------------------------------------------
+  # 3. Desplegar en Cloud Run
+  # Ajusta la región (us-central1) si prefieres otra ubicación.
+  # -----------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'kai-backend'                # Nombre del servicio en Cloud Run
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/kai-backend'
+      - '--region'
+      - 'us-central1'                # Región (ej. us-central1, us-east1)
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'    # Permitir tráfico público
+      # Descomenta las siguientes líneas si necesitas pasar variables de entorno específicas aquí
+      # - '--set-env-vars'
+      # - 'KEY=VALUE'
+
+# Define qué imágenes se guardan como artefactos de esta compilación
+images:
+  - 'gcr.io/$PROJECT_ID/kai-backend'
