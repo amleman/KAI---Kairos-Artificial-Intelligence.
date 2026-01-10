@@ -16,20 +16,33 @@ if not os.path.exists(UPLOAD_FOLDER):
 # -------------------------
 # DATABASE CONFIGURATION
 # -------------------------
-# Detectar si estamos en producción (Cloud Run) o desarrollo local
+# Intentar obtener la URL completa (método rápido)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Si no hay DATABASE_URL, usar SQLite local
+# Si no hay URL completa, intentar construirla con variables individuales (método robusto para Cloud Run)
+if not DATABASE_URL and os.environ.get('INSTANCE_CONNECTION_NAME'):
+    db_user = os.environ.get('DB_USER', 'postgres')
+    db_pass = os.environ.get('DB_PASS', '')
+    db_name = os.environ.get('DB_NAME', 'postgres')
+    db_connection_name = os.environ.get('INSTANCE_CONNECTION_NAME')
+    
+    # Construcción de URL para Socket Unix (Estándar de Google Cloud Run)
+    # Formato: postgresql+psycopg2://USER:PASS@/DB_NAME?host=/cloudsql/CONNECTION_NAME
+    DATABASE_URL = f"postgresql://{db_user}:{db_pass}@/{db_name}?host=/cloudsql/{db_connection_name}"
+
+# Si después de todo esto tenemos DATABASE_URL, usamos Postgres
 USE_POSTGRES = DATABASE_URL is not None
 
 if USE_POSTGRES:
     import psycopg2
     from psycopg2.extras import RealDictCursor
-    print(f"🐘 Usando PostgreSQL: {DATABASE_URL[:30]}...")
+    # Ocultar contraseña en logs por seguridad
+    safe_url = DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else '...'
+    print(f"🐘 Usando PostgreSQL (Cloud SQL): ...@{safe_url}")
 else:
     import sqlite3
     DB = "usuarios.db"
-    print("📁 Usando SQLite local: usuarios.db")
+    pass
 
 # Mapeo de carreras
 CAREER_FILE_MAP = {
@@ -216,7 +229,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("✅ Base de datos inicializada correctamente")
+    pass
 
 def get_user_career(carne):
     """Auxiliary to get user career from DB"""

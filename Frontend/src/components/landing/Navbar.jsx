@@ -24,7 +24,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                        <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                        <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-sky-500 to-blue-600">
                             KAI USAC
                         </Link>
                     </div>

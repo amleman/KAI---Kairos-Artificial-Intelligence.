@@ -24,7 +24,7 @@ const HeroSection = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                    KAI <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">USAC</span>
+                    KAI <span className="text-transparent bg-clip-text bg-gradient-to-br from-sky-500 to-blue-600">USAC</span>
                 </motion.h1>
 
                 <motion.h2
