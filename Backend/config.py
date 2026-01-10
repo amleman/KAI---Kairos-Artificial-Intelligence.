@@ -121,6 +121,7 @@ def init_db():
                 usuario TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
+                rol TEXT DEFAULT 'user',
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -170,6 +171,7 @@ def init_db():
                 usuario TEXT UNIQUE NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
+                rol TEXT DEFAULT 'user',
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
