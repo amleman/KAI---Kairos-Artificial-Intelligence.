@@ -689,61 +689,61 @@ const OptimizadorPromedio = () => {
       </div>
       {/* Help Modal */}
       {mostrarAyuda && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative border border-slate-200 animate-scaleIn">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative border border-white/50 dark:border-slate-700/50 animate-scaleIn">
             <button
               onClick={() => setMostrarAyuda(false)}
-              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+              className="absolute top-6 right-6 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all"
             >
               <X size={24} />
             </button>
 
             <div className="mb-8">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
                 <Info className="text-emerald-500" size={32} />
                 Guía de Funcionalidades
               </h2>
-              <p className="text-slate-500 font-medium mt-2">Aprende a sacar el máximo provecho de nuestras herramientas de predicción.</p>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Aprende a sacar el máximo provecho de nuestras herramientas de predicción.</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               {/* Calculadora de Notas */}
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100">
-                  <Calculator className="text-sky-500" size={24} />
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="w-12 h-12 bg-white dark:bg-slate-700/50 rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-600">
+                  <Calculator className="text-sky-500 dark:text-sky-400" size={24} />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 mb-2">Calculadora de Notas</h3>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Calculadora de Notas</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-4">
                   Define una <strong>meta de promedio</strong> exacta y el sistema calculará qué nota mínima necesitas en cada curso actual para lograrla.
                 </p>
-                <div className="bg-sky-50 p-3 rounded-xl border border-sky-100">
-                  <p className="text-xs text-sky-800 font-bold">
+                <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-xl border border-sky-100 dark:border-sky-800/30">
+                  <p className="text-xs text-sky-800 dark:text-sky-300 font-bold">
                     💡 <span className="underline decoration-sky-300 decoration-2 underline-offset-2">Tip:</span> Úsalo al inicio del semestre para planificar tu esfuerzo.
                   </p>
                 </div>
               </div>
 
               {/* Simulador de Escenarios */}
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100">
-                  <Sparkles className="text-blue-500" size={24} />
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="w-12 h-12 bg-white dark:bg-slate-700/50 rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-600">
+                  <Sparkles className="text-blue-500 dark:text-blue-400" size={24} />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 mb-2">Simulador de Escenarios</h3>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Simulador de Escenarios</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-4">
                   Proyecta tu promedio final en <strong>4 situaciones hipotéticas</strong>, desde aprobar con la mínima hasta un rendimiento perfecto.
                 </p>
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                  <p className="text-xs text-blue-800 font-bold">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                  <p className="text-xs text-blue-800 dark:text-blue-300 font-bold">
                     🔮 <span className="underline decoration-blue-300 decoration-2 underline-offset-2">Tip:</span> Ideal para conocer tus límites superior e inferior rápidamente.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
               <button
                 onClick={() => setMostrarAyuda(false)}
-                className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all hover:-translate-y-1 shadow-lg"
+                className="px-6 py-3 bg-slate-900 dark:bg-indigo-600 text-white font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all hover:-translate-y-1 shadow-lg"
               >
                 ¡Entendido!
               </button>

@@ -322,12 +322,21 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
 
                             {/* Contact */}
                             <div className="mt-6 text-center">
-                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1 flex-wrap">
                                     ¿Dudas? Escríbenos a{' '}
-                                    <a href="mailto:soporte@kai.gt" className="text-sky-600 dark:text-sky-400 font-bold hover:underline">
-                                        soporte@kai.gt
+                                    <a href="mailto:martin1aleman@proton.me" className="text-sky-600 dark:text-sky-400 font-bold hover:underline">
+                                        martin1aleman@proton.me
                                     </a>
-                                    {' '}o por WhatsApp
+                                    {' '}o contáctanos por{' '}
+                                    <a
+                                        href="https://wa.me/50240131873?text=Hola,%20tengo%20dudas%20sobre%20los%20planes%20Premium%20de%20KAI"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"
+                                    >
+                                        <MessageCircle size={14} />
+                                        WhatsApp
+                                    </a>
                                 </p>
                             </div>
 

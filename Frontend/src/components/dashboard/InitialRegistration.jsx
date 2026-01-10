@@ -23,7 +23,7 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
 
     return (
         <div className="flex items-center justify-center min-h-screen p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border-t-4 border-blue-600 relative">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md border-t-4 border-sky-500 relative">
                 <button
                     onClick={() => {
                         localStorage.clear();
@@ -36,7 +36,7 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                 </button>
 
                 <div className="text-center mb-8">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
                         <User className="text-white" size={36} />
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Registro Inicial</h1>
@@ -97,7 +97,7 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                 </div>
 
                 <button
-                    className="w-full mt-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-800 transition-all shadow-lg"
+                    className="w-full mt-8 py-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-sky-600 hover:to-blue-700 transition-all shadow-lg"
                     onClick={onSave}
                 >
                     Guardar y Continuar

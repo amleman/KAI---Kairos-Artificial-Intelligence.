@@ -27,6 +27,8 @@ const StatCard = ({ title, value, subtitle, icon: Icon, bgClass, iconClass, subt
   </div>
 );
 
+import InitialRegistration from "../components/dashboard/InitialRegistration";
+
 const Dashboard = () => {
   const [userData, setUserData] = useState({ nombre: "Estudiante", carne: "", carrera: "" });
   const [stats, setStats] = useState({
@@ -42,6 +44,9 @@ const Dashboard = () => {
     badgeColor: "bg-slate-200 text-slate-500"
   });
   const [mostrarAnalisis, setMostrarAnalisis] = useState(false);
+  const [isProfileComplete, setIsProfileComplete] = useState(() => {
+    return !!localStorage.getItem("userData");
+  }); // Initialize directly from localStorage to prevent flash
 
   useEffect(() => {
     // Cargar datos de usuario
@@ -49,6 +54,7 @@ const Dashboard = () => {
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUserData(parsedUser);
+      setIsProfileComplete(true);
 
       // Cargar estadísticas
       if (parsedUser.carne) {
@@ -74,8 +80,47 @@ const Dashboard = () => {
           })
           .catch(console.error);
       }
+    } else {
+      // If no userData in local storage, check if we need initial registration
+      // We assume if they are here without userData, they need to register info
+      setIsProfileComplete(false);
     }
   }, []);
+
+  const saveUserProfile = async () => {
+    try {
+      const usuarioNombre = localStorage.getItem("usuario");
+      const payload = { ...userData, usuario: usuarioNombre };
+
+      const response = await fetch(`${API_URL}/guardar_usuario_info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        localStorage.setItem("userData", JSON.stringify(userData));
+        setIsProfileComplete(true);
+        window.location.reload(); // Reload to refresh stats/context
+      } else {
+        alert("Error al guardar información");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+  };
+
+  if (!isProfileComplete) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-50 overflow-auto">
+        <InitialRegistration
+          usuarioData={userData}
+          setUsuarioData={setUserData}
+          handleGuardarUsuario={saveUserProfile}
+        />
+      </div>
+    );
+  }
 
   // --- LÓGICA DE CÁLCULO DE ESTADÍSTICAS DEL HORARIO ---
   useEffect(() => {

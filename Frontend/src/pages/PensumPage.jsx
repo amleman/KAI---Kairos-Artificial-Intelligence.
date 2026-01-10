@@ -17,86 +17,86 @@ const HelpModal = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
                     />
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden relative border border-white"
+                        className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden relative border border-white/50 dark:border-slate-700/50"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header Gradient */}
                         <div className="bg-gradient-to-r from-sky-400 via-purple-400 to-pink-400 h-2 w-full" />
 
-                        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 p-2 rounded-full">
+                        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-slate-100 dark:bg-slate-800 p-2 rounded-full border border-slate-200 dark:border-slate-700">
                             <X size={20} />
                         </button>
 
                         <div className="p-8 md:p-10">
                             <div className="flex items-center gap-4 mb-8">
-                                <div className="w-12 h-12 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600">
+                                <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400">
                                     <HelpCircle size={28} />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Guía del Pensum</h2>
-                                    <p className="text-slate-500 font-medium text-sm text-balance">Todo lo que necesitas saber para gestionar tu progreso académico.</p>
+                                    <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Guía del Pensum</h2>
+                                    <p className="text-slate-500 dark:text-slate-400 font-medium text-sm text-balance">Todo lo que necesitas saber para gestionar tu progreso académico.</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-balance">
                                 {/* Section 1: Views */}
                                 <div className="space-y-4">
-                                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
-                                        <LayoutGrid size={18} className="text-purple-500" /> Modos de Vista
+                                    <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                        <LayoutGrid size={18} className="text-purple-500 dark:text-purple-400" /> Modos de Vista
                                     </h3>
                                     <div className="space-y-3">
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
-                                            <p className="font-bold text-xs text-slate-800">Grid (Cuadrícula)</p>
-                                            <p className="text-[11px] text-slate-500">Vista tradicional organizada por semestres. Ideal para una revisión rápida y secuencial.</p>
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm transition-transform hover:scale-[1.02]">
+                                            <p className="font-bold text-xs text-slate-800 dark:text-slate-200">Grid (Cuadrícula)</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Vista tradicional organizada por semestres. Ideal para una revisión rápida y secuencial.</p>
                                         </div>
-                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm transition-transform hover:scale-[1.02]">
-                                            <p className="font-bold text-xs text-slate-800">Grafo (Interactiva)</p>
-                                            <p className="text-[11px] text-slate-500">Visualización dinámica de interconexiones. Los cursos se agrupan orgánicamente por sus dependencias.</p>
+                                        <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm transition-transform hover:scale-[1.02]">
+                                            <p className="font-bold text-xs text-slate-800 dark:text-slate-200">Grafo (Interactiva)</p>
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Visualización dinámica de interconexiones. Los cursos se agrupan orgánicamente por sus dependencias.</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Section 2: Colors */}
                                 <div className="space-y-4">
-                                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
-                                        <Zap size={18} className="text-yellow-500" /> Código de Colores
+                                    <h3 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                        <Zap size={18} className="text-yellow-500 dark:text-yellow-400" /> Código de Colores
                                     </h3>
                                     <div className="grid grid-cols-1 gap-2">
-                                        <div className="flex items-center gap-3 p-2 bg-emerald-50 rounded-lg border border-emerald-100">
-                                            <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                                            <span className="text-[11px] font-bold text-emerald-800">GANADO: Curso ya aprobado.</span>
+                                        <div className="flex items-center gap-3 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                                            <div className="w-3 h-3 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+                                            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">GANADO: Curso ya aprobado.</span>
                                         </div>
-                                        <div className="flex items-center gap-3 p-2 bg-sky-50 rounded-lg border border-sky-100">
-                                            <div className="w-3 h-3 rounded-full bg-sky-500" />
-                                            <span className="text-[11px] font-bold text-sky-800">DISPONIBLE: Puedes asignarlo ahora.</span>
+                                        <div className="flex items-center gap-3 p-2 bg-sky-50 dark:bg-sky-900/20 rounded-lg border border-sky-100 dark:border-sky-900/30">
+                                            <div className="w-3 h-3 rounded-full bg-sky-500 dark:bg-sky-400" />
+                                            <span className="text-[11px] font-bold text-sky-800 dark:text-sky-300">DISPONIBLE: Puedes asignarlo ahora.</span>
                                         </div>
-                                        <div className="flex items-center gap-3 p-2 bg-rose-50 rounded-lg border border-rose-100">
-                                            <div className="w-3 h-3 rounded-full bg-rose-400" />
-                                            <span className="text-[11px] font-bold text-rose-800">BLOQUEADO: Faltan prerrequisitos.</span>
+                                        <div className="flex items-center gap-3 p-2 bg-rose-50 dark:bg-rose-900/20 rounded-lg border border-rose-100 dark:border-rose-900/30">
+                                            <div className="w-3 h-3 rounded-full bg-rose-400 dark:bg-rose-500" />
+                                            <span className="text-[11px] font-bold text-rose-800 dark:text-rose-300">BLOQUEADO: Faltan prerrequisitos.</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Section 3: More features */}
-                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200">
-                                <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-                                    <Camera size={18} className="text-sky-500" /> Tips Rápidos
+                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                                <h3 className="font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                    <Camera size={18} className="text-sky-500 dark:text-sky-400" /> Tips Rápidos
                                 </h3>
                                 <ul className="space-y-3">
                                     <li className="flex items-start gap-3">
-                                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">1</div>
-                                        <p className="text-xs text-slate-600">Usa el botón de <b>Subir Notas (OCR)</b> para cargar fotos de tus certificaciones y actualizar todo tu pensum en segundos.</p>
+                                        <div className="w-5 h-5 bg-white dark:bg-slate-700/50 rounded-full flex items-center justify-center border dark:border-slate-600 shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic text-slate-600 dark:text-slate-300">1</div>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">Usa el botón de <b>Subir Notas (OCR)</b> para cargar fotos de tus certificaciones y actualizar todo tu pensum en segundos.</p>
                                     </li>
                                     <li className="flex items-start gap-3">
-                                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">2</div>
-                                        <p className="text-xs text-slate-600">En el Grafo, haz <b>click</b> en un curso disponible (azul) para ingresar tu nota y guardarla permanentemente.</p>
+                                        <div className="w-5 h-5 bg-white dark:bg-slate-700/50 rounded-full flex items-center justify-center border dark:border-slate-600 shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic text-slate-600 dark:text-slate-300">2</div>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">En el Grafo, haz <b>click</b> en un curso disponible (azul) para ingresar tu nota y guardarla permanentemente.</p>
                                     </li>
                                     <li className="flex items-start gap-3">
                                         <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center border shadow-sm shrink-0 mt-0.5 text-[10px] font-black italic">3</div>

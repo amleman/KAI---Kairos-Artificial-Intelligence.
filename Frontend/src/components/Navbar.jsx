@@ -25,7 +25,9 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(true);
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [userPlan, setUserPlan] = useState({ plan: 'free', nombre_plan: 'Gratuito' });
 
@@ -51,8 +53,10 @@ const Navbar = () => {
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem("theme", "dark");
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem("theme", "light");
     }
   }, [isDark]);
 
@@ -116,8 +120,8 @@ const Navbar = () => {
           {/* Logo Section */}
           <div className="flex items-center justify-between mb-10 pl-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-pastel-pink dark:bg-rose-900/50 flex items-center justify-center text-slate-700 dark:text-rose-200 shadow-sm">
-                <GraduationCap className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm overflow-hidden">
+                <img src="/kai-favicon.png" alt="KAI Logo" className="w-full h-full object-cover" />
               </div>
               <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                 KAI
