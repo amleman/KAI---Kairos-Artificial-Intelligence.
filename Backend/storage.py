@@ -94,10 +94,9 @@ def upload_file(file_obj, filename, folder="uploads"):
     file_obj.seek(0) # Reset puntero
     file_obj.save(filepath)
     
-    # Construir URL local
-    # Necesita saber la URL base. Podemos usar una variable de entorno o default.
-    base_url = os.environ.get('BASE_URL', 'http://localhost:8000')
-    url_publica = f"{base_url}/{folder}/{filename}"
+    # Construir URL relativa para que el frontend pueda anteponer su API_URL
+    # Esto soluciona problemas cuando se accede desde red local (móvil)
+    url_publica = f"/{folder}/{filename}"
     
     print(f"📁 Archivo guardado localmente: {url_publica}")
     return url_publica

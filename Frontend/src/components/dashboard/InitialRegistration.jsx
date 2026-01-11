@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { User, CreditCard, Cake, Briefcase, LogOut } from "lucide-react";
+import { User, CreditCard, Cake, Briefcase, LogOut, AlertCircle } from "lucide-react";
 
 const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario }) => {
     const [localData, setLocalData] = useState(usuarioData);
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         setLocalData(usuarioData);
@@ -10,13 +11,67 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
 
     const handleChange = (field, value) => {
         setLocalData(prev => ({ ...prev, [field]: value }));
+        // Limpiar error al escribir
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: null }));
+        }
     };
 
     const handleBlur = () => {
         setUsuarioData(localData);
     };
 
+    const validate = () => {
+        const newErrors = {};
+
+        // Validar Nombre
+        if (!localData.nombre || localData.nombre.trim().length < 3) {
+            newErrors.nombre = "El nombre debe tener al menos 3 caracteres.";
+        } else {
+            // Validación de seguridad (XSS / SQL Injection Check)
+            const dangerousChars = /[<>;'"/=\\]/;
+            if (dangerousChars.test(localData.nombre)) {
+                newErrors.nombre = "Por seguridad, no se permiten los caracteres: < > ; ' \" / = \\";
+            }
+
+            // Palabras clave peligrosas
+            const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+            if (dangerousKeywords.test(localData.nombre)) {
+                newErrors.nombre = "Entrada rechazada por contener palabras restringidas.";
+            }
+
+            // Permitir solo letras, espacios y puntos (Lista blanca estricta opcional, pero cumplimos con lo pedido primero de detectar inyecciones)
+        }
+
+        // Validar Carné
+        if (!localData.carne || !/^\d+$/.test(localData.carne) || parseInt(localData.carne) <= 0) {
+            newErrors.carne = "El carné debe ser un número positivo válido.";
+        } else if (localData.carne.length > 9) {
+            newErrors.carne = "El carné no puede tener más de 9 caracteres.";
+        }
+
+        // Validar Fecha
+        if (!localData.fechaNacimiento) {
+            newErrors.fechaNacimiento = "La fecha de nacimiento es requerida.";
+        } else {
+            const year = parseInt(localData.fechaNacimiento.split("-")[0]);
+            if (year < 1960 || year > 2015) {
+                newErrors.fechaNacimiento = "El año de nacimiento debe estar entre 1960 y 2015.";
+            }
+        }
+
+        // Validar Carrera
+        if (!localData.carrera) {
+            newErrors.carrera = "Debes seleccionar una carrera.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const onSave = () => {
+        if (!validate()) return;
+
         setUsuarioData(localData);
         handleGuardarUsuario();
     };
@@ -90,7 +145,15 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                                     onChange={(e) => handleChange(field === "carné" ? "carne" : "nombre", e.target.value)}
                                     onBlur={handleBlur}
                                     value={field === "carné" ? localData.carne : localData.nombre || ""}
+                                    maxLength={field === "carné" ? "9" : undefined}
                                 />
+                            )}
+
+                            {errors[field === "carné" ? "carne" : field] && (
+                                <div className="flex items-center gap-1 mt-1 text-red-500 text-xs font-semibold animate-pulse">
+                                    <AlertCircle size={12} />
+                                    <span>{errors[field === "carné" ? "carne" : field]}</span>
+                                </div>
                             )}
                         </div>
                     ))}

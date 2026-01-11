@@ -183,9 +183,14 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
                       {getNombre(curso)}
                     </h4>
                   </div>
-                  <span className="ml-2 bg-blue-100 dark:!bg-blue-900/40 text-blue-700 dark:!text-blue-300 text-xs font-bold px-2 py-1 rounded border border-blue-200 dark:!border-blue-800 shrink-0">
-                    Sec. {getSeccion(curso)}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 ml-2">
+                    <span className="bg-blue-100 dark:!bg-blue-900/40 text-blue-700 dark:!text-blue-300 text-xs font-bold px-2 py-1 rounded border border-blue-200 dark:!border-blue-800 shrink-0">
+                      Sec. {getSeccion(curso)}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                      {curso.Star || "Clase"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-2 text-sm text-gray-600 dark:!text-gray-400 bg-gray-50 dark:!bg-slate-900/50 p-3 rounded-lg">
@@ -282,6 +287,13 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
                             <div className="flex justify-between items-center opacity-80">
                               <span className="text-[10px] font-bold">{getSeccion(cursoFound)}</span>
                               <span className="text-[9px] font-mono">{getInicio(cursoFound)}</span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-1">
+                              <span className={
+                                `text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-black/10 dark:bg-black/30`
+                              }>
+                                {cursoFound.Star || "Clase"}
+                              </span>
                             </div>
 
                             {/* Tooltip nativo o custom */}

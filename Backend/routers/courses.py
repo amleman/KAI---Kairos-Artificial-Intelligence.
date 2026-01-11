@@ -90,8 +90,22 @@ def validar_contra_pensum(carne, cursos_candidatos):
 def merge_cursos_en_db(carne: str, nuevos_cursos: list):
     """Actualiza o inserta cursos aprobados, validándolos contra el pensum."""
     
+    # 0. Pre-validación de notas y limpieza
+    cursos_limpios = []
+    for c in nuevos_cursos:
+        try:
+            nota = float(c.get("nota", 0))
+            if nota < 0 or nota > 100:
+                print(f"⚠️ Nota inválida ({nota}) para curso {c.get('codigo')}. Se omite o se ajusta.")
+                continue # Omitimos cursos con notas imposibles (o podríamos clamear)
+            
+            c["nota"] = nota
+            cursos_limpios.append(c)
+        except ValueError:
+            continue
+
     # 1. Validar y normalizar los cursos entrantes
-    cursos_a_guardar = validar_contra_pensum(carne, nuevos_cursos)
+    cursos_a_guardar = validar_contra_pensum(carne, cursos_limpios)
     
     if not cursos_a_guardar:
         print("No hay cursos válidos para guardar después de la validación.")
@@ -224,7 +238,7 @@ def extraer_cursos_desde_imagen(file_storage, carne):
     
     texto_raw = pytesseract.image_to_string(imagen, lang="spa", config="--psm 6")
     
-    print("Tomo el texto de la imagen")
+    print(f"✅ OCR completado. Texto extraído (longitud: {len(texto_raw)}): {texto_raw[:100]}...")
     cursos = []
     
     for linea in texto_raw.splitlines():
@@ -234,6 +248,7 @@ def extraer_cursos_desde_imagen(file_storage, carne):
             cursos.append(curso)
 
     if not cursos:
+        print("🔍 No se detectaron cursos en la primera pasada (Líneas). Intentando con mapeo de datos...")
         data = pytesseract.image_to_data(imagen, lang="spa", output_type=pytesseract.Output.DICT, config="--psm 6")
         line_map = {}
         for text, line_num in zip(data.get("text", []), data.get("line_num", [])):
@@ -247,6 +262,9 @@ def extraer_cursos_desde_imagen(file_storage, carne):
             curso = extraer_curso_desde_linea(linea_limpia, career_lookup)
             if curso:
                 cursos.append(curso)
+    
+    if not cursos:
+        print("⚠️ No se encontraron cursos que coincidan con el patrón esperado después de ambas pasadas.")
 
     return cursos, texto_raw
 

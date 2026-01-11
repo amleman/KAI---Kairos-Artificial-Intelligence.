@@ -28,27 +28,11 @@ const EfectoMecanografia = ({ texto }) => {
 const ChatbotAcademico = () => {
     const mensajeInicial = {
         tipo: 'bot',
-        texto: '👋 ¡Hola! Soy tu asistente académico de SIOA.\n\n✨ Puedo ayudarte con:\n\n📖 Información de cursos\n📋 Prerrequisitos\n🔍 Búsqueda de cursos\n📚 Cursos por semestre\n✅ Cursos sin prerequisitos\n⭐ Y mucho más...\n\n¿En qué puedo ayudarte? 😊',
+        texto: '👋 ¡Hola! Soy tu asistente académico de KAI.\n\n✨ Puedo ayudarte con:\n\n📖 Información de cursos\n📋 Prerrequisitos\n🔍 Búsqueda de cursos\n📚 Cursos por semestre\n✅ Cursos sin prerequisitos\n⭐ Y mucho más...\n\n¿En qué puedo ayudarte? 😊',
         timestamp: new Date().toISOString()
     };
 
-    const cargarMensajes = () => {
-        try {
-            const mensajesGuardados = localStorage.getItem('chatbot_mensajes');
-            if (mensajesGuardados) {
-                const mensajes = JSON.parse(mensajesGuardados);
-                return mensajes.map(m => ({
-                    ...m,
-                    timestamp: new Date(m.timestamp)
-                }));
-            }
-        } catch (error) {
-            console.error('Error al cargar mensajes:', error);
-        }
-        return [mensajeInicial];
-    };
-
-    const [mensajes, setMensajes] = useState(cargarMensajes());
+    const [mensajes, setMensajes] = useState([mensajeInicial]);
     const [inputMensaje, setInputMensaje] = useState('');
     const [cargando, setCargando] = useState(false);
     const [mostrarModalLimpiar, setMostrarModalLimpiar] = useState(false);
@@ -56,22 +40,38 @@ const ChatbotAcademico = () => {
     const [mensajeCopiado, setMensajeCopiado] = useState(null);
     const [mostrarScrollTop, setMostrarScrollTop] = useState(false);
     const mensajesContainerRef = useRef(null);
-    const mensajesIniciales = useRef(cargarMensajes().length);
 
-    useEffect(() => {
+    const obtenerUsuarioActivo = () => {
         try {
-            const mensajesParaGuardar = mensajes.map(m => ({
-                ...m,
-                timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp
-            }));
-            localStorage.setItem('chatbot_mensajes', JSON.stringify(mensajesParaGuardar));
-        } catch (error) {
-            console.error('Error al guardar mensajes:', error);
+            const userData = localStorage.getItem('userData');
+            if (userData) {
+                const parsed = JSON.parse(userData);
+                if (parsed.carne) return parsed.carne;
+                if (parsed.usuario) return parsed.usuario;
+            }
+            return localStorage.getItem('usuario') || '';
+        } catch (e) {
+            return localStorage.getItem('usuario') || '';
         }
-    }, [mensajes]);
+    };
+
+    // Cargar Historial del Backend
+    useEffect(() => {
+        const usuario = obtenerUsuarioActivo();
+        if (usuario) {
+            fetch(`${API_URL}/chatbot/historial/${usuario}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        setMensajes([mensajeInicial, ...data]);
+                    }
+                })
+                .catch(err => console.error("Error cargando historial:", err));
+        }
+    }, []);
 
     useEffect(() => {
-        if (mensajes.length > mensajesIniciales.current && mensajesContainerRef.current) {
+        if (mensajesContainerRef.current) {
             mensajesContainerRef.current.scrollTop = mensajesContainerRef.current.scrollHeight;
         }
     }, [mensajes]);
@@ -103,19 +103,6 @@ const ChatbotAcademico = () => {
         }
     };
 
-    const obtenerUsuarioActivo = () => {
-        try {
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                const parsed = JSON.parse(userData);
-                if (parsed.carne) return parsed.carne;
-            }
-            return localStorage.getItem('usuario') || '';
-        } catch (e) {
-            return localStorage.getItem('usuario') || '';
-        }
-    };
-
     const mostrarAyuda = async () => {
         setMostrarModalAyuda(false);
         const nuevoMensaje = { tipo: 'usuario', texto: 'ayuda', timestamp: new Date() };
@@ -137,12 +124,51 @@ const ChatbotAcademico = () => {
         }
     };
 
+    const [charCount, setCharCount] = useState(0);
+
+    const validateChatInput = (text) => {
+        // 1. Bloqueo de XSS (HTML ejecutable)
+        const xssPattern = /<(\s*)script|object|embed|iframe|style|link(\s*)[^>]*>/i;
+        if (xssPattern.test(text)) {
+            alert("Por seguridad, no se permiten etiquetas HTML ejecutables.");
+            return false;
+        }
+
+        // 2. Bloqueo estricto de SQL Injection Keywords
+        const sqlKeywords = /\b(select|insert|update|delete|drop|alter|union|exec|truncate)\b/i;
+        if (sqlKeywords.test(text)) {
+            alert("Por seguridad, no se permiten comandos SQL.");
+            return false;
+        }
+
+        // 3. Bloqueo de caracteres peligrosos para SQL (comillas simples/dobles, punto y coma)
+        // Permitimos interrogación (?) y exclamación (!) para preguntas normales
+        const dangerousChars = /['";\\]/;
+        if (dangerousChars.test(text)) {
+            alert("El mensaje contiene caracteres no permitidos (comillas, punto y coma).");
+            return false;
+        }
+
+        // 4. Límite de longitud
+        if (text.length > 300) {
+            alert("Tu mensaje es muy largo. Máximo 300 caracteres.");
+            return false;
+        }
+        return true;
+    };
+
     const enviarMensaje = async (e) => {
         e.preventDefault();
+
         if (!inputMensaje.trim()) return;
+
+        // Validaciones
+        if (!validateChatInput(inputMensaje)) return;
+
         const nuevoMensajeUsuario = { tipo: 'usuario', texto: inputMensaje, timestamp: new Date() };
         setMensajes(prev => [...prev, nuevoMensajeUsuario]);
         setInputMensaje('');
+        setCharCount(0);
         setCargando(true);
         try {
             const response = await fetch(`${API_URL}/chatbot`, {
@@ -151,12 +177,20 @@ const ChatbotAcademico = () => {
                 body: JSON.stringify({ pregunta: inputMensaje, usuario: obtenerUsuarioActivo() })
             });
             const data = await response.json();
+
+            if (response.status === 403) {
+                alert(data.mensaje || "Has alcanzado el límite de uso diario.");
+                // Remover mensaje de usuario fallido
+                setMensajes(prev => prev.slice(0, -1));
+                return;
+            }
+
             await new Promise(resolve => setTimeout(resolve, 800)); // Ligeramente más rápido
             const mensajeBot = { tipo: 'bot', texto: data.respuesta, intent: data.intent, confianza: data.confianza, timestamp: new Date() };
             setMensajes(prev => [...prev, mensajeBot]);
         } catch (error) {
             console.error('Error:', error);
-            const mensajeError = { tipo: 'bot', texto: '😅 Disculpa, hubo un error. Intenta de nuevo.', timestamp: new Date() };
+            const mensajeError = { tipo: 'bot', texto: '😅 Disculpa, hubo un error de conexión.', timestamp: new Date() };
             setMensajes(prev => [...prev, mensajeError]);
         } finally {
             setCargando(false);
@@ -167,7 +201,6 @@ const ChatbotAcademico = () => {
         const nuevoMensajeInicial = { ...mensajeInicial, timestamp: new Date() };
         setMensajes([nuevoMensajeInicial]);
         mensajesIniciales.current = 1;
-        localStorage.removeItem('chatbot_mensajes');
         setMostrarModalLimpiar(false);
     };
 
@@ -285,7 +318,10 @@ const ChatbotAcademico = () => {
                         <input
                             type="text"
                             value={inputMensaje}
-                            onChange={(e) => setInputMensaje(e.target.value)}
+                            onChange={(e) => {
+                                setInputMensaje(e.target.value);
+                                setCharCount(e.target.value.length);
+                            }}
                             placeholder="Escribe tu pregunta sobre cursos o requisitos..."
                             className="flex-1 pl-6 pr-4 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900 focus:border-sky-400 dark:focus:border-sky-500 outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all shadow-inner"
                             disabled={cargando}
@@ -298,9 +334,19 @@ const ChatbotAcademico = () => {
                             {cargando ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
                         </button>
                     </form>
-                    <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-3 font-medium">
-                        Tu asistente aprende constantemente. Verifica la información importante.
-                    </p>
+                    <div className="flex justify-between items-center max-w-4xl mx-auto mt-2 px-2">
+                        <div className="flex flex-col">
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                Tu asistente aprende constantemente. Verifica la información importante.
+                            </p>
+                            <p className="text-[9px] text-sky-500/70 dark:text-sky-400/50 font-bold italic mt-0.5">
+                                Implementado por Daniel Ortiz
+                            </p>
+                        </div>
+                        <span className={`text-[10px] font-bold ${charCount > 300 ? "text-rose-500" : "text-slate-400"}`}>
+                            {charCount}/300
+                        </span>
+                    </div>
                 </div>
 
                 {mostrarScrollTop && (

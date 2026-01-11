@@ -38,7 +38,52 @@ const SchedulePage = () => {
         }
     }, [configGen]);
 
+    const validateInputs = () => {
+        // 1. Validar Salario
+        const salario = parseFloat(configGen.salarioMeta);
+        if (isNaN(salario) || salario < 0) {
+            alert("El salario no puede ser negativo.");
+            return false;
+        }
+        if (salario > 50000) {
+            alert("El salario máximo permitido es 50,000.");
+            return false;
+        }
+
+        // 2. Validar Horas (si trabaja)
+        if (configGen.trabaja) {
+            if (!configGen.horaInicio || !configGen.horaFin) {
+                alert("Debes definir hora de entrada y salida.");
+                return false;
+            }
+            // Validación simple de formato 24h
+            const timeRegex = /^([01]\d|2[0-3]):?([0-5]\d)$/;
+            if (!timeRegex.test(configGen.horaInicio) || !timeRegex.test(configGen.horaFin)) {
+                alert("Formato de hora inválido. Usa formato 24h (HH:MM).");
+                return false;
+            }
+        }
+
+        // 3. Chequeo Anti-SQLi / XSS
+        const dangerousChars = /[<>;'"/=\\]/;
+        const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+
+        const allValues = [configGen.salarioMeta, configGen.horaInicio, configGen.horaFin].join(" ");
+        if (dangerousChars.test(allValues) || dangerousKeywords.test(allValues)) {
+            alert("Entrada rechazada por caracteres de seguridad no permitidos.");
+            return false;
+        }
+
+        return true;
+    };
+
+    const cleanNumberInput = (val) => {
+        return val.replace(/[^0-9.]/g, '');
+    };
+
     const handleGenerarOptimizado = async () => {
+        if (!validateInputs()) return;
+
         setLoadingOptimizado(true);
         try {
             const timeToMin = (strTime) => {
@@ -118,8 +163,14 @@ const SchedulePage = () => {
                                     <span className="absolute left-3 top-2.5 text-slate-400">Q</span>
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="50000"
                                         value={configGen.salarioMeta}
-                                        onChange={(e) => setConfigGen({ ...configGen, salarioMeta: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = cleanNumberInput(e.target.value);
+                                            setConfigGen({ ...configGen, salarioMeta: val })
+                                        }}
+                                        onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                                         className="w-full pl-8 pr-4 py-2 bg-white/60 dark:bg-slate-800 border-[2px] border-soft-blue/50 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 dark:text-slate-200 shadow-inner"
                                     />
                                 </div>

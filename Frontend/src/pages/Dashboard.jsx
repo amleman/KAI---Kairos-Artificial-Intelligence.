@@ -30,7 +30,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, bgClass, iconClass, subt
 import InitialRegistration from "../components/dashboard/InitialRegistration";
 
 const Dashboard = () => {
-  const [userData, setUserData] = useState({ nombre: "Estudiante", carne: "", carrera: "" });
+  const [userData, setUserData] = useState({ nombre: "", carne: "", carrera: "" });
   const [stats, setStats] = useState({
     promedio: 0,
     creditos: 0,
@@ -64,7 +64,7 @@ const Dashboard = () => {
             const cursos = data || [];
             const totalCreditos = cursos.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
             const promedio = cursos.length > 0
-              ? (cursos.reduce((acc, curr) => acc + (curr.nota || 0), 0) / cursos.length).toFixed(1)
+              ? Math.round(cursos.reduce((acc, curr) => acc + parseFloat(curr.nota || 0), 0) / cursos.length)
               : 0;
             const avance = Math.min(((totalCreditos / 250) * 100).toFixed(1), 100);
 

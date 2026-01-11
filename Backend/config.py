@@ -168,12 +168,38 @@ def init_db():
         """)
         
         cursor.execute("""
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS horarios_guardados (
                 id SERIAL PRIMARY KEY,
                 usuario TEXT,
                 nombre_horario TEXT,
                 data_json TEXT,
                 fecha_guardado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Historial del Chatbot
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_historial (
+                id SERIAL PRIMARY KEY,
+                usuario TEXT,
+                pregunta TEXT,
+                respuesta TEXT,
+                intent TEXT,
+                confianza FLOAT,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Feedback del Chatbot
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_feedback (
+                id SERIAL PRIMARY KEY,
+                historial_id INTEGER REFERENCES chatbot_historial(id),
+                usuario TEXT,
+                es_util BOOLEAN,
+                comentario TEXT,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
     else:
@@ -224,6 +250,31 @@ def init_db():
                 nombre_horario TEXT,
                 data_json TEXT,
                 fecha_guardado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Historial del Chatbot (SQLite)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_historial (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario TEXT,
+                pregunta TEXT,
+                respuesta TEXT,
+                intent TEXT,
+                confianza REAL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Feedback del Chatbot (SQLite)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chatbot_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                historial_id INTEGER REFERENCES chatbot_historial(id),
+                usuario TEXT,
+                es_util BOOLEAN,
+                comentario TEXT,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 

@@ -12,6 +12,15 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // 1. Validación de seguridad en Frontend
+        const dangerousChars = /[<>;'"/=\\]/;
+        const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+
+        if (dangerousChars.test(usuario) || dangerousKeywords.test(usuario)) {
+            setError("Usuario inválido por seguridad. Caracteres o palabras restringidas detectadas.");
+            return;
+        }
+
         const response = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

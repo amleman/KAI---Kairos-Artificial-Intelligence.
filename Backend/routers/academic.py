@@ -87,7 +87,16 @@ def calcular_promedio_actual_endpoint():
     data = request.get_json()
     cursos_aprobados = data.get("cursos_aprobados", [])
     ultimos_6_cursos = cursos_aprobados[-6:]
+    
+    # Calculate metadata (credits, etc) using the optimizer
     resultado = optimizador.calcular_promedio_actual(ultimos_6_cursos)
+    
+    # OVERRIDE with Simple Average logic to match Dashboard (User Request)
+    if ultimos_6_cursos:
+        suma_notas = sum([float(c['nota']) for c in ultimos_6_cursos])
+        promedio_simple = suma_notas / len(ultimos_6_cursos)
+        resultado['promedio'] = round(promedio_simple, 2)
+    
     return jsonify(resultado), 200
 
 @academic_bp.route("/simular_escenarios", methods=['POST'])

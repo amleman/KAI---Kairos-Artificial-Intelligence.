@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API_URL from "../api/apiConfig";
 import AuthBackground from "../components/auth/AuthBackground";
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
   const [usuario, setUsuario] = useState("");
@@ -10,6 +11,8 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,8 +25,28 @@ const Register = () => {
       return;
     }
 
+    // Validación de seguridad extra para Email
+    const dangerousChars = /[<>;'"/=\\]/;
+    const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+
+    if (dangerousChars.test(email) || dangerousKeywords.test(email)) {
+      setError("El email contiene caracteres o palabras no permitidas por seguridad.");
+      return;
+    }
+
     if (password.length < 4) {
       setError("La contraseña debe tener al menos 4 caracteres");
+      return;
+    }
+
+    // Validación de usuario
+    const userRegex = /^[a-z0-9._]+$/;
+    if (!userRegex.test(usuario)) {
+      setError("El usuario solo puede contener letras minúsculas, números, puntos y guiones bajos (sin espacios ni tildes).");
+      return;
+    }
+    if (usuario.length < 4) {
+      setError("El usuario debe tener al menos 4 caracteres.");
       return;
     }
 
@@ -41,10 +64,29 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("¡Registro exitoso! Redirigiendo al login...");
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setSuccess("¡Cuenta creada! Iniciando sesión...");
+
+        // Auto-login para ir directo al Dashboard (InitialRegistration)
+        try {
+          const loginRes = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuario, password })
+          });
+
+          if (loginRes.ok) {
+            const loginData = await loginRes.json();
+            localStorage.setItem("usuario", usuario);
+            // No guardamos "userData" aún para forzar que aparezca InitialRegistration en Dashboard
+            navigate("/dashboard");
+          } else {
+            // Fallback si falla el auto-login
+            setTimeout(() => navigate("/login"), 1500);
+          }
+        } catch (autoLoginErr) {
+          setTimeout(() => navigate("/login"), 1500);
+        }
+
       } else {
         setError(data.error || "Error al registrar usuario");
       }
@@ -100,6 +142,9 @@ const Register = () => {
                 onChange={(e) => setUsuario(e.target.value)}
                 required
               />
+              <p className="text-[10px] text-gray-500 mt-1.5 ml-1">
+                Solo minúsculas, números, puntos (.) y guiones bajos (_). (Ejemplo: usuario_123)
+              </p>
             </div>
 
             <div>
@@ -120,28 +165,46 @@ const Register = () => {
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Contraseña
               </label>
-              <input
-                type="password"
-                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all pr-12"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                 Confirmar Contraseña
               </label>
-              <input
-                type="password"
-                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all pr-12"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <button

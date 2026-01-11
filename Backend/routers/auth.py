@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from config import UPLOAD_FOLDER, get_db_connection, execute_query, USE_POSTGRES
+import re
+
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,6 +22,35 @@ def is_integrity_error(e):
     """Detecta si el error es de integridad (duplicado) en ambas DBs"""
     error_str = str(e).lower()
     return 'unique' in error_str or 'duplicate' in error_str or 'integrity' in error_str
+
+# -----------------------------------------------------------
+# SANITIZACIÓN Y VALIDACIÓN
+# -----------------------------------------------------------
+def sanitize_input(text):
+    """Elimina etiquetas HTML y bloquea keywords peligrosas para evitar XSS y SQLi básico"""
+    if not text: return ""
+    # Eliminar etiquetas HTML
+    text = re.sub(r'<[^>]*>', '', str(text))
+    # Detectar keywords peligrosas (si existen, devolvemos vacío o lanzamos error)
+    dangerous_keywords = r"\b(script|select|drop|delete|update|insert|alert)\b"
+    if re.search(dangerous_keywords, text, re.IGNORECASE):
+        return "" # O podrías retornar None o lanzar excepción
+    return text.strip()
+
+def validate_date(date_str):
+    """Valida formato YYYY-MM-DD y rango de años (1900 - 2010)"""
+    try:
+        dt = datetime.strptime(date_str, '%Y-%m-%d')
+        if dt.year < 1960:
+            return False, "La fecha de nacimiento no puede ser anterior a 1960."
+        if dt.year > 2015:
+            return False, "La fecha de nacimiento no puede ser posterior a 2015."
+        if dt > datetime.now():
+            return False, "La fecha no puede ser futura."
+        return True, ""
+    except ValueError:
+        return False, "Formato de fecha inválido (use YYYY-MM-DD)."
+
 
 # -----------------------------------------------------------
 # REGISTER
@@ -122,17 +153,57 @@ def guardar_usuario_info():
 
         if existe:
             # Actualizar
+            
+            # --- VALIDACIONES ---
+            # 1. Carné (Solo números, positivos y max 9 dígitos)
+            carne_str = str(data["carne"])
+            if not carne_str.isdigit() or int(carne_str) < 0:
+                 return jsonify({"error": "El carné debe contener solo números positivos."}), 400
+            
+            if len(carne_str) > 9:
+                 return jsonify({"error": "El carné no puede exceder los 9 caracteres."}), 400
+            
+            # 2. Fecha Nacimiento
+            valid_date, msg_date = validate_date(data["fechaNacimiento"])
+            if not valid_date:
+                return jsonify({"error": msg_date}), 400
+
+            # 3. Sanitización
+            nombre_limpio = sanitize_input(data["nombre"])
+            carrera_limpia = sanitize_input(data["carrera"])
+
+            if not nombre_limpio or not carrera_limpia:
+                return jsonify({"error": "El nombre y la carrera son obligatorios."}), 400
+
             execute_query(cursor, """
                 UPDATE usuarios_info 
                 SET nombre = ?, carne = ?, fecha_nacimiento = ?, carrera = ?
                 WHERE usuario = ?
-            """, (data["nombre"], data["carne"], data["fechaNacimiento"], data["carrera"], data["usuario"]))
+            """, (nombre_limpio, data["carne"], data["fechaNacimiento"], carrera_limpia, data["usuario"]))
         else:
+             # --- VALIDACIONES (Mismas para Insert) ---
+            carne_str = str(data["carne"])
+            if not carne_str.isdigit() or int(carne_str) < 0:
+                 return jsonify({"error": "El carné debe contener solo números positivos."}), 400
+            
+            if len(carne_str) > 9:
+                 return jsonify({"error": "El carné no puede exceder los 9 caracteres."}), 400
+            
+            valid_date, msg_date = validate_date(data["fechaNacimiento"])
+            if not valid_date:
+                return jsonify({"error": msg_date}), 400
+                
+            nombre_limpio = sanitize_input(data["nombre"])
+            carrera_limpia = sanitize_input(data["carrera"])
+
+            if not nombre_limpio or not carrera_limpia:
+                return jsonify({"error": "El nombre y la carrera son obligatorios."}), 400
+
             # Insertar
             execute_query(cursor, """
                 INSERT INTO usuarios_info (usuario, nombre, carne, fecha_nacimiento, carrera)
                 VALUES (?, ?, ?, ?, ?)
-            """, (data["usuario"], data["nombre"], data["carne"], data["fechaNacimiento"], data["carrera"]))
+            """, (data["usuario"], nombre_limpio, data["carne"], data["fechaNacimiento"], carrera_limpia))
 
         conn.commit()
         return jsonify({"message": "Guardado"}), 200
@@ -224,18 +295,37 @@ def actualizar_perfil(usuario):
     cursor = conn.cursor()
     
     try:
-        # Actualizar tabla usuarios (email)
-        if 'email' in data:
-            execute_query(cursor, "UPDATE usuarios SET email = ? WHERE usuario = ?", (data['email'], usuario))
+        # 1. Sanitización de entradas
+        nombre = sanitize_input(data.get('nombre', ''))
+        email = sanitize_input(data.get('email', ''))
+        # Nota: La carrera en el frontend será read-only, pero aquí la sanitizamos por si acaso
+        carrera = sanitize_input(data.get('carrera', ''))
+        fecha = data.get('fecha_nacimiento', '')
+        
+        if not nombre or not email:
+            return jsonify({"error": "Nombre y correo son obligatorios o contienen caracteres restringidos."}), 400
+
+        # 2. Validar Fecha (1960 - 2015)
+        valid_date, msg_date = validate_date(fecha)
+        if not valid_date:
+            return jsonify({"error": msg_date}), 400
             
-        # Actualizar/Insertar usuarios_info
+        # 3. Validar Unicidad de Correo (excluyendo al usuario actual)
+        execute_query(cursor, "SELECT usuario FROM usuarios WHERE email = ? AND usuario != ?", (email, usuario))
+        if cursor.fetchone():
+            return jsonify({"error": "Este correo ya está registrado por otro usuario."}), 400
+
+        # 4. Actualizar tabla usuarios (email)
+        execute_query(cursor, "UPDATE usuarios SET email = ? WHERE usuario = ?", (email, usuario))
+            
+        # 5. Actualizar/Insertar usuarios_info
         execute_query(cursor, "SELECT id FROM usuarios_info WHERE usuario = ?", (usuario,))
         exists = cursor.fetchone()
         
-        nombre = data.get('nombre', '')
-        fecha = data.get('fecha_nacimiento', '')
-        carrera = data.get('carrera', '')
-        carne = data.get('carne', usuario) 
+        # El carné no se debería cambiar aquí según requisitos previos, lo mantenemos igual
+        execute_query(cursor, "SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario,))
+        carne_row = cursor.fetchone()
+        carne = carne_row[0] if carne_row else data.get('carne', usuario)
         
         if exists:
             execute_query(cursor, """
@@ -252,6 +342,7 @@ def actualizar_perfil(usuario):
         conn.commit()
         return jsonify({"mensaje": "Perfil actualizado correctamente"})
     except Exception as e:
+        print(f"Error en actualizar_perfil: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()

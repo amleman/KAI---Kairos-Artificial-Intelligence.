@@ -197,6 +197,16 @@ const PensumGraph = ({ pensum, aprobados, onSaveSingleCourse, aprobadosData = []
             onMouseMove={handleMouseMove}
             onMouseUp={() => setIsDragging(false)}
             onMouseLeave={() => setIsDragging(false)}
+
+            onTouchStart={(e) => {
+                const touch = e.touches[0];
+                handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+            }}
+            onTouchMove={(e) => {
+                const touch = e.touches[0];
+                handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+            }}
+            onTouchEnd={() => setIsDragging(false)}
         >
             {/* Glassmorphism Background Decorations */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -359,9 +369,14 @@ const PensumGraph = ({ pensum, aprobados, onSaveSingleCourse, aprobadosData = []
                                             <Award className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                             <input
                                                 type="number"
+                                                min="61"
+                                                max="100"
                                                 value={modalNota}
                                                 onChange={(e) => setModalNota(e.target.value)}
-                                                className="w-full bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 pl-9 pr-3 font-bold text-sm text-slate-700 dark:text-slate-100 focus:border-emerald-400 dark:focus:border-emerald-500 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 shadow-sm"
+                                                className={`w-full bg-white dark:!bg-slate-800 border rounded-lg py-2 pl-9 pr-3 font-bold text-sm text-slate-700 dark:text-slate-100 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500 shadow-sm ${modalAprobado && (parseInt(modalNota) < 61 || parseInt(modalNota) > 100)
+                                                    ? "border-red-500 text-red-600 focus:border-red-500 dark:border-red-500"
+                                                    : "border-slate-200 dark:border-slate-700 focus:border-emerald-400 dark:focus:border-emerald-500"
+                                                    }`}
                                                 placeholder="0"
                                             />
                                         </div>

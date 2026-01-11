@@ -40,6 +40,20 @@ const OptimizadorPromedio = () => {
   const [busquedaActuales, setBusquedaActuales] = useState("");
   const [resultadosBusquedaActuales, setResultadosBusquedaActuales] = useState([]);
 
+  const validateSecurity = (value) => {
+    const dangerousChars = /[<>;'"/=\\]/;
+    const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+    if (dangerousChars.test(value) || dangerousKeywords.test(value)) {
+      alert("Entrada rechazada por caracteres de seguridad no permitidos.");
+      return false;
+    }
+    return true;
+  };
+
+  const cleanNumberInput = (val) => {
+    return val.replace(/[^0-9.]/g, '');
+  };
+
   useEffect(() => {
     const estadoAGuardar = {
       cursosActuales,
@@ -207,6 +221,12 @@ const OptimizadorPromedio = () => {
         })
       });
       const data = await response.json();
+
+      // Override with actual cumulative average (all courses) to match Dashboard
+      const totalNotas = aprobadosValidos.reduce((sum, course) => sum + parseFloat(course.nota || 0), 0);
+      const promedioReal = aprobadosValidos.length > 0 ? (totalNotas / aprobadosValidos.length) : 0;
+      data.promedio = promedioReal;
+
       setPromedioActual(data);
     } catch (error) {
       console.error("Error calculando promedio:", error);
@@ -225,8 +245,11 @@ const OptimizadorPromedio = () => {
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
-    if (!promedioObjetivo || parseFloat(promedioObjetivo) < 0 || parseFloat(promedioObjetivo) > 100) {
-      setMensajeExito("Ingresa un promedio objetivo válido");
+    if (!validateSecurity(promedioObjetivo)) return;
+
+    const promObj = parseFloat(promedioObjetivo);
+    if (isNaN(promObj) || promObj < 61 || promObj > 100) {
+      setMensajeExito("El promedio objetivo debe estar entre 61 y 100");
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
@@ -258,6 +281,7 @@ const OptimizadorPromedio = () => {
       setTimeout(() => setMensajeExito(""), 3000);
       return;
     }
+    if (!validateSecurity(promedioObjetivo)) return;
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/simular_escenarios`, {
@@ -426,10 +450,14 @@ const OptimizadorPromedio = () => {
                     <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
                     <input
                       type="number"
-                      placeholder="Ej: 85.0"
-                      min="0" max="100" step="0.1"
+                      placeholder="61.0 - 100.0"
+                      min="61" max="100" step="0.1"
                       value={promedioObjetivo}
-                      onChange={(e) => setPromedioObjetivo(e.target.value)}
+                      onChange={(e) => {
+                        const val = cleanNumberInput(e.target.value);
+                        setPromedioObjetivo(val);
+                      }}
+                      onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                       className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 rounded-2xl text-xl font-black text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 transition-all"
                     />
                   </div>
@@ -533,7 +561,7 @@ const OptimizadorPromedio = () => {
               <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors" />
               <h3 className="text-[10px] font-black text-sky-100 uppercase tracking-[0.2em] mb-6 relative">Promedio de Cierre</h3>
               <div className="flex items-baseline gap-1 relative mb-6">
-                <span className="text-7xl font-black tracking-tighter">{promedioActual.promedio}</span>
+                <span className="text-7xl font-black tracking-tighter">{Math.round(parseFloat(promedioActual.promedio))}</span>
                 <span className="text-2xl font-bold text-sky-200">%</span>
               </div>
               <div className="flex gap-4 border-t border-white/20 pt-6">

@@ -125,11 +125,20 @@ class GeneradorHorarioCustom:
         cursos_sin_oferta = []
 
         for cod in codigos_deseados:
-            secciones = df_subset[df_subset['Codigo'] == cod]
-            if not secciones.empty:
-                secciones_por_curso.append(secciones.to_dict('records'))
-            else:
+            df_curso = df_subset[df_subset['Codigo'] == cod]
+            
+            if df_curso.empty:
                 cursos_sin_oferta.append(cod)
+                continue
+                
+            # Identificar componentes únicos (ej: Clase normal, Laboratorio)
+            # para obligar al algoritmo a elegir uno de CADA tipo.
+            tipos_materia = df_curso['Star'].unique()
+            
+            for tipo in tipos_materia:
+                secciones_tipo = df_curso[df_curso['Star'] == tipo]
+                if not secciones_tipo.empty:
+                    secciones_por_curso.append(secciones_tipo.to_dict('records'))
 
         # Si algún curso se quedó sin secciones por los filtros, retornamos error
         if cursos_sin_oferta:

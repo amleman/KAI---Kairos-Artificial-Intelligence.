@@ -289,9 +289,20 @@ const PensumPage = () => {
 
     // --- OCR Logic Proxies ---
     const confirmarNotasOCR = () => {
+        // Validación de rango de notas (61-100)
+        const notasInvalidas = cursosNuevos.some(c => {
+            const nota = parseFloat(notasTemp[c.codigo]);
+            return isNaN(nota) || nota < 61 || nota > 100;
+        });
+
+        if (notasInvalidas) {
+            alert("Por favor, asegúrate de que todas las notas estén entre 61 y 100.");
+            return;
+        }
+
         const cursosConNotas = cursosNuevos.map(c => ({
             codigo: c.codigo,
-            nota: notasTemp[c.codigo] || 61,
+            nota: parseFloat(notasTemp[c.codigo]) || 61,
             nombre: c.nombre,
             creditos: c.creditos
         }));

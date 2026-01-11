@@ -34,11 +34,14 @@ const GradesModal = ({
                             <div className="relative">
                                 <input
                                     type="number"
-                                    min="0"
+                                    min="61"
                                     max="100"
                                     step="0.1"
-                                    placeholder="Nota (0-100)"
-                                    className="w-full pl-4 pr-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-pastel-blue/50 focus:border-pastel-blue transition-all"
+                                    placeholder="Nota (61-100)"
+                                    className={`w-full pl-4 pr-4 py-3 bg-white border rounded-lg text-slate-700 focus:outline-none focus:ring-2 transition-all ${notasTemp[curso.codigo] < 61 || notasTemp[curso.codigo] > 100
+                                        ? "border-red-500 text-red-600 focus:border-red-500 focus:ring-red-200"
+                                        : "border-slate-200 focus:ring-pastel-blue/50 focus:border-pastel-blue"
+                                        }`}
                                     value={notasTemp[curso.codigo] || ""}
                                     onChange={(e) => setNotasTemp({ ...notasTemp, [curso.codigo]: e.target.value })}
                                 />

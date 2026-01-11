@@ -12,6 +12,58 @@ const ScheduleManagementTab = ({
 }) => {
     const navigate = useNavigate();
 
+    const validateInputs = () => {
+        // 1. Validar Salario
+        const salario = parseFloat(configGen.salarioMeta);
+        if (isNaN(salario) || salario < 0) {
+            alert("El salario no puede ser negativo.");
+            return false;
+        }
+        if (salario > 50000) {
+            alert("El salario máximo permitido es 50,000.");
+            return false;
+        }
+
+        // 2. Validar Horas (si trabaja)
+        if (configGen.trabaja) {
+            if (!configGen.horaInicio || !configGen.horaFin) {
+                alert("Debes definir hora de entrada y salida.");
+                return false;
+            }
+            // Validación simple de formato (los inputs type="time" suelen forzarlo, pero por seguridad)
+            const timeRegex = /^([01]\d|2[0-3]):?([0-5]\d)$/;
+            if (!timeRegex.test(configGen.horaInicio) || !timeRegex.test(configGen.horaFin)) {
+                alert("Formato de hora inválido. Usa formato 24h (HH:MM).");
+                return false;
+            }
+        }
+
+        // 3. Chequeo Anti-SQLi / XSS en valores de texto (por si acaso)
+        // Aunque son inputs controlados numéricos/time, validamos que no se haya colado nada raro
+        const dangerousChars = /[<>;'"/=\\]/;
+        const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+
+        // Convertimos a string para probar
+        const allValues = [configGen.salarioMeta, configGen.horaInicio, configGen.horaFin].join(" ");
+        if (dangerousChars.test(allValues) || dangerousKeywords.test(allValues)) {
+            alert("Entrada rechazada por caracteres de seguridad no permitidos.");
+            return false;
+        }
+
+        return true;
+    };
+
+    const onGenerateClick = () => {
+        if (validateInputs()) {
+            handleGenerarOptimizado();
+        }
+    };
+
+    const cleanNumberInput = (val) => {
+        // Remueve caracteres no numéricos excepto punto (y evita e, +, -) para inputs numéricos estrictos de texto
+        return val.replace(/[^0-9.]/g, '');
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="text-left mb-8">
@@ -56,10 +108,16 @@ const ScheduleManagementTab = ({
                                     </label>
                                     <input
                                         type="number"
+                                        min="0"
+                                        max="50000"
                                         value={configGen.salarioMeta}
-                                        onChange={(e) => setConfigGen({ ...configGen, salarioMeta: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = cleanNumberInput(e.target.value);
+                                            setConfigGen({ ...configGen, salarioMeta: val })
+                                        }}
                                         className="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 p-2 border"
                                         placeholder="Ej. 5000"
+                                        onKeyDown={(e) => ["e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
                                     />
                                 </div>
 
@@ -106,7 +164,7 @@ const ScheduleManagementTab = ({
                         {/* Botones de Acción */}
                         <div className="space-y-3 mt-2">
                             <button
-                                onClick={handleGenerarOptimizado}
+                                onClick={onGenerateClick}
                                 disabled={loadingOptimizado}
                                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex justify-center items-center gap-2 shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >

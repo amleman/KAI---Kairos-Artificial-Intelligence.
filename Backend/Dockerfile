@@ -4,6 +4,8 @@ FROM python:3.11-slim
 # Instalar dependencias del sistema necesarias (Tesseract OCR y librerías de sistema)
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
+    tesseract-ocr-spa \
+    tesseract-ocr-equ \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*

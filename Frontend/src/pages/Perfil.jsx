@@ -63,7 +63,8 @@ const Perfil = () => {
                     const aprobados = dataCursos.aprobados || [];
                     const creditos = aprobados.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
                     const sumaNotas = aprobados.reduce((acc, curr) => acc + (curr.nota || 0), 0);
-                    const promedio = aprobados.length > 0 ? (sumaNotas / aprobados.length).toFixed(2) : 0;
+                    const rawPromedio = aprobados.length > 0 ? (sumaNotas / aprobados.length) : 0;
+                    const promedio = Math.min(rawPromedio, 100).toFixed(2);
                     const mejorCurso = aprobados.reduce((max, obj) => (obj.nota > max.nota ? obj : max), { nota: 0, nombre: '-' });
 
                     setStats({
@@ -100,6 +101,27 @@ const Perfil = () => {
 
     const handleGuardar = async () => {
         if (!usuario) return;
+
+        // 1. Validación de Seguridad (SQLi / XSS)
+        const dangerousChars = /[<>;'"/=\\]/;
+        const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
+
+        if (dangerousChars.test(formData.nombre) || dangerousKeywords.test(formData.nombre) ||
+            dangerousChars.test(formData.email) || dangerousKeywords.test(formData.email)) {
+            alert("Error de Seguridad: Se detectaron caracteres o palabras restringidas en los campos.");
+            return;
+        }
+
+        // 2. Validación de Fecha (1960 - 2015)
+        if (formData.fecha_nacimiento) {
+            const date = new Date(formData.fecha_nacimiento);
+            const year = date.getUTCFullYear();
+            if (year < 1960 || year > 2015) {
+                alert("La fecha de nacimiento debe estar entre 1960 y 2015.");
+                return;
+            }
+        }
+
         setGuardando(true);
         try {
             const res = await fetch(`${API_URL}/api/perfil/${usuario.usuario}`, {
@@ -107,9 +129,15 @@ const Perfil = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
-            if (res.ok) setEditando(false);
+            const data = await res.json();
+            if (res.ok) {
+                setEditando(false);
+            } else {
+                alert(data.error || "Ocurrió un error al guardar.");
+            }
         } catch (error) {
             console.error(error);
+            alert("Error de conexión al servidor.");
         } finally {
             setGuardando(false);
         }
@@ -162,7 +190,7 @@ const Perfil = () => {
                 {/* Banner */}
                 <div className="h-64 bg-slate-800 relative overflow-hidden">
                     {formData.foto_banner ? (
-                        <img src={formData.foto_banner} alt="Banner" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
+                        <img src={formData.foto_banner.startsWith('http') ? formData.foto_banner : `${API_URL}${formData.foto_banner}`} alt="Banner" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-r from-sky-400 via-blue-500 to-blue-600" />
                     )}
@@ -183,7 +211,7 @@ const Perfil = () => {
                         <div className="relative group/avatar">
                             <div className="w-44 h-44 rounded-full border-[6px] border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center transition-transform hover:scale-105 duration-500">
                                 {formData.foto_perfil ? (
-                                    <img src={formData.foto_perfil} alt="Perfil" className="w-full h-full object-cover" />
+                                    <img src={formData.foto_perfil.startsWith('http') ? formData.foto_perfil : `${API_URL}${formData.foto_perfil}`} alt="Perfil" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-sky-50 flex items-center justify-center text-sky-400">
                                         <User size={80} strokeWidth={1} />
@@ -270,17 +298,14 @@ const Perfil = () => {
                             <div className="md:col-span-2 space-y-2 group/input">
                                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">Carrera</label>
                                 <div className="relative">
-                                    <Book className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando ? "text-slate-800" : "text-amber-500"}`} size={20} />
+                                    <Book className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500" size={20} />
                                     <input
                                         type="text"
                                         name="carrera"
                                         value={formData.carrera}
                                         onChange={handleChange}
-                                        disabled={!editando}
-                                        className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando
-                                            ? "bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-500 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-400 focus:ring-0 shadow-inner"
-                                            : "bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default"
-                                            }`}
+                                        disabled={true}
+                                        className="w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default shadow-sm"
                                     />
                                 </div>
                             </div>

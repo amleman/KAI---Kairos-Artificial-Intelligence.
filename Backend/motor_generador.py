@@ -108,11 +108,19 @@ class GeneradorHorarios:
             df_oferta_actual = df_oferta_actual[~mask_descartar]
 
         for cod in codigos_meta:
-            secciones = df_oferta_actual[df_oferta_actual['Codigo'] == cod]
-            if not secciones.empty:
-                secciones_por_curso.append(secciones.to_dict('records'))
-            else:
+            df_curso = df_oferta_actual[df_oferta_actual['Codigo'] == cod]
+            if df_curso.empty:
                 secciones_por_curso.append([])
+                continue
+
+            tipos_materia = df_curso['Star'].unique()
+
+            for tipo in tipos_materia:
+                secciones_tipo = df_curso[df_curso['Star'] == tipo]
+                if not secciones_tipo.empty:
+                    secciones_por_curso.append(secciones_tipo.to_dict('records'))
+                else:
+                    secciones_por_curso.append([])
                 
         if not any(secciones_por_curso):
             return []

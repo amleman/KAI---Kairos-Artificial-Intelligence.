@@ -43,3 +43,7 @@ uploads/*
 
 # Local environment variables
 .env
+
+# Verification scripts
+verify_algorithm.py
+verify_output.txt
