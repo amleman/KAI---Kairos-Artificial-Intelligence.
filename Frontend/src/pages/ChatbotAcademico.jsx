@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Loader2, BookOpen, HelpCircle, Sparkles, Trash2, User, Bot, X, AlertTriangle, Copy, Check, ArrowUp, Info, Zap, Lightbulb } from 'lucide-react';
+import { MessageCircle, Send, Loader2, BookOpen, HelpCircle, Sparkles, Trash2, User, Bot, X, AlertTriangle, Copy, Check, ArrowUp, Info, Zap, Lightbulb, Crown } from 'lucide-react';
 import API_URL from '../api/apiConfig';
+import PricingModal from '../components/PricingModal';
 
 const EfectoMecanografia = ({ texto }) => {
     const [textoMostrado, setTextoMostrado] = useState('');
@@ -39,6 +40,23 @@ const ChatbotAcademico = () => {
     const [mostrarModalAyuda, setMostrarModalAyuda] = useState(false);
     const [mensajeCopiado, setMensajeCopiado] = useState(null);
     const [mostrarScrollTop, setMostrarScrollTop] = useState(false);
+    const [mostrarLimiteModal, setMostrarLimiteModal] = useState(false);
+    const [mostrarPricingModal, setMostrarPricingModal] = useState(false);
+    const [usageInfo, setUsageInfo] = useState(() => {
+        try {
+            const saved = localStorage.getItem('chatbot_usage');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Verificar si es del mismo día
+                const today = new Date().toDateString();
+                if (parsed.date === today) {
+                    return { current: parsed.current, limit: parsed.limit };
+                }
+            }
+        } catch (e) { }
+        return { current: 0, limit: 5 };
+    });
+    const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
     const mensajesContainerRef = useRef(null);
 
     const obtenerUsuarioActivo = () => {
@@ -67,6 +85,25 @@ const ChatbotAcademico = () => {
                     }
                 })
                 .catch(err => console.error("Error cargando historial:", err));
+
+            // Cargar info de uso desde el plan
+            fetch(`${API_URL}/plan/${usuario}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.limites) {
+                        const newUsage = {
+                            current: data.limites.chatbot_usado || 0,
+                            limit: data.limites.chatbot_diario === -1 ? 100 : data.limites.chatbot_diario
+                        };
+                        setUsageInfo(newUsage);
+                        // Guardar en localStorage
+                        localStorage.setItem('chatbot_usage', JSON.stringify({
+                            ...newUsage,
+                            date: new Date().toDateString()
+                        }));
+                    }
+                })
+                .catch(err => console.error("Error cargando plan:", err));
         }
     }, []);
 
@@ -165,27 +202,54 @@ const ChatbotAcademico = () => {
         // Validaciones
         if (!validateChatInput(inputMensaje)) return;
 
-        const nuevoMensajeUsuario = { tipo: 'usuario', texto: inputMensaje, timestamp: new Date() };
-        setMensajes(prev => [...prev, nuevoMensajeUsuario]);
+        // Verificar límite ANTES de enviar
+        if (usageInfo.limit < 100 && usageInfo.current >= usageInfo.limit) {
+            setMostrarLimiteModal(true);
+            return;
+        }
+
+        const mensajeTexto = inputMensaje;
         setInputMensaje('');
         setCharCount(0);
+
+        const nuevoMensajeUsuario = { tipo: 'usuario', texto: mensajeTexto, timestamp: new Date() };
+        setMensajes(prev => [...prev, nuevoMensajeUsuario]);
         setCargando(true);
+
         try {
             const response = await fetch(`${API_URL}/chatbot`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pregunta: inputMensaje, usuario: obtenerUsuarioActivo() })
+                body: JSON.stringify({ pregunta: mensajeTexto, usuario: obtenerUsuarioActivo() })
             });
             const data = await response.json();
 
             if (response.status === 403) {
-                alert(data.mensaje || "Has alcanzado el límite de uso diario.");
                 // Remover mensaje de usuario fallido
                 setMensajes(prev => prev.slice(0, -1));
+                // Actualizar uso al máximo
+                const maxUsage = { current: usageInfo.limit, limit: usageInfo.limit };
+                setUsageInfo(maxUsage);
+                localStorage.setItem('chatbot_usage', JSON.stringify({
+                    ...maxUsage,
+                    date: new Date().toDateString()
+                }));
+                // Mostrar modal de límite alcanzado
+                setMostrarLimiteModal(true);
                 return;
             }
 
-            await new Promise(resolve => setTimeout(resolve, 800)); // Ligeramente más rápido
+            // Actualizar info de uso
+            if (data.usage) {
+                setUsageInfo(data.usage);
+                // Guardar en localStorage
+                localStorage.setItem('chatbot_usage', JSON.stringify({
+                    ...data.usage,
+                    date: new Date().toDateString()
+                }));
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 800));
             const mensajeBot = { tipo: 'bot', texto: data.respuesta, intent: data.intent, confianza: data.confianza, timestamp: new Date() };
             setMensajes(prev => [...prev, mensajeBot]);
         } catch (error) {
@@ -246,7 +310,14 @@ const ChatbotAcademico = () => {
                                 Asistente Académico
                                 <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] rounded-full font-bold uppercase tracking-wider border border-emerald-200 dark:border-emerald-800">Online</span>
                             </h1>
-                            <p className="text-slate-500 dark:text-slate-400 font-medium text-xs">Resuelvo tus dudas sobre el pensum</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-slate-500 dark:text-slate-400 font-medium text-xs">Resuelvo tus dudas sobre el pensum</p>
+                                {usageInfo.limit < 100 && (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${usageInfo.current >= usageInfo.limit ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'}`}>
+                                        {usageInfo.current}/{usageInfo.limit} hoy
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-2">
@@ -277,7 +348,7 @@ const ChatbotAcademico = () => {
                                     : 'bg-sky-600 dark:bg-sky-600 text-white rounded-tr-none shadow-sky-200/50 dark:shadow-none'
                                     }`}>
 
-                                    {esBot && esUltimo ? <EfectoMecanografia texto={mensaje.texto} /> : <span className="whitespace-pre-wrap">{mensaje.texto}</span>}
+                                    {esBot && esUltimo && !limiteAlcanzado ? <EfectoMecanografia texto={mensaje.texto} /> : <span className="whitespace-pre-wrap">{mensaje.texto}</span>}
 
                                     <div className={`text-[10px] mt-1.5 font-bold opacity-60 flex justify-end ${esBot ? 'text-slate-400 dark:text-slate-500' : 'text-sky-100'}`}>
                                         {formatearHora(mensaje.timestamp)}
@@ -480,6 +551,71 @@ const ChatbotAcademico = () => {
                     </div>
                 </div>
             )}
+
+            {/* Modal de Límite Alcanzado */}
+            {mostrarLimiteModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-white dark:!bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden border border-slate-200 dark:border-slate-700">
+                        {/* Gradient top bar */}
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+
+                        <button
+                            onClick={() => setMostrarLimiteModal(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-slate-500 transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-amber-50 dark:ring-amber-900/20">
+                            <Crown size={36} className="text-amber-500" />
+                        </div>
+
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                            ¡Límite diario alcanzado!
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                            Has usado tus <span className="font-bold text-slate-700 dark:text-slate-300">5 consultas gratuitas</span> de hoy.
+                            Vuelve mañana o actualiza a Premium para consultas ilimitadas.
+                        </p>
+
+                        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-600">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-500 dark:text-slate-400">Plan actual:</span>
+                                <span className="font-bold text-slate-700 dark:text-slate-300">Gratuito</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm mt-2">
+                                <span className="text-slate-500 dark:text-slate-400">Consultas usadas:</span>
+                                <span className="font-bold text-rose-500">5/5</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setMostrarLimiteModal(false)}
+                                className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
+                            >
+                                Volver mañana
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setMostrarLimiteModal(false);
+                                    setMostrarPricingModal(true);
+                                }}
+                                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-200 dark:shadow-amber-900/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Crown size={18} />
+                                Ver Premium
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PricingModal */}
+            <PricingModal
+                isOpen={mostrarPricingModal}
+                onClose={() => setMostrarPricingModal(false)}
+            />
         </div>
     );
 };

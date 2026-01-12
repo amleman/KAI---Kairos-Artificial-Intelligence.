@@ -38,7 +38,7 @@ const Navbar = () => {
       if (!usuario) return;
 
       try {
-        const res = await fetch(`${API_URL}/api/plan/${usuario}`);
+        const res = await fetch(`${API_URL}/plan/${usuario}`);
         if (res.ok) {
           const data = await res.json();
           setUserPlan(data);
@@ -135,22 +135,22 @@ const Navbar = () => {
                 className={`
                   group relative px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider
                   transition-all duration-300 hover:scale-105 hover:shadow-lg
-                  ${userPlan.plan === 'premium'
+                  ${(userPlan.plan?.toLowerCase() === 'premium')
                     ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/30'
-                    : userPlan.plan === 'daily'
+                    : (userPlan.plan?.toLowerCase() === 'daily')
                       ? 'bg-gradient-to-r from-violet-400 to-purple-500 text-white shadow-md shadow-violet-200 dark:shadow-violet-900/30'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }
                 `}
               >
                 <span className="flex items-center gap-1">
-                  {userPlan.plan === 'premium' && <Crown size={10} />}
-                  {userPlan.plan === 'daily' && <Zap size={10} />}
-                  {userPlan.plan === 'free' ? 'FREE' : userPlan.plan === 'daily' ? '24H' : userPlan.plan.toUpperCase()}
+                  {(userPlan.plan?.toLowerCase() === 'premium') && <Crown size={10} />}
+                  {(userPlan.plan?.toLowerCase() === 'daily') && <Zap size={10} />}
+                  {(!userPlan.plan || userPlan.plan?.toLowerCase() === 'free') ? 'FREE' : (userPlan.plan?.toLowerCase() === 'daily') ? '24H' : userPlan.plan.toUpperCase()}
                 </span>
 
                 {/* Tooltip on hover */}
-                {userPlan.plan === 'free' && (
+                {(!userPlan.plan || userPlan.plan?.toLowerCase() === 'free') && (
                   <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 text-white text-[9px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     ¡Mejora tu plan!
                   </span>
@@ -158,7 +158,7 @@ const Navbar = () => {
               </button>
 
               {/* Day Pass Expiration Time */}
-              {userPlan.plan === 'daily' && userPlan.fecha_fin && (
+              {(userPlan.plan?.toLowerCase() === 'daily') && userPlan.fecha_fin && (
                 <div className="flex items-center gap-1 text-[9px] text-violet-600 dark:text-violet-400 font-medium">
                   <Clock size={10} />
                   <span>Hasta {new Date(userPlan.fecha_fin).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })}</span>

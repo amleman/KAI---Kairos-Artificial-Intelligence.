@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   TrafficCone, CheckCircle, BookOpen, BarChart3, TrendingUp, Loader2, Trash2, Calendar, Clock, Eye,
-  X, AlertTriangle, Search, Filter, Info, Sparkles
+  X, AlertTriangle, Search, Filter, Info, Sparkles, HelpCircle, Crown
 } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import PricingModal from "../components/PricingModal";
 import API_URL from "../api/apiConfig";
 
 const SemaforoCarga = () => {
@@ -39,7 +40,13 @@ const SemaforoCarga = () => {
   const [mensajeError, setMensajeError] = useState(null);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalMensaje, setErrorModalMensaje] = useState("");
+  const [mostrarAyuda, setMostrarAyuda] = useState(false);
   const navigate = useNavigate();
+
+  // Generador Limit State
+  const [generadorUsageInfo, setGeneradorUsageInfo] = useState({ current: 0, limit: 3 });
+  const [mostrarLimiteGeneradorModal, setMostrarLimiteGeneradorModal] = useState(false);
+  const [mostrarPricingModal, setMostrarPricingModal] = useState(false);
 
   const [horarioGenerado, setHorarioGenerado] = useState(() => cargarEstado('horarioGenerado', null));
   const [mostrarFiltrosAvanzados, setMostrarFiltrosAvanzados] = useState(false);
@@ -66,6 +73,21 @@ const SemaforoCarga = () => {
 
   useEffect(() => {
     cargarCursosClasificados();
+
+    // Load generador usage from plan
+    if (userData.carne) {
+      fetch(`${API_URL}/plan/${userData.carne}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.limites) {
+            setGeneradorUsageInfo({
+              current: data.limites.generador_usado || 0,
+              limit: data.limites.generador_manual_total === -1 ? 999 : (data.limites.generador_manual_total || 3)
+            });
+          }
+        })
+        .catch(console.error);
+    }
   }, []);
 
   const cargarCursosClasificados = async () => {
@@ -132,6 +154,26 @@ const SemaforoCarga = () => {
   };
 
   const generarHorario = async () => {
+    // Verificar límite ANTES de hacer cualquier cosa
+    if (generadorUsageInfo.limit < 999 && generadorUsageInfo.current >= generadorUsageInfo.limit) {
+      setMostrarLimiteGeneradorModal(true);
+      return;
+    }
+
+    // Incrementar contador ANTES de la petición (cuenta cada intento)
+    const nuevoContador = generadorUsageInfo.current + 1;
+    setGeneradorUsageInfo(prev => ({
+      ...prev,
+      current: nuevoContador
+    }));
+
+    // Incrementar en el backend
+    try {
+      await fetch(`${API_URL}/plan/${userData.carne}/usar/generador`, { method: "POST" });
+    } catch (e) {
+      console.error("Error incrementando contador:", e);
+    }
+
     setLoadingHorario(true);
     setMensajeError(null);
     setHorarioGenerado(null);
@@ -165,6 +207,7 @@ const SemaforoCarga = () => {
       if (!data.horarios || data.horarios.length === 0) {
         throw new Error("No se pudo generar ningún horario con los filtros actuales.");
       }
+
       setHorarioGenerado(data);
     } catch (error) {
       console.error("Error generando horario:", error);
@@ -257,12 +300,19 @@ const SemaforoCarga = () => {
           <div className="p-3 bg-white/50 dark:bg-slate-700/50 backdrop-blur-md rounded-xl shadow-sm border border-white/50 w-fit">
             <TrafficCone size={32} className="text-emerald-500" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-800 dark:text-slate-100 mb-1">Semáforo Académico</h1>
             <p className="text-slate-600 dark:text-slate-300 font-medium text-sm md:text-base max-w-2xl">
               Diseña tu semestre ideal. Equilibra la dificultad de tus cursos y genera horarios inteligentes.
             </p>
           </div>
+          <button
+            onClick={() => setMostrarAyuda(true)}
+            className="p-3 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-all active:scale-95 border border-slate-200 dark:border-slate-600 self-start md:self-center"
+            title="¿Cómo funciona?"
+          >
+            <HelpCircle size={24} />
+          </button>
         </div>
       </div>
 
@@ -632,6 +682,177 @@ const SemaforoCarga = () => {
           </div>
         </div>
       )}
+
+      {/* Help Modal */}
+      {mostrarAyuda && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative border border-white/50 dark:border-slate-700/50 animate-scaleIn max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setMostrarAyuda(false)}
+              className="absolute top-6 right-6 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="mb-8">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                <TrafficCone className="text-emerald-500" size={32} />
+                Guía del Semáforo Académico
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Aprende a equilibrar tu carga académica y prevenir el estrés.</p>
+            </div>
+
+            <div className="space-y-6">
+              {/* What is it */}
+              <div className="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 p-6 rounded-2xl border border-sky-100 dark:border-sky-800/30">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Info className="text-sky-500" size={20} />
+                  ¿Qué es el Semáforo?
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Es una herramienta para crear tu <strong>horario manual</strong> con filtros personalizados.
+                  Te permite observar la <strong>dificultad del semestre</strong> que estás por cursar y prevenir
+                  el abandono de cursos por exceso de estrés académico.
+                </p>
+              </div>
+
+              {/* Difficulty Levels */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">Niveles de Dificultad</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-emerald-400 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400" />
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400">Fácil</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Cursos con menor carga de trabajo. Ideales para balancear tu semestre.</p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-amber-400 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-400" />
+                      <span className="font-bold text-amber-700 dark:text-amber-400">Medio</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Requieren dedicación moderada. Combínalos estratégicamente.</p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-rose-400 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-rose-400" />
+                      <span className="font-bold text-rose-700 dark:text-rose-400">Difícil</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Alta demanda de tiempo y esfuerzo. Limita su cantidad por semestre.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* How to use */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4">¿Cómo usar esta herramienta?</h3>
+                <ol className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                  <li className="flex gap-3">
+                    <span className="shrink-0 w-6 h-6 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+                    <span>Explora el <strong>catálogo de cursos</strong> disponibles según tus prerrequisitos aprobados.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="shrink-0 w-6 h-6 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+                    <span>Selecciona los cursos que deseas llevar usando los <strong>filtros de búsqueda y dificultad</strong>.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="shrink-0 w-6 h-6 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+                    <span>Presiona <strong>"Analizar Carga"</strong> para recibir tu diagnóstico de dificultad (verde, amarillo o rojo).</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="shrink-0 w-6 h-6 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+                    <span>Usa los <strong>filtros de horario</strong> para ajustar disponibilidad y generar combinaciones sin traslapes.</span>
+                  </li>
+                </ol>
+              </div>
+
+              {/* Pro tip */}
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                <p className="text-sm text-emerald-800 dark:text-emerald-300 font-bold flex items-start gap-3">
+                  <Sparkles className="text-emerald-500 shrink-0 mt-0.5" size={18} />
+                  <span>
+                    <strong>¡Escoge tu nivel de dificultad y gana todos tus cursos!</strong><br />
+                    <span className="font-normal">Un semestre balanceado te permite rendir mejor sin sacrificar tu bienestar.</span>
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+              <button
+                onClick={() => setMostrarAyuda(false)}
+                className="px-6 py-3 bg-slate-900 dark:bg-emerald-600 text-white font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-emerald-700 transition-all hover:-translate-y-1 shadow-lg"
+              >
+                ¡Entendido!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Límite Generador Alcanzado */}
+      {mostrarLimiteGeneradorModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:!bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500" />
+
+            <button
+              onClick={() => setMostrarLimiteGeneradorModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-300 hover:text-slate-500 transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-emerald-50 dark:ring-emerald-900/20">
+              <Calendar size={36} className="text-emerald-500" />
+            </div>
+
+            <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+              ¡Límite semestral alcanzado!
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+              Has usado tus <span className="font-bold text-slate-700 dark:text-slate-300">3 generaciones gratuitas</span> este semestre.
+              Actualiza a Premium para generaciones ilimitadas.
+            </p>
+
+            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-600">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500 dark:text-slate-400">Plan actual:</span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Gratuito</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-slate-500 dark:text-slate-400">Horarios generados:</span>
+                <span className="font-bold text-rose-500">{generadorUsageInfo.current}/{generadorUsageInfo.limit}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setMostrarLimiteGeneradorModal(false)}
+                className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={() => {
+                  setMostrarLimiteGeneradorModal(false);
+                  setMostrarPricingModal(true);
+                }}
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-200 dark:shadow-emerald-900/30 transition-all flex items-center justify-center gap-2"
+              >
+                <Crown size={18} />
+                Ver Premium
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PricingModal
+        isOpen={mostrarPricingModal}
+        onClose={() => setMostrarPricingModal(false)}
+      />
     </div>
   );
 };

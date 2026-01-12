@@ -157,7 +157,7 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                                 {planes.map((plan) => {
                                     const IconComponent = plan.icon;
-                                    const isCurrentPlan = currentPlan === plan.id;
+                                    const isCurrentPlan = currentPlan?.toLowerCase() === plan.id;
 
                                     return (
                                         <motion.div
@@ -323,13 +323,9 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
                             {/* Contact */}
                             <div className="mt-6 text-center">
                                 <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1 flex-wrap">
-                                    ¿Dudas? Escríbenos a{' '}
-                                    <a href="mailto:martin1aleman@proton.me" className="text-sky-600 dark:text-sky-400 font-bold hover:underline">
-                                        martin1aleman@proton.me
-                                    </a>
-                                    {' '}o contáctanos por{' '}
+                                    ¿Dudas? Contáctanos por{' '}
                                     <a
-                                        href="https://wa.me/50240131873?text=Hola,%20tengo%20dudas%20sobre%20los%20planes%20Premium%20de%20KAI"
+                                        href="https://wa.me/50240131873?text=Hola!,%20tengo%20dudas%20sobre%20los%20planes%20Premium%20de%20KAI%20USAC"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"

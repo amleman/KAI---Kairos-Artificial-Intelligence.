@@ -33,8 +33,8 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | **Archivo Frontend** | `Frontend/src/pages/ChatbotAcademico.jsx` |
 | **Función a bloquear** | `enviarMensaje()` (línea ~140) |
 | **Tipo de bloqueo** | Contador diario - Mostrar modal cuando `chatbot_usado >= 5` |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/chatbot` |
-| **Incrementar uso** | `POST /api/plan/{usuario}/usar/chatbot` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/chatbot` |
+| **Incrementar uso** | `POST /plan/{usuario}/usar/chatbot` |
 
 ---
 
@@ -45,8 +45,8 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | **Archivo Frontend** | `Frontend/src/pages/SchedulePage.jsx` |
 | **Función a bloquear** | `handleGenerarOptimizado()` (línea ~41) |
 | **Tipo de bloqueo** | Contador semestral - Mostrar modal cuando `generador_usado >= 3` |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/generador_manual` |
-| **Incrementar uso** | `POST /api/plan/{usuario}/usar/generador` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/generador_manual` |
+| **Incrementar uso** | `POST /plan/{usuario}/usar/generador` |
 
 ---
 
@@ -55,9 +55,9 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | Aspecto | Detalle |
 |---------|---------|
 | **Archivo Frontend** | `Frontend/src/pages/SchedulePage.jsx` |
-| **Botón a crear** | Nuevo botón "Generar con IA ⚡" (actualmente no existe) |
+| **Botón a modificar** | Cambiar texto de "Generar rutas óptimas" a "Generar con IA" |
 | **Tipo de bloqueo** | Feature completa - Verificar antes de mostrar/habilitar |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/generador_ia` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/generador_ia` |
 
 ---
 
@@ -68,8 +68,8 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | **Archivo Frontend** | `Frontend/src/components/dashboard/UploadModal.jsx` |
 | **Función a bloquear** | Al subir imagen para OCR |
 | **Tipo de bloqueo** | Contador total - Mostrar modal cuando `ocr_usado >= 2` |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/ocr` |
-| **Incrementar uso** | `POST /api/plan/{usuario}/usar/ocr` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/ocr` |
+| **Incrementar uso** | `POST /plan/{usuario}/usar/ocr` |
 
 ---
 
@@ -80,7 +80,7 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | **Archivo Frontend** | `Frontend/src/pages/OptimizadorPromedio.jsx` |
 | **Función a bloquear** | `simularEscenarios()` (línea ~253) |
 | **Tipo de bloqueo** | Feature completa - Verificar antes de mostrar sección |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/simulador` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/simulador` |
 
 ---
 
@@ -91,7 +91,7 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 | **Archivo Frontend** | `Frontend/src/pages/PensumPage.jsx` |
 | **Componente** | `Frontend/src/components/PensumGraph.jsx` |
 | **Tipo de bloqueo** | Tab/Vista completa - Verificar antes de renderizar |
-| **Endpoint backend** | `GET /api/plan/{usuario}/verificar/pensum_grafo` |
+| **Endpoint backend** | `GET /plan/{usuario}/verificar/pensum_grafo` |
 
 ---
 
@@ -99,7 +99,7 @@ description: Reporte de funciones Premium y ubicación para implementar lógica 
 
 ### Verificar si puede usar feature
 ```
-GET /api/plan/{usuario}/verificar/{feature}
+GET /plan/{usuario}/verificar/{feature}
 ```
 **Features válidas:** `chatbot`, `generador_manual`, `generador_ia`, `ocr`, `simulador`, `pensum_grafo`
 
@@ -132,13 +132,13 @@ GET /api/plan/{usuario}/verificar/{feature}
 
 ### Incrementar contador de uso
 ```
-POST /api/plan/{usuario}/usar/{feature}
+POST /plan/{usuario}/usar/{feature}
 ```
 **Features con contador:** `chatbot`, `generador`, `ocr`
 
 ### Obtener plan del usuario
 ```
-GET /api/plan/{usuario}
+GET /plan/{usuario}
 ```
 **Respuesta:**
 ```json
@@ -186,29 +186,7 @@ GET /api/plan/{usuario}
 3. **Generador Manual** - Importante para monetización
 4. **Simulador de Escenarios** - Feature premium clara
 5. **Pensum en Grafo** - Feature premium visual
-6. **Generador IA** - Requiere crear nuevo botón/flujo
-
----
-
-## 📝 Configuración Backend
-
-**Archivo de configuración:** `Backend/routers/plan.py`
-**Líneas de configuración:** 14-52 (PLANES_CONFIG)
-
-```python
-PLANES_CONFIG = {
-    "free": {
-        "chatbot_limite_diario": 5,
-        "generador_manual_limite": 3,
-        "generador_ia_limite": 0,
-        "ocr_limite": 2,
-        "tiene_simulador": False,
-        "tiene_pensum_grafo": False
-    },
-    "daily": { ... },  # Todo ilimitado por 24h
-    "premium": { ... } # Todo ilimitado
-}
-```
+6. **Generador IA** - Requiere crear nuevo flujo
 
 ---
 

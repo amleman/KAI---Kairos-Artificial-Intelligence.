@@ -38,7 +38,7 @@ const Perfil = () => {
                 if (!usuarioNombre) return;
                 setUsuario({ usuario: usuarioNombre });
 
-                const resPerfil = await fetch(`${API_URL}/api/perfil/${usuarioNombre}`);
+                const resPerfil = await fetch(`${API_URL}/perfil/${usuarioNombre}`);
                 if (resPerfil.ok) {
                     const dataPerfil = await resPerfil.json();
                     setFormData({
@@ -81,7 +81,7 @@ const Perfil = () => {
                 }
 
                 // Cargar plan del usuario
-                const resPlan = await fetch(`${API_URL}/api/plan/${usuarioNombre}`);
+                const resPlan = await fetch(`${API_URL}/plan/${usuarioNombre}`);
                 if (resPlan.ok) {
                     const dataPlan = await resPlan.json();
                     setUserPlan(dataPlan);
@@ -102,17 +102,29 @@ const Perfil = () => {
     const handleGuardar = async () => {
         if (!usuario) return;
 
-        // 1. Validación de Seguridad (SQLi / XSS)
+        // 1. Validación de Seguridad (SQLi / XSS) - Solo para nombre
         const dangerousChars = /[<>;'"/=\\]/;
         const dangerousKeywords = /\b(script|select|drop|delete|update|insert|alert)\b/i;
 
-        if (dangerousChars.test(formData.nombre) || dangerousKeywords.test(formData.nombre) ||
-            dangerousChars.test(formData.email) || dangerousKeywords.test(formData.email)) {
-            alert("Error de Seguridad: Se detectaron caracteres o palabras restringidas en los campos.");
+        if (dangerousChars.test(formData.nombre) || dangerousKeywords.test(formData.nombre)) {
+            alert("Error de Seguridad: Se detectaron caracteres o palabras restringidas en el nombre.");
             return;
         }
 
-        // 2. Validación de Fecha (1960 - 2015)
+        // 2. Validación de Email
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!formData.email || !emailRegex.test(formData.email)) {
+            alert("Por favor ingresa un correo electrónico válido.");
+            return;
+        }
+
+        // Verificar caracteres peligrosos en email (sin @ . - _ que son válidos)
+        if (dangerousKeywords.test(formData.email)) {
+            alert("Error de Seguridad: El correo contiene palabras restringidas.");
+            return;
+        }
+
+        // 3. Validación de Fecha (1960 - 2015)
         if (formData.fecha_nacimiento) {
             const date = new Date(formData.fecha_nacimiento);
             const year = date.getUTCFullYear();
@@ -124,14 +136,21 @@ const Perfil = () => {
 
         setGuardando(true);
         try {
-            const res = await fetch(`${API_URL}/api/perfil/${usuario.usuario}`, {
+            const res = await fetch(`${API_URL}/perfil/${usuario.usuario}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    nombre: formData.nombre,
+                    email: formData.email,
+                    fecha_nacimiento: formData.fecha_nacimiento,
+                    carrera: formData.carrera,
+                    carne: formData.carne
+                })
             });
             const data = await res.json();
             if (res.ok) {
                 setEditando(false);
+                alert("Perfil actualizado correctamente.");
             } else {
                 alert(data.error || "Ocurrió un error al guardar.");
             }
@@ -154,7 +173,7 @@ const Perfil = () => {
         uploadData.append('usuario', usuario.usuario);
         uploadData.append('tipo', tipo);
         try {
-            const res = await fetch(`${API_URL}/api/upload`, {
+            const res = await fetch(`${API_URL}/upload`, {
                 method: 'POST',
                 body: uploadData
             });
@@ -378,20 +397,20 @@ const Perfil = () => {
                                 <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Tu Suscripción</h3>
                                 <div className={`
                                     px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5
-                                    ${userPlan.plan === 'premium'
+                                    ${(userPlan.plan?.toLowerCase() === 'premium')
                                         ? 'bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 text-white shadow-lg shadow-amber-200 dark:shadow-amber-900/30'
-                                        : userPlan.plan === 'daily'
+                                        : (userPlan.plan?.toLowerCase() === 'daily')
                                             ? 'bg-gradient-to-r from-violet-400 to-purple-500 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/30'
                                             : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
                                     }
                                 `}>
-                                    {userPlan.plan === 'premium' && <Crown size={10} />}
-                                    {userPlan.plan === 'daily' && <Zap size={10} />}
-                                    {userPlan.plan === 'daily' ? 'Day Pass' : userPlan.nombre_plan || userPlan.plan.toUpperCase()}
+                                    {(userPlan.plan?.toLowerCase() === 'premium') && <Crown size={10} />}
+                                    {(userPlan.plan?.toLowerCase() === 'daily') && <Zap size={10} />}
+                                    {(userPlan.plan?.toLowerCase() === 'daily') ? 'Day Pass' : userPlan.nombre_plan || userPlan.plan.toUpperCase()}
                                 </div>
                             </div>
 
-                            {userPlan.plan === 'free' ? (
+                            {(!userPlan.plan || userPlan.plan?.toLowerCase() === 'free') ? (
                                 <>
                                     <div className="text-center py-2">
                                         <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">¡Desbloquea todo el potencial!</h4>
@@ -413,10 +432,10 @@ const Perfil = () => {
                                         {userPlan.fecha_fin && (
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-slate-500 dark:text-slate-400">
-                                                    {userPlan.plan === 'daily' ? 'Expira hoy a las' : 'Válido hasta'}
+                                                    {(userPlan.plan?.toLowerCase() === 'daily') ? 'Expira hoy a las' : 'Válido hasta'}
                                                 </span>
                                                 <span className="font-bold text-slate-800 dark:text-slate-100">
-                                                    {userPlan.plan === 'daily'
+                                                    {(userPlan.plan?.toLowerCase() === 'daily')
                                                         ? new Date(userPlan.fecha_fin).toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })
                                                         : new Date(userPlan.fecha_fin).toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })
                                                     }
@@ -428,12 +447,12 @@ const Perfil = () => {
                                             <ul className="space-y-1 text-xs text-emerald-600 dark:text-emerald-300">
                                                 <li className="flex items-center gap-2">
                                                     <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                                                    {userPlan.plan === 'premium' ? 'Todo ilimitado' : 'Chatbot ilimitado'}
+                                                    {(userPlan.plan?.toLowerCase() === 'premium') ? 'Todo ilimitado' : 'Chatbot ilimitado'}
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
-                                    {userPlan.plan !== 'premium' && (
+                                    {(userPlan.plan?.toLowerCase() !== 'premium') && (
                                         <button
                                             onClick={() => setShowPricingModal(true)}
                                             className="w-full py-2.5 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-600 transition-all flex items-center justify-center gap-2"

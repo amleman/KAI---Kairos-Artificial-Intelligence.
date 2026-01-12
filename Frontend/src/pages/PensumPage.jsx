@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info, LayoutGrid, Network, HelpCircle, X, MousePointer2, Camera, Zap } from "lucide-react";
+import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info, LayoutGrid, Network, HelpCircle, X, MousePointer2, Camera, Zap, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UploadModal from "../components/dashboard/UploadModal";
 import GradesModal from "../components/dashboard/GradesModal";
 import PensumGraph from "../components/PensumGraph";
+import PricingModal from "../components/PricingModal";
 import API_URL from "../api/apiConfig";
 
 const HelpModal = ({ isOpen, onClose }) => {
@@ -134,6 +135,15 @@ const PensumPage = () => {
 
     const [usuarioData, setUsuarioData] = useState({ carne: "", carrera: "Ingeniería en Sistemas" });
 
+    // OCR Limit State
+    const [ocrUsageInfo, setOcrUsageInfo] = useState({ current: 0, limit: 2 });
+    const [mostrarLimiteOCRModal, setMostrarLimiteOCRModal] = useState(false);
+    const [mostrarPricingModal, setMostrarPricingModal] = useState(false);
+
+    // Pensum Graph Access State
+    const [tieneAccesoGrafo, setTieneAccesoGrafo] = useState(false);
+    const [mostrarLimiteGrafoModal, setMostrarLimiteGrafoModal] = useState(false);
+
     // Helper to normalize course objects
     const normalizarCurso = (curso) => ({
         codigo: curso.codigo || curso.CODIGO || curso.Código || "",
@@ -172,6 +182,23 @@ const PensumPage = () => {
                         setAprobadosData(data);
                         const codigos = data.map(c => c.codigo);
                         setAprobados(codigos);
+                    })
+                    .catch(console.error);
+
+                // Load OCR usage from plan
+                fetch(`${API_URL}/plan/${parsed.carne}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.limites) {
+                            setOcrUsageInfo({
+                                current: data.limites.ocr_usado || 0,
+                                limit: data.limites.ocr_total === -1 ? 999 : (data.limites.ocr_total || 2)
+                            });
+                        }
+                        // Check graph access from features
+                        if (data.features) {
+                            setTieneAccesoGrafo(data.features.pensum_grafo === true);
+                        }
                     })
                     .catch(console.error);
             }
@@ -335,12 +362,22 @@ const PensumPage = () => {
     };
 
     const procesarImagenesAprobados = async () => {
-        if (imagenesSeleccionadas.length === 0) { setErrorUpload("Selecciona imágenes."); return; }
+        if (imagenesSeleccionadas.length === 0) { setErrorUpload("Selecciona una imagen."); return; }
+
+        // Solo se permite 1 imagen por petición
+        const imagenAProcesar = imagenesSeleccionadas[0];
+
+        // Verificar límite OCR ANTES de procesar
+        if (ocrUsageInfo.limit < 999 && ocrUsageInfo.current >= ocrUsageInfo.limit) {
+            setMostrarLimiteOCRModal(true);
+            return;
+        }
+
         setProcesandoImagenes(true);
         setErrorUpload("");
 
         const formData = new FormData();
-        imagenesSeleccionadas.forEach(file => formData.append("files", file));
+        formData.append("files", imagenAProcesar);
         formData.append("usuario", usuarioData.carne);
 
         try {
@@ -355,14 +392,21 @@ const PensumPage = () => {
                 }).filter(Boolean);
 
                 if (validos.length) {
+                    // Solo incrementar contador DESPUÉS de éxito
+                    await fetch(`${API_URL}/plan/${usuarioData.carne}/usar/ocr`, { method: "POST" });
+                    setOcrUsageInfo(prev => ({
+                        ...prev,
+                        current: prev.current + 1
+                    }));
+
                     setCursosNuevos(validos);
                     const map = {}; validos.forEach(c => map[c.codigo] = c.nota);
                     setNotasTemp(map);
                     setShowUploadModal(false);
                     setShowModalNotas(true);
                     setImagenesSeleccionadas([]);
-                } else { setErrorUpload("No se hallaron cursos válidos."); }
-            } else { setErrorUpload("No legible."); }
+                } else { setErrorUpload("No se hallaron cursos válidos en la imagen."); }
+            } else { setErrorUpload("No se pudo leer la imagen. Intenta con otra captura."); }
         } catch (e) { setErrorUpload(e.message); }
         finally { setProcesandoImagenes(false); }
     };
@@ -402,10 +446,19 @@ const PensumPage = () => {
                             <LayoutGrid size={18} /> GRID
                         </button>
                         <button
-                            onClick={() => setViewMode('graph')}
-                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'graph' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            onClick={() => {
+                                if (tieneAccesoGrafo) {
+                                    setViewMode('graph');
+                                } else {
+                                    setMostrarLimiteGrafoModal(true);
+                                }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all relative ${viewMode === 'graph' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
                         >
                             <Network size={18} /> GRAFO
+                            {!tieneAccesoGrafo && (
+                                <Crown size={14} className="text-amber-500" />
+                            )}
                         </button>
                     </div>
 
@@ -537,6 +590,127 @@ const PensumPage = () => {
                 notasTemp={notasTemp}
                 setNotasTemp={setNotasTemp}
                 confirmarNotas={confirmarNotasOCR}
+            />
+
+            {/* Modal de Límite OCR Alcanzado */}
+            {mostrarLimiteOCRModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-white dark:!bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden border border-slate-200 dark:border-slate-700">
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+
+                        <button
+                            onClick={() => setMostrarLimiteOCRModal(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-slate-500 transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-amber-50 dark:ring-amber-900/20">
+                            <Crown size={36} className="text-amber-500" />
+                        </div>
+
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                            ¡Límite de OCR alcanzado!
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                            Has usado tu <span className="font-bold text-slate-700 dark:text-slate-300">escaneo gratuito</span> de este mes.
+                            Actualiza a Premium para escaneos ilimitados.
+                        </p>
+
+                        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-600">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-slate-500 dark:text-slate-400">Plan actual:</span>
+                                <span className="font-bold text-slate-700 dark:text-slate-300">Gratuito</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm mt-2">
+                                <span className="text-slate-500 dark:text-slate-400">Imágenes escaneadas:</span>
+                                <span className="font-bold text-rose-500">{ocrUsageInfo.current}/{ocrUsageInfo.limit}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setMostrarLimiteOCRModal(false)}
+                                className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
+                            >
+                                Cerrar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setMostrarLimiteOCRModal(false);
+                                    setMostrarPricingModal(true);
+                                }}
+                                className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 shadow-lg shadow-amber-200 dark:shadow-amber-900/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Crown size={18} />
+                                Ver Premium
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Límite Grafo Alcanzado */}
+            {mostrarLimiteGrafoModal && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-white dark:!bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden border border-slate-200 dark:border-slate-700">
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-400 via-pink-500 to-rose-500" />
+
+                        <button
+                            onClick={() => setMostrarLimiteGrafoModal(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-300 hover:text-slate-500 transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-purple-50 dark:ring-purple-900/20">
+                            <Network size={36} className="text-purple-500" />
+                        </div>
+
+                        <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                            Vista Grafo Premium
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                            La vista de <span className="font-bold text-slate-700 dark:text-slate-300">Pensum en Grafo</span> es una función exclusiva para usuarios Premium.
+                            Visualiza las dependencias de tus cursos de forma interactiva.
+                        </p>
+
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 mb-6 border border-purple-100 dark:border-purple-800/30">
+                            <p className="text-sm text-purple-700 dark:text-purple-300 font-medium">
+                                ✨ Explora tu carrera de forma visual
+                                <br />
+                                🔗 Observa las conexiones entre cursos
+                                <br />
+                                📊 Planifica tu ruta académica ideal
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setMostrarLimiteGrafoModal(false)}
+                                className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
+                            >
+                                Usar Grid
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setMostrarLimiteGrafoModal(false);
+                                    setMostrarPricingModal(true);
+                                }}
+                                className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-200 dark:shadow-purple-900/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Crown size={18} />
+                                Ver Premium
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <PricingModal
+                isOpen={mostrarPricingModal}
+                onClose={() => setMostrarPricingModal(false)}
+                currentPlan={tieneAccesoGrafo ? 'premium' : 'free'}
             />
         </div>
     );

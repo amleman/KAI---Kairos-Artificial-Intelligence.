@@ -51,6 +51,23 @@ def validate_date(date_str):
     except ValueError:
         return False, "Formato de fecha inválido (use YYYY-MM-DD)."
 
+def validate_email(email):
+    """Valida formato de email y caracteres permitidos"""
+    if not email:
+        return False, "El correo electrónico es obligatorio."
+    
+    # Regex para validar formato de email básico
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, email):
+        return False, "El formato del correo electrónico no es válido."
+    
+    # Verificar keywords peligrosas SQL/XSS (pero permitir caracteres de email como @ . - _)
+    dangerous_keywords = r"\b(script|select|drop|delete|update|insert|alert)\b"
+    if re.search(dangerous_keywords, email, re.IGNORECASE):
+        return False, "El correo contiene palabras no permitidas."
+    
+    return True, ""
+
 
 # -----------------------------------------------------------
 # REGISTER
@@ -242,7 +259,7 @@ def obtener_usuario_info(carne):
 # -----------------------------------------------------------
 # PERFIL DE USUARIO
 # -----------------------------------------------------------
-@auth_bp.route("/api/perfil/<usuario>", methods=['GET'])
+@auth_bp.route("/perfil/<usuario>", methods=['GET'])
 def obtener_perfil(usuario):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -288,7 +305,7 @@ def obtener_perfil(usuario):
         }
     return jsonify(perfil)
 
-@auth_bp.route("/api/perfil/<usuario>", methods=['PUT'])
+@auth_bp.route("/perfil/<usuario>", methods=['PUT'])
 def actualizar_perfil(usuario):
     data = request.json
     conn = get_db_connection()
@@ -297,20 +314,25 @@ def actualizar_perfil(usuario):
     try:
         # 1. Sanitización de entradas
         nombre = sanitize_input(data.get('nombre', ''))
-        email = sanitize_input(data.get('email', ''))
+        email = data.get('email', '').strip()  # Email se valida aparte, no sanitizar
         # Nota: La carrera en el frontend será read-only, pero aquí la sanitizamos por si acaso
         carrera = sanitize_input(data.get('carrera', ''))
         fecha = data.get('fecha_nacimiento', '')
         
-        if not nombre or not email:
-            return jsonify({"error": "Nombre y correo son obligatorios o contienen caracteres restringidos."}), 400
+        if not nombre:
+            return jsonify({"error": "El nombre es obligatorio o contiene caracteres restringidos."}), 400
 
-        # 2. Validar Fecha (1960 - 2015)
+        # 2. Validar Email (formato y caracteres)
+        valid_email, msg_email = validate_email(email)
+        if not valid_email:
+            return jsonify({"error": msg_email}), 400
+
+        # 3. Validar Fecha (1960 - 2015)
         valid_date, msg_date = validate_date(fecha)
         if not valid_date:
             return jsonify({"error": msg_date}), 400
             
-        # 3. Validar Unicidad de Correo (excluyendo al usuario actual)
+        # 4. Validar Unicidad de Correo (excluyendo al usuario actual)
         execute_query(cursor, "SELECT usuario FROM usuarios WHERE email = ? AND usuario != ?", (email, usuario))
         if cursor.fetchone():
             return jsonify({"error": "Este correo ya está registrado por otro usuario."}), 400
@@ -325,7 +347,10 @@ def actualizar_perfil(usuario):
         # El carné no se debería cambiar aquí según requisitos previos, lo mantenemos igual
         execute_query(cursor, "SELECT carne FROM usuarios_info WHERE usuario = ?", (usuario,))
         carne_row = cursor.fetchone()
-        carne = carne_row[0] if carne_row else data.get('carne', usuario)
+        if carne_row:
+            carne = carne_row['carne'] if hasattr(carne_row, 'keys') else carne_row[0]
+        else:
+            carne = data.get('carne', usuario)
         
         if exists:
             execute_query(cursor, """
@@ -356,7 +381,7 @@ from storage import upload_file as storage_upload_file, delete_file as storage_d
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-@auth_bp.route("/api/upload", methods=['POST'])
+@auth_bp.route("/upload", methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400

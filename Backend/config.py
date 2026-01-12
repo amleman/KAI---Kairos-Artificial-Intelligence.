@@ -62,6 +62,8 @@ CAREER_FILE_MAP = {
 # Singletons de IA
 # -------------------------
 _analizadores_cache = {}
+_optimizador_promedio = None
+_chatbot_academico = None
 
 def get_analizador_carga(pensum_path="./Data/Pensums/sistemas.csv"):
     global _analizadores_cache
@@ -153,7 +155,9 @@ def init_db():
                 chatbot_count_today INTEGER DEFAULT 0,
                 chatbot_last_reset TEXT,
                 generador_count INTEGER DEFAULT 0,
-                ocr_count INTEGER DEFAULT 0
+                generador_last_reset TEXT,
+                ocr_count INTEGER DEFAULT 0,
+                ocr_last_reset TEXT
             )
         """)
 
@@ -228,7 +232,9 @@ def init_db():
                 chatbot_count_today INTEGER DEFAULT 0,
                 chatbot_last_reset TEXT,
                 generador_count INTEGER DEFAULT 0,
-                ocr_count INTEGER DEFAULT 0
+                generador_last_reset TEXT,
+                ocr_count INTEGER DEFAULT 0,
+                ocr_last_reset TEXT
             )
         """)
 

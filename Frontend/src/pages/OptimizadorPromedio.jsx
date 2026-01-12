@@ -169,39 +169,92 @@ const OptimizadorPromedio = () => {
   const cargarDesdeHorario = async () => {
     if (!userData.carne) return;
     setLoading(true);
+
     try {
-      const response = await fetch(`${API_URL}/obtener_horario_guardado/${userData.carne}`);
-      const data = await response.json();
+      let lista = [];
+      let found = false;
 
-      if (data.existe) {
-        let lista = [];
-        // Manejo robusto de la estructura de datos (puede venir anidada)
-        const rawData = data.horario;
-        if (rawData.horario && Array.isArray(rawData.horario)) {
-          lista = rawData.horario;
-        } else if (Array.isArray(rawData)) {
-          lista = rawData;
+      // 1. Check localStorage first (manual planner - SIOA_progreso_*)
+      const progresoKey = `SIOA_progreso_${userData.carne}`;
+      const progresoData = localStorage.getItem(progresoKey);
+      if (progresoData) {
+        try {
+          const parsed = JSON.parse(progresoData);
+          // Check for horarioGenerado within saved progress
+          if (parsed.horarioGenerado && parsed.horarioGenerado.horarios) {
+            // Take first horario option
+            const firstHorario = parsed.horarioGenerado.horarios[0];
+            lista = firstHorario.horario || firstHorario;
+            found = true;
+          }
+        } catch (e) {
+          console.log("Error parsing progreso:", e);
         }
+      }
 
-        // Extraer códigos, limpiando nulos/vacíos
+      // 2. Check localStorage for IA generator (SIOA_optimizado_*)
+      if (!found) {
+        const optimizadoKey = `SIOA_optimizado_${userData.carne}`;
+        const optimizadoData = localStorage.getItem(optimizadoKey);
+        if (optimizadoData) {
+          try {
+            const parsed = JSON.parse(optimizadoData);
+            // Structure: { horarios: [{horario: [...], ...}, ...] }
+            if (parsed.horarios && Array.isArray(parsed.horarios) && parsed.horarios.length > 0) {
+              const firstHorario = parsed.horarios[0];
+              lista = firstHorario.horario || firstHorario;
+              found = true;
+            }
+          } catch (e) {
+            console.log("Error parsing optimizado:", e);
+          }
+        }
+      }
+
+      // 3. Fallback to backend
+      if (!found) {
+        const response = await fetch(`${API_URL}/obtener_horario_guardado/${userData.carne}`);
+        const data = await response.json();
+
+        if (data.existe) {
+          const rawData = data.horario;
+
+          if (Array.isArray(rawData) && rawData.length > 0 && rawData[0].horario) {
+            lista = rawData[0].horario;
+            found = true;
+          } else if (rawData && rawData.horario && Array.isArray(rawData.horario)) {
+            lista = rawData.horario;
+            found = true;
+          } else if (Array.isArray(rawData)) {
+            lista = rawData;
+            found = true;
+          } else if (rawData && rawData.horarios && Array.isArray(rawData.horarios) && rawData.horarios.length > 0) {
+            const firstHorario = rawData.horarios[0];
+            lista = firstHorario.horario || firstHorario;
+            found = true;
+          }
+        }
+      }
+
+      if (found && lista.length > 0) {
+        // Extract course codes
         const codigos = lista.map(c => c.Codigo || c.codigo).filter(c => c);
 
         if (codigos.length > 0) {
-          // Eliminar duplicados y actualizar estado
           setCursosActuales([...new Set(codigos)]);
-          setMensajeExito("¡Cursos importados de tu último horario!");
+          setMensajeExito(`¡${[...new Set(codigos)].length} cursos importados!`);
           setTimeout(() => setMensajeExito(""), 3000);
         } else {
-          setMensajeExito("El horario guardado no contiene cursos válidos.");
+          setMensajeExito("El horario no contiene cursos válidos.");
           setTimeout(() => setMensajeExito(""), 3000);
         }
       } else {
-        setMensajeExito("No se encontró un horario guardado.");
+        setMensajeExito("No se encontró ningún horario guardado.");
         setTimeout(() => setMensajeExito(""), 3000);
       }
     } catch (error) {
       console.error("Error importando horario:", error);
-      setMensajeExito("Error al conectar con la base de datos.");
+      setMensajeExito("Error al importar horario.");
       setTimeout(() => setMensajeExito(""), 3000);
     } finally {
       setLoading(false);
@@ -572,6 +625,12 @@ const OptimizadorPromedio = () => {
                 <div className="flex-1">
                   <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest">CURSOS</p>
                   <p className="text-xl font-black">{promedioActual.cursos_count || "0"}</p>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest">PROMEDIO</p>
+                  <p className="text-xl font-black text-white">
+                    {promedioActual.promedio ? Number(promedioActual.promedio).toFixed(2) : "0.00"}
+                  </p>
                 </div>
               </div>
             </div>

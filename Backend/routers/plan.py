@@ -14,7 +14,7 @@ PLANES_CONFIG = {
         "chatbot_limite_diario": 5,
         "generador_manual_limite": 3,
         "generador_ia_limite": 0,
-        "ocr_limite": 2,
+        "ocr_limite": 1,  # 1 imagen por mes
         "tiene_analisis_financiero": True,
         "tiene_optimizador": True,
         "tiene_simulador": False,
@@ -47,38 +47,51 @@ PLANES_CONFIG = {
     }
 }
 
-@plan_bp.route("/api/plan/<usuario>", methods=['GET'])
+@plan_bp.route("/plan/<usuario>", methods=['GET'])
 def obtener_plan(usuario):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        print(f"DEBUG: Buscando plan para usuario/carne: {usuario}")
         execute_query(cursor, """
             SELECT plan, plan_fecha_inicio, plan_fecha_fin, 
                    chatbot_count_today, chatbot_last_reset,
-                   generador_count, ocr_count
-            FROM usuarios_info WHERE usuario = ?
-        """, (usuario,))
+                   generador_count, ocr_count, ocr_last_reset, generador_last_reset
+            FROM usuarios_info 
+            WHERE usuario = ? OR carne = ?
+        """, (usuario, usuario)) # El parámetro 'usuario' puede ser el carnet en algunos componentes
         row = cursor.fetchone()
         
         if not row:
+            print(f"DEBUG: No se encontró info en usuarios_info para {usuario}")
             return jsonify({"error": "Usuario no encontrado"}), 404
-        
+            
+        # Extraer datos de la fila de forma unificada
         if hasattr(row, 'keys'):
-            plan = row['plan'] or "free"
+            plan = (row['plan'] or "free").strip().lower()
             fecha_fin = row['plan_fecha_fin']
             fecha_inicio = row['plan_fecha_inicio']
             ultimo_reset = row['chatbot_last_reset']
             chatbot_count = row['chatbot_count_today'] or 0
             generador_usado = row['generador_count'] or 0
             ocr_usado = row['ocr_count'] or 0
+            ocr_last_reset = row['ocr_last_reset']
+            generador_last_reset = row['generador_last_reset']
         else:
-            plan = row[0] or "free"
+            plan = (row[0] or "free").strip().lower()
             fecha_fin = row[2]
             fecha_inicio = row[1]
             ultimo_reset = row[4]
             chatbot_count = row[3] or 0
             generador_usado = row[5] or 0
             ocr_usado = row[6] or 0
+            ocr_last_reset = row[7] if len(row) > 7 else None
+            generador_last_reset = row[8] if len(row) > 8 else None
+            
+        print(f"DEBUG: Plan normalizado para {usuario}: '{plan}'")
+        
+        # Normalizar plan a minúsculas para evitar errores de case-sensitivity
+        plan = plan.strip().lower()
         
         if fecha_fin:
             try:
@@ -109,6 +122,37 @@ def obtener_plan(usuario):
             conn.commit()
             chatbot_count = 0
         
+        # Reset mensual de OCR
+        mes_actual = datetime.now().strftime("%Y-%m")
+        if ocr_last_reset is None or (ocr_last_reset and ocr_last_reset[:7] != mes_actual):
+            execute_query(cursor, """
+                UPDATE usuarios_info 
+                SET ocr_count = 0, ocr_last_reset = ?
+                WHERE usuario = ?
+            """, (hoy, usuario))
+            conn.commit()
+            ocr_usado = 0
+        
+        # Reset semestral para generador (Semestre 1: Ene-May, Semestre 2: Jun-Dic)
+        def get_semester(date_str):
+            if not date_str:
+                return None
+            month = int(date_str[5:7]) if len(date_str) >= 7 else datetime.now().month
+            year = date_str[:4] if len(date_str) >= 4 else str(datetime.now().year)
+            return f"{year}-S1" if month <= 5 else f"{year}-S2"
+        
+        semestre_actual = get_semester(hoy)
+        semestre_guardado = get_semester(generador_last_reset) if generador_last_reset else None
+        
+        if semestre_guardado != semestre_actual:
+            execute_query(cursor, """
+                UPDATE usuarios_info 
+                SET generador_count = 0, generador_last_reset = ?
+                WHERE usuario = ?
+            """, (hoy, usuario))
+            conn.commit()
+            generador_usado = 0
+        
         config = PLANES_CONFIG.get(plan, PLANES_CONFIG["free"])
         
         return jsonify({
@@ -136,14 +180,14 @@ def obtener_plan(usuario):
     finally:
         conn.close()
 
-@plan_bp.route("/api/plan/<usuario>/verificar/<feature>", methods=['GET'])
+@plan_bp.route("/plan/<usuario>/verificar/<feature>", methods=['GET'])
 def verificar_feature(usuario, feature):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         execute_query(cursor, """
             SELECT plan, chatbot_count_today, chatbot_last_reset,
-                   generador_count, ocr_count
+                   generador_count, ocr_count, ocr_last_reset, generador_last_reset
             FROM usuarios_info WHERE usuario = ?
         """, (usuario,))
         row = cursor.fetchone()
@@ -157,15 +201,27 @@ def verificar_feature(usuario, feature):
             ultimo_reset = row['chatbot_last_reset']
             generador_count = row['generador_count'] or 0
             ocr_count = row['ocr_count'] or 0
+            ocr_last_reset = row['ocr_last_reset']
+            generador_last_reset = row['generador_last_reset']
         else:
             plan = row[0] or "free"
             chatbot_count = row[1] or 0
             ultimo_reset = row[2]
             generador_count = row[3] or 0
             ocr_count = row[4] or 0
+            ocr_last_reset = row[5] if len(row) > 5 else None
+            generador_last_reset = row[6] if len(row) > 6 else None
         
         config = PLANES_CONFIG.get(plan, PLANES_CONFIG["free"])
         hoy = datetime.now().strftime("%Y-%m-%d")
+        
+        # Helper para obtener semestre
+        def get_semester(date_str):
+            if not date_str:
+                return None
+            month = int(date_str[5:7]) if len(date_str) >= 7 else datetime.now().month
+            year = date_str[:4] if len(date_str) >= 4 else str(datetime.now().year)
+            return f"{year}-S1" if month <= 5 else f"{year}-S2"
         
         if feature == "chatbot":
             limite = config["chatbot_limite_diario"]
@@ -193,10 +249,24 @@ def verificar_feature(usuario, feature):
             limite = config["generador_manual_limite"]
             if limite == -1:
                 return jsonify({"permitido": True})
+            
+            # Reset semestral para generador
+            semestre_actual = get_semester(hoy)
+            semestre_guardado = get_semester(generador_last_reset) if generador_last_reset else None
+            
+            if semestre_guardado != semestre_actual:
+                execute_query(cursor, """
+                    UPDATE usuarios_info 
+                    SET generador_count = 0, generador_last_reset = ?
+                    WHERE usuario = ?
+                """, (hoy, usuario))
+                conn.commit()
+                generador_count = 0
+            
             if generador_count >= limite:
                 return jsonify({
                     "permitido": False,
-                    "razon": f"Has alcanzado tu límite de {limite} horarios manuales",
+                    "razon": f"Has alcanzado tu límite de {limite} horarios este semestre",
                     "limite": limite, "usado": generador_count
                 })
             return jsonify({"permitido": True, "restante": limite - generador_count})
@@ -217,10 +287,23 @@ def verificar_feature(usuario, feature):
             limite = config["ocr_limite"]
             if limite == -1:
                 return jsonify({"permitido": True})
+            
+            # Reset mensual para OCR
+            hoy = datetime.now().strftime("%Y-%m-%d")
+            mes_actual = datetime.now().strftime("%Y-%m")
+            if ocr_last_reset is None or (ocr_last_reset and ocr_last_reset[:7] != mes_actual):
+                execute_query(cursor, """
+                    UPDATE usuarios_info 
+                    SET ocr_count = 0, ocr_last_reset = ?
+                    WHERE usuario = ?
+                """, (hoy, usuario))
+                conn.commit()
+                ocr_count = 0
+            
             if ocr_count >= limite:
                 return jsonify({
                     "permitido": False,
-                    "razon": f"Has alcanzado tu límite de {limite} escaneos OCR",
+                    "razon": f"Has alcanzado tu límite de {limite} escaneo OCR este mes",
                     "limite": limite, "usado": ocr_count
                 })
             return jsonify({"permitido": True, "restante": limite - ocr_count})
@@ -250,7 +333,7 @@ def verificar_feature(usuario, feature):
     finally:
         conn.close()
 
-@plan_bp.route("/api/plan/<usuario>/usar/<feature>", methods=['POST'])
+@plan_bp.route("/plan/<usuario>/usar/<feature>", methods=['POST'])
 def incrementar_uso(usuario, feature):
     conn = get_db_connection()
     try:
@@ -275,7 +358,7 @@ def incrementar_uso(usuario, feature):
     finally:
         conn.close()
 
-@plan_bp.route("/api/plan/<usuario>/activar", methods=['POST'])
+@plan_bp.route("/plan/<usuario>/activar", methods=['POST'])
 def activar_plan(usuario):
     data = request.get_json()
     nuevo_plan = data.get("plan", "premium")
@@ -314,6 +397,6 @@ def activar_plan(usuario):
     finally:
         conn.close()
 
-@plan_bp.route("/api/planes", methods=['GET'])
+@plan_bp.route("/planes", methods=['GET'])
 def obtener_planes():
     return jsonify(PLANES_CONFIG)
