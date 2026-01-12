@@ -28,22 +28,23 @@ const HeroSection = () => {
                 </motion.h1>
 
                 <motion.h2
-                    className="text-2xl md:text-4xl font-light text-gray-400 mb-8 tracking-wide"
+                    className="text-2xl md:text-5xl font-light text-gray-200 mb-8 tracking-wide"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
                 >
-                    Kairos Artificial Intelligence
+                    Tu Asistente Académico Inteligente
                 </motion.h2>
 
                 <motion.p
-                    className="text-lg md:text-xl text-gray-400 mb-12 max-w-3xl mx-auto font-light leading-relaxed"
+                    className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto font-light leading-relaxed bg-black/20 backdrop-blur-sm p-6 rounded-2xl border border-white/5"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                 >
-                    Revolucionando la gestión académica con el poder de la Inteligencia Artificial y Python.
-                    <br className="hidden md:block" /> Optimización de horarios, proyecciones y análisis de datos en una plataforma unificada.
+                    Diseñado por estudiantes, para estudiantes.
+                    <br className="hidden md:block" />
+                    Automatiza la creación de tus horarios, visualiza tu progreso y toma decisiones informadas sobre tu carrera en segundos.
                 </motion.p>
 
                 <motion.div
@@ -54,10 +55,10 @@ const HeroSection = () => {
                 >
                     <Link
                         to="/login"
-                        className="group relative px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold overflow-hidden shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1"
+                        className="group relative px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold overflow-hidden shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1 w-full sm:w-auto text-center"
                     >
-                        <span className="relative z-10 flex items-center gap-2">
-                            Ingresar a la Plataforma
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                            Empezar Ahora
                             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
@@ -67,15 +68,15 @@ const HeroSection = () => {
 
                     <Link
                         to="/register"
-                        className="px-8 py-4 bg-white/5 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/10 transition-all hover:scale-105 shadow-lg flex items-center justify-center"
+                        className="px-8 py-4 bg-white/5 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/10 transition-all hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto"
                     >
-                        Crear Cuenta
+                        Crear Cuenta Gratis
                     </Link>
                 </motion.div>
             </div>
 
             <motion.div
-                className="absolute bottom-10 left-1/2 transform -translate-x-1/2 text-gray-400"
+                className="absolute bottom-10 w-full flex justify-center text-gray-400"
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
             >

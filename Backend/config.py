@@ -61,15 +61,13 @@ CAREER_FILE_MAP = {
 # -------------------------
 # Singletons de IA
 # -------------------------
-_analizador_carga = None
-_optimizador_promedio = None
-_chatbot_academico = None
+_analizadores_cache = {}
 
-def get_analizador_carga():
-    global _analizador_carga
-    if _analizador_carga is None:
-        _analizador_carga = crear_analizador("./Data/Pensums/sistemas.csv")
-    return _analizador_carga
+def get_analizador_carga(pensum_path="./Data/Pensums/sistemas.csv"):
+    global _analizadores_cache
+    if pensum_path not in _analizadores_cache:
+        _analizadores_cache[pensum_path] = crear_analizador(pensum_path)
+    return _analizadores_cache[pensum_path]
 
 def get_optimizador_promedio():
     global _optimizador_promedio
@@ -167,7 +165,6 @@ def init_db():
             )
         """)
         
-        cursor.execute("""
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS horarios_guardados (
                 id SERIAL PRIMARY KEY,

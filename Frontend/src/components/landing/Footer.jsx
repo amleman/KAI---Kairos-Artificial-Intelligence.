@@ -19,8 +19,8 @@ const Footer = () => {
                     <div>
                         <h4 className="text-lg font-semibold mb-4 text-gray-200">Plataforma</h4>
                         <ul className="space-y-2 text-gray-400 text-sm">
-                            <li><a href="#" className="hover:text-white transition-colors">Características</a></li>
-                            <li><a href="#" className="hover:text-white transition-colors">Seguridad</a></li>
+                            <li><Link to="/features" className="hover:text-white transition-colors">Características</Link></li>
+                            <li><Link to="/security" className="hover:text-white transition-colors">Seguridad</Link></li>
                         </ul>
                     </div>
 
@@ -35,7 +35,7 @@ const Footer = () => {
                 <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
                     <p>&copy; {new Date().getFullYear()} KAI USAC. Todos los derechos reservados.</p>
                     <div className="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#" className="hover:text-white transition-colors">Privacidad</a>
+                        <Link to="/privacy" className="hover:text-white transition-colors">Privacidad</Link>
                     </div>
                 </div>
             </div>

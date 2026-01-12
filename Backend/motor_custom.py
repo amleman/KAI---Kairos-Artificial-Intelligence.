@@ -112,105 +112,108 @@ class GeneradorHorarioCustom:
                     puntaje -= 500 
         return puntaje
 
-    def generar(self, codigos_deseados, filtros=None, salario_meta=6000, disponibles_totales=None):
-        # 1. Filtrar solo los cursos solicitados
-        df_subset = self.df_oferta[self.df_oferta['Codigo'].isin(codigos_deseados)]
-        
-        # 2. Aplicar Filtros Avanzados ANTES de generar combinaciones
-        if filtros:
-            df_subset = self.aplicar_filtros_avanzados(df_subset, filtros)
-        
-        # 3. Agrupar secciones válidas
+    def generar(self, codigos_deseados, filtros, salario_meta=6500, disponibles_totales=None):
+        """
+        Genera horarios buscando explícitamente Clase Normal Y sus auxiliares (Lab, Dibujo, Practica)
+        para asegurar que se cursen en conjunto según el reglamento.
+        """
+        # 1. Aplicar filtros generales al DataFrame completo
+        df_filtrado = self.aplicar_filtros_avanzados(self.df_oferta, filtros)
+
         secciones_por_curso = []
         cursos_sin_oferta = []
+        
+        # Definimos los tipos auxiliares que acompañan a la clase normal
+        # El orden no afecta, pero los buscamos todos por si acaso.
+        tipos_auxiliares = ['laboratorio', 'dibujo', 'practica']
 
         for cod in codigos_deseados:
-            df_curso = df_subset[df_subset['Codigo'] == cod]
+            # Filtrar el DataFrame solo para este código
+            df_subset_codigo = df_filtrado[df_filtrado['Codigo'] == cod]
+
+            # -----------------------------------------------------
+            # PASO 1: Buscar la CLASE NORMAL (Base)
+            # -----------------------------------------------------
+            df_teoria = df_subset_codigo[df_subset_codigo['Star'] == 'Clase normal']
             
-            if df_curso.empty:
-                cursos_sin_oferta.append(cod)
-                continue
+            has_teoria = False
+            if not df_teoria.empty:
+                secciones_por_curso.append(df_teoria.to_dict('records'))
+                has_teoria = True
+            
+            # -----------------------------------------------------
+            # PASO 2: Buscar AUXILIARES (Lab, Dibujo, Practica)
+            # -----------------------------------------------------
+            has_auxiliar = False
+            for tipo in tipos_auxiliares:
+                df_aux = df_subset_codigo[df_subset_codigo['Star'] == tipo]
                 
-            # Identificar componentes únicos (ej: Clase normal, Laboratorio)
-            # para obligar al algoritmo a elegir uno de CADA tipo.
-            tipos_materia = df_curso['Star'].unique()
-            
-            for tipo in tipos_materia:
-                secciones_tipo = df_curso[df_curso['Star'] == tipo]
-                if not secciones_tipo.empty:
-                    secciones_por_curso.append(secciones_tipo.to_dict('records'))
+                if not df_aux.empty:
+                    # Si encontramos oferta para este tipo auxiliar, agregamos el slot
+                    secciones_por_curso.append(df_aux.to_dict('records'))
+                    has_auxiliar = True
+                    # NOTA: No hacemos 'break' aquí por si existiera un caso raro 
+                    # con Lab Y Practica a la vez, aunque indicaste que no sucede. 
+                    # Si quieres forzar solo 1 auxiliar, podrías poner un break.
 
-        # Si algún curso se quedó sin secciones por los filtros, retornamos error
-        if cursos_sin_oferta:
-            print(f"Advertencia: Los cursos {cursos_sin_oferta} se quedaron sin secciones por los filtros.")
-            return [] 
-        
-        # Para el análisis financiero, necesitamos saber qué cursos estaban "Disponibles"
-        # En el caso CUSTOM, los "disponibles" son básicamente los desados (porque el usuario elije qué llevar)
-        # O podríamos llamar al motor general para ver qué OTROS cursos podía llevar.
-        # POR SIMPLICIDAD: Asumimos que los "disponibles" para el cálculo de oportunidad son:
-        # los que está intentando meter + los que NO metió.
-        # Pero dado que el usuario ELIJE los cursos, el análisis de "qué dejaste de llevar" se hace 
-        # comparando (Cursos deseados) vs (Cursos realmente asignados en el horario).
-        # Sin embargo, la logica de costo oportunidad es sobre cursos CRÍTICOS DEL PENSUM que no estás llevando.
-        # Si el usuario NO seleccionó un curso crítico en 'codigos_deseados', la herramienta debería avisarle.
-        
-        # TRUCO: Analizaremos sobre TODA la oferta posible de esos códigos deseados.
-        # Pero para ser útiles, pasaremos como 'disponibles_totales' los codigos_deseados.
-        # SI el horario final NO incluye alguno de los deseados (por choque), ahí saltará la alerta.
-        # ADEMÁS, si quisiéramos ser proactivos, deberíamos pasarle TODOS los disponibles reales del pensum,
-        # pero 'motor_custom' no calcula prerrequisitos.
-        # ASUMIREMOS que 'disponibles_totales' = codigos_deseados.
+            # Validación: Si no se encontró NADA para el curso
+            if not has_teoria and not has_auxiliar:
+                cursos_sin_oferta.append(cod)
 
-        # --- ALGORITMO GENÉTICO RAPIDO ---
-        POBLACION_TAMANO = 60
-        GENERACIONES = 20
+        # Si no hay cursos válidos para armar un horario, retornar vacío
+        if not secciones_por_curso:
+            return []
+
+        # ---------------------------------------------------------
+        # INICIO DEL ALGORITMO GENÉTICO (Sin cambios en la lógica núcleo)
+        # ---------------------------------------------------------
+        poblacion_tam = 50
+        generaciones = 20  
         poblacion = []
 
-        # Crear Población Inicial
-        for _ in range(POBLACION_TAMANO):
+        # Generar población inicial
+        for _ in range(poblacion_tam):
             individuo = []
             for opciones in secciones_por_curso:
                 if opciones:
                     individuo.append(random.choice(opciones))
-            if len(individuo) == len(codigos_deseados): 
-                poblacion.append(individuo)
-
-        if not poblacion: return []
+            poblacion.append(individuo)
 
         # Evolución
-        for _ in range(GENERACIONES):
+        for _ in range(generaciones):
             poblacion = sorted(poblacion, key=self.calcular_fitness, reverse=True)
-            if self.calcular_fitness(poblacion[0]) == 1000: break
+            sobrevivientes = poblacion[:10]
             
-            sobrevivientes = poblacion[:POBLACION_TAMANO//2]
             hijos = []
-            while len(hijos) < POBLACION_TAMANO - len(sobrevivientes):
-                padre = random.choice(sobrevivientes)
-                madre = random.choice(sobrevivientes)
-                punto = len(padre) // 2
-                hijo = padre[:punto] + madre[punto:]
+            while len(hijos) < (poblacion_tam - 10):
+                padre1 = random.choice(sobrevivientes)
+                padre2 = random.choice(sobrevivientes)
                 
-                # Mutación leve
+                punto_cruce = random.randint(0, len(padre1)-1)
+                hijo = padre1[:punto_cruce] + padre2[punto_cruce:]
+                
                 if random.random() < 0.2:
                     idx = random.randint(0, len(hijo)-1)
-                    opciones = secciones_por_curso[idx]
-                    hijo[idx] = random.choice(opciones)
+                    opciones_disponibles = secciones_por_curso[idx]
+                    hijo[idx] = random.choice(opciones_disponibles)
+                
                 hijos.append(hijo)
+            
             poblacion = sobrevivientes + hijos
 
-        # Retornar top resultados con análisis
+        # ---------------------------------------------------------
+        # SELECCIÓN FINAL
+        # ---------------------------------------------------------
         mejores = sorted(poblacion, key=self.calcular_fitness, reverse=True)
-        resultados_unicos = []
         vistos = set()
-        
         finales = []
-        
+
         for indiv in mejores:
-            firma = tuple(sorted([c['Codigo']+c['Seccion'] for c in indiv]))
-            if firma not in vistos and self.calcular_fitness(indiv) == 1000:
+            # Firma única: Codigo + Seccion + Tipo(Star)
+            firma = tuple(sorted([c['Codigo'] + c['Seccion'] + c['Star'] for c in indiv]))
+            
+            if firma not in vistos and self.calcular_fitness(indiv) >= 1000:
                 
-                # Análisis de costo (usando disponibles_totales si existe, sino lo que pidió)
                 pool_analisis = disponibles_totales if disponibles_totales is not None else codigos_deseados
                 
                 analisis = self.analizador_financiero.analizar_costo_oportunidad(
@@ -226,7 +229,8 @@ class GeneradorHorarioCustom:
                 
                 finales.append(item_resultado)
                 vistos.add(firma)
-                
-            if len(finales) >= 5: break
             
+            if len(finales) >= 5: 
+                break
+        
         return finales

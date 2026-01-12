@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 import json
+import os
 import pandas as pd
-from config import get_analizador_carga, get_optimizador_promedio, get_db_connection, execute_query
+from config import get_analizador_carga, get_optimizador_promedio, get_db_connection, execute_query, CAREER_FILE_MAP, get_user_career
 from clustering_semaforo import analizar_carga
 from optimizador_promedio import calcular_notas_objetivo
 
@@ -9,7 +10,12 @@ academic_bp = Blueprint('academic', __name__)
 
 @academic_bp.route("/cursos_clasificados/<carne>", methods=['GET'])
 def obtener_cursos_clasificados(carne):
-    analizador = get_analizador_carga()
+    # Determine career and pensum
+    carrera = get_user_career(carne)
+    pensum_file = CAREER_FILE_MAP.get(carrera, "sistemas.csv")
+    pensum_path = os.path.join("Data/Pensums", pensum_file)
+
+    analizador = get_analizador_carga(pensum_path)
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -25,8 +31,13 @@ def obtener_cursos_clasificados(carne):
             aprobados = [str(c["codigo"]).strip().zfill(4) for c in cursos_data]
     
     todos_cursos = analizador.obtener_todos_cursos_clasificados()
-    df_pensum = pd.read_csv("./Data/Pensums/sistemas.csv")
-    df_pensum['codigo'] = df_pensum['codigo'].astype(str).str.zfill(4)
+    
+    # Load specific pensum for prerequisites check
+    df_pensum = pd.read_csv(pensum_path)
+    # Normalize columns if needed (to match motor_generador logic)
+    df_pensum.rename(columns={'codigo': 'Codigo', 'pre_requisitos': 'Prerrequisito'}, inplace=True)
+    
+    df_pensum['Codigo'] = df_pensum['Codigo'].astype(str).str.zfill(4)
     df_oferta = pd.read_csv("./Data/cursos_oferta_limpio.csv")
     codigos_en_oferta = set(df_oferta['Codigo'].astype(str).str.zfill(4).unique())
     
@@ -35,11 +46,12 @@ def obtener_cursos_clasificados(carne):
         codigo = curso['codigo']
         if codigo in aprobados or codigo not in codigos_en_oferta:
             continue
-        curso_pensum = df_pensum[df_pensum['codigo'] == codigo]
+            
+        curso_pensum = df_pensum[df_pensum['Codigo'] == codigo]
         puede_llevar = True
         if not curso_pensum.empty:
-            prereq = curso_pensum.iloc[0]['pre_requisitos']
-            if pd.notna(prereq) and prereq != 'N/A' and str(prereq).strip():
+            prereq = curso_pensum.iloc[0]['Prerrequisito']
+            if pd.notna(prereq) and str(prereq) != 'nan' and str(prereq).strip():
                 prerequisitos = [p.strip().zfill(4) for p in str(prereq).split(',')]
                 puede_llevar = all(p in aprobados for p in prerequisitos if p)
         if puede_llevar:
@@ -49,9 +61,20 @@ def obtener_cursos_clasificados(carne):
 
 @academic_bp.route("/analizar_semaforo", methods=['POST'])
 def analizar_semaforo():
-    analizador = get_analizador_carga()
     data = request.get_json()
     cursos_seleccionados = data.get("cursos", [])
+    usuario = data.get("usuario") # Optional: to detect career
+    
+    # Default to Sistemas if unknown
+    pensum_path = "./Data/Pensums/sistemas.csv"
+    
+    if usuario:
+        carrera = get_user_career(usuario)
+        pensum_file = CAREER_FILE_MAP.get(carrera, "sistemas.csv")
+        pensum_path = os.path.join("Data/Pensums", pensum_file)
+        
+    analizador = get_analizador_carga(pensum_path)
+    
     if not cursos_seleccionados:
         return jsonify({"error": "Debes proporcionar una lista de cursos"}), 400
     resultado = analizar_carga(analizador, cursos_seleccionados)
@@ -59,7 +82,18 @@ def analizar_semaforo():
 
 @academic_bp.route("/cursos_por_nivel/<int:nivel>", methods=['GET'])
 def obtener_cursos_por_nivel(nivel):
-    analizador = get_analizador_carga()
+    # This endpoint is generic, defaulting to Sistemas. 
+    # To support others, it should accept a query param ?usuario=...
+    usuario = request.args.get('usuario')
+    pensum_path = "./Data/Pensums/sistemas.csv"
+    
+    if usuario:
+        carrera = get_user_career(usuario)
+        pensum_file = CAREER_FILE_MAP.get(carrera, "sistemas.csv")
+        pensum_path = os.path.join("Data/Pensums", pensum_file)
+
+    analizador = get_analizador_carga(pensum_path)
+    
     if nivel not in [1, 2, 3]:
         return jsonify({"error": "Nivel debe ser 1, 2 o 3"}), 400
     cursos = analizador.obtener_cursos_por_nivel(nivel)

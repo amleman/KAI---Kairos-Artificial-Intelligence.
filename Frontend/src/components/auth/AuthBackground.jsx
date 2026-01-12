@@ -20,7 +20,7 @@ const AuthBackground = () => {
     const [circles, setCircles] = useState([]);
 
     useEffect(() => {
-        const newCircles = Array.from({ length: 110 }).map((_, i) => ({ // Increased to 120 for high density
+        const newCircles = Array.from({ length: 60 }).map((_, i) => ({ // Increased to 120 for high density
             id: i,
             size: Math.floor(Math.random() * 60) + 10, // 10px - 70px (Smaller average size)
             top: Math.floor(Math.random() * 100),

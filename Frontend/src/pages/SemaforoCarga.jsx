@@ -560,14 +560,22 @@ const SemaforoCarga = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md p-3 rounded-xl border border-slate-100 dark:!border-slate-700/50 text-center">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Dificultad Prom.</span>
-                    <span className="text-xl font-black text-slate-700 dark:text-slate-200">{resultado.nivel_promedio.toFixed(2)}</span>
-                  </div>
-                  <div className="bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md p-3 rounded-xl border border-slate-100 dark:!border-slate-700/50 text-center">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Total Cursos</span>
-                    <span className="text-xl font-black text-slate-700 dark:text-slate-200">{Object.keys(cursosSeleccionados).length}</span>
+                <div className="bg-slate-50 dark:!bg-slate-800/40 backdrop-blur-md p-4 rounded-xl border border-slate-100 dark:!border-slate-700/50">
+                  <div className="flex justify-between items-center max-w-[240px] mx-auto">
+                    <div className="flex flex-col items-center gap-1 group">
+                      <span className="text-2xl font-black text-rose-500 group-hover:scale-110 transition-transform">{resultado.cursos_por_nivel[3] || 0}</span>
+                      <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Difíciles</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
+                    <div className="flex flex-col items-center gap-1 group">
+                      <span className="text-2xl font-black text-amber-500 group-hover:scale-110 transition-transform">{resultado.cursos_por_nivel[2] || 0}</span>
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Medios</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-200 dark:bg-slate-700" />
+                    <div className="flex flex-col items-center gap-1 group">
+                      <span className="text-2xl font-black text-emerald-500 group-hover:scale-110 transition-transform">{resultado.cursos_por_nivel[1] || 0}</span>
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Fáciles</span>
+                    </div>
                   </div>
                 </div>
 

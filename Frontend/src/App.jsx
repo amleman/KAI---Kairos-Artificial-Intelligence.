@@ -16,6 +16,7 @@ import PlatformLayout from "./components/ui/PlatformLayout";
 import ApprovedCoursesPage from "./pages/ApprovedCoursesPage";
 import PensumPage from "./pages/PensumPage";
 import SchedulePage from "./pages/SchedulePage";
+import ComingSoonPage from "./pages/ComingSoonPage";
 
 function App() {
   return (
@@ -39,6 +40,9 @@ function App() {
         </Route>
 
         {/* Route removed: /que-es-sioa */}
+        <Route path="/features" element={<ComingSoonPage />} />
+        <Route path="/security" element={<ComingSoonPage />} />
+        <Route path="/privacy" element={<ComingSoonPage />} />
         <Route path="/glass-demo" element={<GlassDemo />} />
       </Routes>
     </BrowserRouter>

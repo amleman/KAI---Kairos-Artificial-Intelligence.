@@ -1,26 +1,32 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, ScanLine, Code2, Zap } from 'lucide-react';
+import { Brain, ScanLine, Clock, Zap, MessageSquare } from 'lucide-react';
 
 const FeaturesSection = () => {
     const features = [
         {
             icon: <Brain className="w-8 h-8 text-purple-500" />,
-            title: "Inteligencia Artificial",
-            description: "Algoritmos avanzados de optimización que generan el horario ideal basándose en tus necesidades y preferencias académicas.",
+            title: "Horarios Perfectos",
+            description: "No más horas peleando con Excel. Nuestro algoritmo crea el horario ideal para ti en segundos, evitando cruces y optimizando tu tiempo libre.",
             color: "bg-pastel-purple"
         },
         {
             icon: <ScanLine className="w-8 h-8 text-blue-500" />,
-            title: "Reconocimiento OCR",
-            description: "Olvídate de la entrada manual de datos. Nuestro sistema extrae información de tus constancias automáticamente.",
+            title: "Carga Automática",
+            description: "Olvídate de ingresar datos manualmente. Sube tu constancia en PDF y nuestro sistema inteligente digitalizará todo tu historial al instante.",
             color: "bg-pastel-blue"
         },
         {
-            icon: <Code2 className="w-8 h-8 text-pink-500" />,
-            title: "Core en Python",
-            description: "Un backend robusto y eficiente construido con Python, garantizando velocidad y precisión en el procesamiento de datos.",
+            icon: <MessageSquare className="w-8 h-8 text-pink-500" />,
+            title: "Asistente AI 24/7",
+            description: "Resuelve tus dudas académicas, pide consejos sobre cursos y recibe orientación personalizada con nuestro Chatbot avanzado.",
             color: "bg-pastel-pink"
+        },
+        {
+            icon: <Zap className="w-8 h-8 text-yellow-500" />,
+            title: "Simulador de Notas",
+            description: "Toma el control de tu promedio. Calcula exactamente qué notas necesitas para ganar tus cursos y alcanzar tus metas académicas.",
+            color: "bg-pastel-yellow"
         }
     ];
 
@@ -40,44 +46,44 @@ const FeaturesSection = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        Tecnología de Vanguardia
+                        Innovación pensada en ti
                     </motion.span>
                     <motion.h2
                         className="text-4xl md:text-5xl font-black text-white mb-6"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }} // Added delay
+                        transition={{ delay: 0.1 }}
                         viewport={{ once: true }}
                     >
-                        Potencia bajo el capó
+                        Herramientas que te dan ventaja
                     </motion.h2>
                     <motion.p
                         className="text-xl text-gray-400 max-w-2xl mx-auto font-light"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
+                        transition={{ delay: 0.2 }}
                         viewport={{ once: true }}
                     >
-                        Una suite de herramientas diseñadas para transformar la complejidad académica en simplicidad.
+                        Todo lo que necesitas para triunfar en la universidad, reunido en una sola plataforma intuitiva y potente.
                     </motion.p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
                             className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group"
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 + (index * 0.2) }} // Increased delay
+                            transition={{ delay: 0.3 + (index * 0.1) }}
                             viewport={{ once: true }}
                             whileHover={{ y: -10 }}
                         >
                             <div className={`w-16 h-16 bg-slate-800/80 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ring-1 ring-white/10 shadow-inner`}>
                                 {feature.icon}
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                            <p className="text-gray-400 leading-relaxed font-light">
+                            <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
+                            <p className="text-gray-400 leading-relaxed font-light text-sm">
                                 {feature.description}
                             </p>
                         </motion.div>

@@ -62,11 +62,11 @@ def generar_horario():
                     
                 # Determinar límite de cursos basado en promedio
                 if promedio > 77:
-                    limite_cursos = 7
+                    limite_cursos = 10
                 elif promedio > 67:
-                    limite_cursos = 6
+                    limite_cursos = 8
                 elif promedio >= 61:
-                    limite_cursos = 4
+                    limite_cursos = 6
                 else:
                     limite_cursos = 4 # < 61 también restringido
                     
