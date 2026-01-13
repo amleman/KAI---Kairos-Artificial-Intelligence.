@@ -10,7 +10,7 @@ const HeroSection = () => {
             <ThreeDParticles particleSize={2.5} scaleFactor={1.6} className="opacity-70" />
 
             {/* Contenido */}
-            <div className="relative z-10 text-center px-4 max-w-6xl mx-auto mt-[-5vh]">
+            <div className="relative z-10 text-center px-6 max-w-6xl mx-auto pt-20 md:pt-0">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -19,7 +19,7 @@ const HeroSection = () => {
                 </motion.div>
 
                 <motion.h1
-                    className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-tight mb-4"
+                    className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-tight mb-6 md:mb-4"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
@@ -28,7 +28,7 @@ const HeroSection = () => {
                 </motion.h1>
 
                 <motion.h2
-                    className="text-2xl md:text-5xl font-light text-gray-200 mb-8 tracking-wide"
+                    className="text-xl md:text-5xl font-light text-gray-200 mb-8 tracking-wide"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
@@ -37,7 +37,7 @@ const HeroSection = () => {
                 </motion.h2>
 
                 <motion.p
-                    className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto font-light leading-relaxed bg-black/20 backdrop-blur-sm p-6 rounded-2xl border border-white/5"
+                    className="text-base md:text-xl text-gray-300 mb-8 md:mb-12 max-w-3xl mx-auto font-light leading-relaxed bg-black/40 backdrop-blur-md p-6 rounded-3xl border border-white/10"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
@@ -48,14 +48,14 @@ const HeroSection = () => {
                 </motion.p>
 
                 <motion.div
-                    className="flex flex-col sm:flex-row justify-center items-center gap-6"
+                    className="flex flex-col sm:flex-row justify-center items-center gap-4 md:gap-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.8 }}
                 >
                     <Link
                         to="/login"
-                        className="group relative px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold overflow-hidden shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1 w-full sm:w-auto text-center"
+                        className="group relative px-6 py-3.5 bg-gray-900 text-white rounded-xl font-bold overflow-hidden shadow-2xl hover:shadow-xl transition-all hover:-translate-y-1 w-full sm:w-auto text-center"
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2">
                             Empezar Ahora
@@ -68,7 +68,7 @@ const HeroSection = () => {
 
                     <Link
                         to="/register"
-                        className="px-8 py-4 bg-white/5 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/10 transition-all hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto"
+                        className="px-6 py-3.5 bg-white/5 backdrop-blur-md text-white border border-white/20 rounded-xl font-bold hover:bg-white/10 transition-all hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto"
                     >
                         Crear Cuenta Gratis
                     </Link>
