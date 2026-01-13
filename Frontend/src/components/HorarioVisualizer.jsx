@@ -55,6 +55,10 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
     } catch { return []; }
   };
 
+  const getCodigo = (c) => getDato(c, ["Codigo", "codigo"]);
+  const getModalidad = (c) => getDato(c, ["Modalidad", "modalidad"]);
+  const getRestricciones = (c) => getDato(c, ["Restricciones", "restricciones"]);
+
   /* ----------------------------------------------------------------------------------
    *  LÓGICA DE EXTRACCIÓN DE DATOS (Soporte estructura nueva y vieja)
    * ---------------------------------------------------------------------------------- */
@@ -142,28 +146,32 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
     <div className="bg-white dark:!bg-black border-gray-200 dark:border-slate-800 rounded-xl shadow-lg border overflow-hidden flex flex-col h-full transition-colors duration-300">
       {/* Header */}
       {/* Header (Always Visible) */}
-      <div className={`bg-gray-50 dark:!bg-black border-b border-gray-200 dark:border-slate-800 flex justify-between items-center shrink-0 ${compact ? 'px-4 py-2' : 'px-6 py-4'}`}>
-        <div className="flex flex-col">
-          <h3 className={`font-bold text-gray-700 dark:text-slate-200 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
-            <Calendar className="text-gray-500 dark:text-slate-400" size={compact ? 16 : 20} /> Visualización
-          </h3>
+      <div className={`bg-gray-50 dark:!bg-black border-b border-gray-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-3 sm:gap-0 ${compact ? 'px-4 py-2' : 'px-4 py-3 md:px-6 md:py-4'}`}>
+        <div className="flex flex-col w-full sm:w-auto">
+          <div className="flex justify-between items-center sm:block">
+            <h3 className={`font-bold text-gray-700 dark:text-slate-200 flex items-center gap-2 ${compact ? 'text-sm' : ''}`}>
+              <Calendar className="text-gray-500 dark:text-slate-400" size={compact ? 16 : 20} /> Visualización
+            </h3>
+            {/* Show view toggles here on mobile if space allows, or keep them below? Let's keep below for better touch targets or standard layout */}
+          </div>
           {fechaGuardado && (
-            <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium ml-7">
+            <span className="text-[10px] text-gray-400 dark:text-slate-500 font-medium ml-0 sm:ml-7 mt-1 sm:mt-0 block">
               Guardado: {new Date(fechaGuardado).toLocaleDateString()} {new Date(fechaGuardado).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
         </div>
-        <div className="flex p-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm">
+
+        <div className="flex p-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm w-full sm:w-auto">
           <button
             onClick={() => setVista("calendario")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "calendario" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+            className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "calendario" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               }`}
           >
             <Calendar size={14} /> Calendario
           </button>
           <button
             onClick={() => setVista("lista")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "lista" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+            className={`flex-1 sm:flex-none justify-center flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${vista === "lista" ? "bg-slate-900 dark:bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700/50"
               }`}
           >
             <List size={14} /> Lista
@@ -171,144 +179,186 @@ const HorarioVisualizer = ({ horario, compact = false, vista: vistaProp }) => {
         </div>
       </div>
 
-      <div className="p-6 overflow-auto bg-white dark:!bg-black">
+      <div className="p-4 md:p-6 overflow-auto bg-white dark:!bg-black">
         {vista === "lista" ? (
           /* --- VISTA LISTA --- */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {listaHorario.map((curso, idx) => (
-              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white dark:!bg-slate-800 dark:!border-slate-700 group`}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 dark:!text-gray-200 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
-                      {getNombre(curso)}
-                    </h4>
+              <div key={idx} className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition bg-white dark:!bg-slate-800 dark:!border-slate-700 group hover:border-blue-400 dark:hover:border-blue-700 relative overflow-hidden`}>
+                {/* Lateral decoration based on star/type */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500/50 group-hover:bg-blue-500 transition-colors"></div>
+
+                <div className="ml-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 dark:bg-slate-800 px-1.5 rounded">
+                          {getCodigo(curso) || "---"}
+                        </span>
+                        {getModalidad(curso) && (
+                          <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-1.5 rounded uppercase">
+                            {getModalidad(curso)}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="font-bold text-gray-800 dark:!text-gray-200 text-sm line-clamp-2 leading-tight group-hover:line-clamp-none transition-all">
+                        {getNombre(curso)}
+                      </h4>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 ml-2">
+                      <span className="bg-blue-100 dark:!bg-blue-900/40 text-blue-700 dark:!text-blue-300 text-xs font-bold px-2 py-1 rounded border border-blue-200 dark:!border-blue-800 shrink-0">
+                        Sec. {getSeccion(curso)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 ml-2">
-                    <span className="bg-blue-100 dark:!bg-blue-900/40 text-blue-700 dark:!text-blue-300 text-xs font-bold px-2 py-1 rounded border border-blue-200 dark:!border-blue-800 shrink-0">
-                      Sec. {getSeccion(curso)}
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+
+                  <div className="space-y-2 text-sm text-gray-600 dark:!text-gray-400 bg-gray-50 dark:!bg-slate-900/50 p-3 rounded-lg border border-gray-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-blue-500 shrink-0" />
+                      <span className="font-mono font-medium">{getInicio(curso)} - {getFinal(curso)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin size={14} className="text-red-500 shrink-0" />
+                      <span className="line-clamp-1 group-hover:line-clamp-none">{getEdificio(curso)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <User size={14} className="text-green-500 shrink-0" />
+                      <span className="truncate group-hover:whitespace-normal">{getProfe(curso)}</span>
+                    </div>
+                    {/* Render Auxiliar if exists */}
+                    {getDato(curso, ["Aux", "aux"]) && (
+                      <div className="flex items-center gap-2">
+                        <User size={14} className="text-teal-500 shrink-0" />
+                        <span className="truncate group-hover:whitespace-normal italic text-xs">
+                          Aux: {getDato(curso, ["Aux", "aux"])}
+                        </span>
+                      </div>
+                    )}
+                    {/* Restricciones o info extra si existe */}
+                    {getRestricciones(curso) && (
+                      <div className="flex items-start gap-2 pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-slate-700">
+                        <AlertCircle size={14} className="text-orange-500 shrink-0 mt-0.5" />
+                        <span className="text-xs text-orange-600 dark:text-orange-400 italic leading-tight">
+                          {getRestricciones(curso)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex justify-between items-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} />
+                      {parsearDias(curso).join(", ")}
+                    </div>
+                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-60">
                       {curso.Star || "Clase"}
                     </span>
                   </div>
-                </div>
-
-                <div className="space-y-2 text-sm text-gray-600 dark:!text-gray-400 bg-gray-50 dark:!bg-slate-900/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-blue-500" />
-                    <span className="font-mono font-medium">{getInicio(curso)} - {getFinal(curso)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin size={14} className="text-red-500" />
-                    <span>{getEdificio(curso)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User size={14} className="text-green-500" />
-                    <span className="truncate">{getProfe(curso)}</span>
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-gray-100 dark:border-slate-700 text-xs font-bold text-gray-500 dark:text-gray-400 flex gap-2">
-                  <Calendar size={14} />
-                  {parsearDias(curso).join(", ")}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          /* --- VISTA CUADRÍCULA (NUEVA ESTRUCTURA) --- */
+          /* --- VISTA CUADRÍCULA (POSICIONAMIENTO ABSOLUTO) --- */
           <div className="overflow-x-auto bg-white dark:!bg-black">
-            <div className="min-w-[800px]">
-              {/* Grid Header */}
-              <div className="grid grid-cols-7 gap-2 mb-2">
-                <div className="bg-slate-800 dark:bg-slate-900 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest flex items-center justify-center">
-                  Horario
+            <div className="min-w-[800px] relative">
+              {/* Header de Días */}
+              <div className="grid grid-cols-[60px_1fr] border-b border-gray-200 dark:border-slate-800 mb-2 sticky top-0 bg-white dark:bg-black z-20">
+                <div className="p-2 text-center text-xs font-bold text-gray-400 dark:text-slate-500">
+                  Hora
                 </div>
-                {DIAS_SEMANA.map((dia) => (
-                  <div key={dia} className="bg-slate-800 dark:bg-slate-900 text-white rounded-lg p-3 text-center text-xs font-bold uppercase tracking-widest">
-                    {dia}
-                  </div>
-                ))}
+                <div className="grid grid-cols-6 divide-x divide-gray-100 dark:divide-slate-800">
+                  {DIAS_SEMANA.map((dia) => (
+                    <div key={dia} className="p-2 text-center text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                      {dia}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Grid Body */}
-              <div className="space-y-2">
-                {[
-                  { start: "07:00", end: "07:50" },
-                  { start: "07:50", end: "08:40" },
-                  { start: "09:00", end: "09:50" },
-                  { start: "09:50", end: "10:40" },
-                  { start: "11:00", end: "11:50" },
-                  { start: "11:50", end: "12:40" },
-                  { start: "14:00", end: "14:50" },
-                  { start: "14:50", end: "15:40" },
-                  { start: "16:00", end: "16:50" },
-                  { start: "16:50", end: "17:40" },
-                  { start: "18:00", end: "18:50" },
-                  { start: "18:50", end: "19:40" },
-                ].map((bloque, idx) => (
-                  <div key={idx} className="grid grid-cols-7 gap-2">
-                    {/* Time Label */}
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs flex items-center justify-center">
-                      {bloque.start} - {bloque.end}
+              <div className="grid grid-cols-[60px_1fr]">
+                {/* Columna de Horas */}
+                <div className="relative border-r border-gray-200 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/30">
+                  {horasAMostrar.map((hora) => (
+                    <div key={hora} className="h-[100px] border-b border-gray-100 dark:border-slate-800 text-[10px] text-gray-400 dark:text-slate-500 font-mono relative">
+                      <span className="absolute -top-2 w-full text-center">
+                        {hora}:00
+                      </span>
                     </div>
+                  ))}
+                </div>
 
-                    {/* Columns for Days */}
-                    {DIAS_SEMANA.map((dia) => {
-                      // Buscar curso que coincida con este día y bloque
-                      const cursoFound = listaHorario.find((c) => {
-                        const diasCurso = parsearDias(c).map(d => d.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
-                        const diaActual = dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().substring(0, 3);
-                        // Chequear dia
-                        const esDia = diasCurso.some(d => d.includes(diaActual));
-                        if (!esDia) return false;
-
-                        // Chequear intersección de tiempo
-                        const inicioC = toMinutos(getInicio(c));
-                        const finalC = toMinutos(getFinal(c));
-                        const inicioB = toMinutos(bloque.start);
-                        const finalB = toMinutos(bloque.end);
-
-                        // Hay traslape significativo?
-                        return (inicioC < finalB && finalC > inicioB);
-                      });
-
-                      if (cursoFound) {
-                        const colorIndex = listaHorario.indexOf(cursoFound) % PALETA.length;
-                        // Extraer color base para aplicar estilos
-                        const colorClasses = PALETA[colorIndex]; // ej: "bg-blue-100 ..."
-                        // Extraer solo clases de bg para tener más control si se requiere, o usar la paleta directo
-                        // Usaremos la paleta directa pero con bordes redondeados consistentes
-
-                        return (
-                          <div key={dia} className={`rounded-xl p-3 flex flex-col justify-center relative group cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md ${colorClasses}`}>
-                            <h4 className="font-black text-[11px] leading-tight mb-1 line-clamp-2 md:line-clamp-none">
-                              {getNombre(cursoFound)}
-                            </h4>
-                            <div className="flex justify-between items-center opacity-80">
-                              <span className="text-[10px] font-bold">{getSeccion(cursoFound)}</span>
-                              <span className="text-[9px] font-mono">{getInicio(cursoFound)}</span>
-                            </div>
-                            <div className="mt-1 flex items-center gap-1">
-                              <span className={
-                                `text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-black/10 dark:bg-black/30`
-                              }>
-                                {cursoFound.Star || "Clase"}
-                              </span>
-                            </div>
-
-                            {/* Tooltip nativo o custom */}
-                            <div className="absolute inset-0 z-10" title={`${getNombre(cursoFound)}\n${getEdificio(cursoFound)}\n${getProfe(cursoFound)}`} />
-                          </div>
-                        );
-                      }
-
-                      // Empty Slot
-                      return (
-                        <div key={dia} className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50" />
-                      );
-                    })}
+                {/* Columna de Días (Contenido) */}
+                <div className="grid grid-cols-6 divide-x divide-gray-100 dark:divide-slate-800 relative">
+                  {/* Líneas de fondo para las horas */}
+                  <div className="absolute inset-0 z-0 pointer-events-none flex flex-col">
+                    {horasAMostrar.map((h, i) => (
+                      <div key={i} className="h-[100px] border-b border-gray-100 dark:border-slate-800 w-full" />
+                    ))}
                   </div>
-                ))}
+
+                  {DIAS_SEMANA.map((dia) => (
+                    <div key={dia} className="relative h-full z-10">
+                      {/* Renderizar cursos de este día */}
+                      {listaHorario
+                        .filter(curso => {
+                          const diasCurso = parsearDias(curso).map(d => d.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+                          const diaActual = dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().substring(0, 3);
+                          return diasCurso.some(d => d.includes(diaActual));
+                        })
+                        .map((curso, idx) => {
+                          const inicioMin = toMinutos(getInicio(curso));
+                          const finMin = toMinutos(getFinal(curso));
+
+                          // Calcular posición relativa al rango mostrado
+                          const startOffsetMin = inicioMin - (rangoHorario.start * 60);
+                          const durationMin = finMin - inicioMin;
+
+                          // 100px por hora = 1.666... px por minuto (o (100/60) * min)
+                          const PIXELS_PER_MINUTE = 100 / 60;
+                          const topPx = startOffsetMin * PIXELS_PER_MINUTE;
+                          const heightPx = durationMin * PIXELS_PER_MINUTE;
+
+                          const colorIndex = listaHorario.indexOf(curso) % PALETA.length;
+                          const colorClasses = PALETA[colorIndex];
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`absolute w-[95%] left-[2.5%] rounded-lg p-2 shadow-sm hover:shadow-lg hover:z-50 hover:scale-105 transition-all cursor-pointer overflow-hidden flex flex-col justify-between border ${colorClasses}`}
+                              style={{
+                                top: `${topPx}px`,
+                                height: `${heightPx}px`,
+                                minHeight: '40px'
+                              }}
+                              title={`${getNombre(curso)}\n${getInicio(curso)} - ${getFinal(curso)}\n${getEdificio(curso)}`}
+                            >
+                              <div>
+                                <div className="font-bold leading-tight line-clamp-2 md:line-clamp-none text-xs">
+                                  {getNombre(curso)}
+                                </div>
+                                <div className="mt-1">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-70 block">
+                                    {curso.Star || "Clase"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between items-end opacity-90 mt-1 border-t border-black/10 pt-1">
+                                <span className="font-bold text-[10px] bg-white/30 px-1 rounded">
+                                  Sección {getSeccion(curso)}
+                                </span>
+                                <span className="font-mono font-bold text-xs">
+                                  {getInicio(curso)} - {getFinal(curso)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

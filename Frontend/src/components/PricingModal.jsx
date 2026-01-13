@@ -54,9 +54,9 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
         {
             id: 'premium',
             nombre: 'Premium',
-            precio: 29,
+            precio: 25,
             periodo: '/mes',
-            precioSemestral: 145,
+            precioSemestral: 125,
             icon: Crown,
             color: 'from-amber-400 via-yellow-500 to-orange-500',
             bgCard: 'bg-gradient-to-br from-amber-50/90 to-orange-50/90 dark:from-amber-900/20 dark:to-orange-900/20',
@@ -77,6 +77,14 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
 
     const handleUpgrade = async (planId) => {
         if (planId === 'free' || planId === currentPlan) return;
+
+        if (planId === 'daily' || planId === 'premium') {
+            const planName = planId === 'daily' ? 'Day Pass' : 'Premium';
+            const message = encodeURIComponent(`¡Hola! 👋 Me interesa adquirir el plan ${planName} de KAI. ¿Podrían indicarme los métodos de pago seguros disponibles?`);
+            window.open(`https://wa.me/50240131873?text=${message}`, '_blank');
+            return;
+        }
+
         setLoading(true);
 
         setTimeout(() => {
@@ -106,49 +114,49 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
                 >
                     <div className="max-h-[90vh] overflow-y-auto custom-scrollbar">
                         {/* Header */}
-                        <div className="relative p-8 pb-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-sky-50/50 via-white to-amber-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50">
+                        <div className="relative p-5 md:p-8 pb-4 md:pb-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-sky-50/50 via-white to-amber-50/50 dark:from-slate-800/50 dark:via-slate-900 dark:to-slate-800/50">
                             <div className="absolute top-0 left-0 w-32 h-32 bg-sky-400/10 rounded-full blur-3xl" />
                             <div className="absolute top-0 right-0 w-40 h-40 bg-amber-400/10 rounded-full blur-3xl" />
 
                             <button
                                 onClick={onClose}
-                                className="absolute top-6 right-6 p-2.5 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:rotate-90 duration-300"
+                                className="absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all hover:rotate-90 duration-300"
                             >
-                                <X size={22} />
+                                <X size={20} className="md:w-6 md:h-6" />
                             </button>
 
-                            <div className="relative text-center max-w-2xl mx-auto">
-                                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-full mb-4 shadow-lg shadow-sky-200 dark:shadow-sky-900/30">
-                                    <Sparkles size={14} />
+                            <div className="relative text-center max-w-2xl mx-auto pt-2">
+                                <div className="inline-flex items-center gap-1.5 md:gap-2 px-3 py-1 md:px-4 md:py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full mb-3 md:mb-4 shadow-lg shadow-sky-200 dark:shadow-sky-900/30">
+                                    <Sparkles size={12} className="md:w-3.5 md:h-3.5" />
                                     Potencia tu Experiencia
                                 </div>
-                                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mb-3">
+                                <h2 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mb-2 md:mb-3 leading-tight">
                                     Elige tu Plan
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 text-base">
+                                <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 px-2 leading-relaxed">
                                     Desbloquea las funciones avanzadas de IA y optimiza tu camino universitario
                                 </p>
                             </div>
                         </div>
 
                         {/* Plans Grid - 2 columns */}
-                        <div className="p-8">
+                        <div className="p-4 md:p-8">
                             {/* Why Premium Section - FIRST */}
-                            <div className="mb-8 p-5 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-slate-800/50 dark:to-slate-800/30 rounded-2xl border border-sky-200 dark:border-slate-700">
-                                <div className="flex items-start gap-4">
-                                    <div className="p-2.5 bg-white dark:bg-slate-700 rounded-xl shadow-sm flex-shrink-0">
-                                        <Server size={22} className="text-sky-600 dark:text-sky-400" />
+                            <div className="mb-6 md:mb-8 p-4 md:p-5 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-slate-800/50 dark:to-slate-800/30 rounded-2xl border border-sky-200 dark:border-slate-700">
+                                <div className="flex items-start gap-3 md:gap-4">
+                                    <div className="p-2 md:p-2.5 bg-white dark:bg-slate-700 rounded-xl shadow-sm flex-shrink-0">
+                                        <Server size={18} className="md:w-5 md:h-5 text-sky-600 dark:text-sky-400" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white text-sm mb-1.5 flex items-center gap-2">
-                                            <Heart size={14} className="text-rose-500" />
+                                        <h4 className="font-bold text-slate-800 dark:text-white text-xs md:text-sm mb-1 flex items-center gap-2">
+                                            <Heart size={12} className="md:w-3.5 md:h-3.5 text-rose-500" />
                                             ¿Por qué hay un plan de pago?
                                         </h4>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                                             Las funciones avanzadas de <strong>IA pesada</strong> (generador de horarios inteligente y chatbot académico ilimitado)
                                             requieren servidores potentes para ejecutar estos modelos. Tu suscripción ayuda a <strong>mantener el proyecto activo 24/7</strong> para
                                             toda la comunidad estudiantil y financiar futuras expansiones a otras facultades.
-                                            <span className="text-sky-600 dark:text-sky-400 font-medium"> ¡Gracias por apoyar! 🇬🇹</span>
+                                            <span className="text-sky-600 dark:text-sky-400 font-medium whitespace-nowrap"> ¡Gracias por apoyar! 🇬🇹</span>
                                         </p>
                                     </div>
                                 </div>
@@ -196,29 +204,29 @@ const PricingModal = ({ isOpen, onClose, currentPlan = 'free', onUpgrade }) => {
                                                 </div>
                                             )}
 
-                                            <div className="p-6 pt-8">
+                                            <div className="p-5 md:p-6 pt-7 md:pt-8">
                                                 {/* Icon & Name */}
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg`}>
-                                                        <IconComponent size={24} className="text-white" />
+                                                <div className="flex items-center gap-3 mb-3 md:mb-4">
+                                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg`}>
+                                                        <IconComponent size={20} className="md:w-6 md:h-6 text-white" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{plan.nombre}</h3>
+                                                        <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">{plan.nombre}</h3>
                                                     </div>
                                                 </div>
 
                                                 {/* Price */}
-                                                <div className="mb-6">
+                                                <div className="mb-4 md:mb-6">
                                                     <div className="flex items-baseline gap-1">
-                                                        <span className="text-4xl font-black text-slate-900 dark:text-white">
+                                                        <span className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white">
                                                             {plan.precio === 0 ? 'Gratis' : `Q${plan.precio}`}
                                                         </span>
                                                         {plan.precio > 0 && (
-                                                            <span className="text-slate-500 dark:text-slate-400 font-medium">{plan.periodo}</span>
+                                                            <span className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium">{plan.periodo}</span>
                                                         )}
                                                     </div>
                                                     {plan.precioSemestral && (
-                                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                                        <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
                                                             o Q{plan.precioSemestral}/semestre <span className="text-emerald-600 font-bold">(Ahorra 1 mes)</span>
                                                         </p>
                                                     )}

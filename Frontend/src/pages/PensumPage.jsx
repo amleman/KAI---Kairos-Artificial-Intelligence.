@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
-import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info, LayoutGrid, Network, HelpCircle, X, MousePointer2, Camera, Zap, Crown } from "lucide-react";
+import { GraduationCap, UploadCloud, CheckCircle2, Award, AlertTriangle, Save, Info, LayoutGrid, Network, HelpCircle, X, MousePointer2, Camera, Zap, Crown, ArrowDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UploadModal from "../components/dashboard/UploadModal";
 import GradesModal from "../components/dashboard/GradesModal";
@@ -126,6 +126,8 @@ const PensumPage = () => {
     const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
     const [procesandoImagenes, setProcesandoImagenes] = useState(false);
     const inputImagenesRef = useRef(null);
+    const bottomRef = useRef(null);
+    const scrollContainerRef = useRef(null);
     const [errorUpload, setErrorUpload] = useState("");
 
     // Grades Modal State
@@ -420,92 +422,119 @@ const PensumPage = () => {
     }));
 
     return (
-        <div className="animate-fadeIn flex flex-col h-[calc(100vh-120px)] space-y-6 relative">
-            {/* Header Area */}
-            <div className="bg-white/50 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-soft-blue dark:border-slate-700/50 shadow-inner shrink-0 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm border border-sky-200 dark:border-sky-800/30">
-                        <GraduationCap size={28} />
+        <div className="animate-fadeIn flex flex-col h-[calc(100dvh-100px)] md:h-[calc(100vh-120px)] space-y-4 md:space-y-6 relative overflow-hidden">
+            {/* Header Area - Always Visible */}
+            <div className="shrink-0 px-1">
+                <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-6 border border-white/40 dark:border-slate-700/50 shadow-sm flex flex-col md:flex-row justify-between gap-4 items-start md:items-center transition-all">
+                    <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-sky-100 dark:bg-sky-900/30 rounded-xl md:rounded-2xl flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm border border-sky-200 dark:border-sky-800/30 shrink-0">
+                            <GraduationCap size={20} className="md:w-6 md:h-6" />
+                        </div>
+                        <div className="min-w-0">
+                            <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight truncate">
+                                Pensum
+                            </h1>
+                            <p className="text-slate-500 dark:text-slate-400 text-[10px] md:text-sm font-bold uppercase tracking-widest truncate">
+                                {usuarioData.carrera}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
-                            Pensum Académico
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                            Gestión inteligente de tu carrera.
-                        </p>
+
+                    <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-200 dark:border-slate-700/50">
+                        <div className="flex gap-1 md:gap-2 bg-slate-100/80 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black flex items-center gap-1.5 transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-md scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            >
+                                <LayoutGrid size={14} className="md:w-4 md:h-4" /> GRID
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (tieneAccesoGrafo) {
+                                        setViewMode('graph');
+                                    } else {
+                                        setMostrarLimiteGrafoModal(true);
+                                    }
+                                }}
+                                className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-[10px] md:text-xs font-black flex items-center gap-1.5 transition-all relative ${viewMode === 'graph' ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-md scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+                            >
+                                <Network size={14} className="md:w-4 md:h-4" /> GRAFO
+                                {!tieneAccesoGrafo && (
+                                    <Crown size={10} className="text-amber-500 absolute -top-1 -right-1" />
+                                )}
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowHelpModal(true)}
+                            className="w-9 h-9 md:w-11 md:h-11 bg-slate-800 dark:bg-slate-700 text-white rounded-xl flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all shadow-lg active:scale-95 shrink-0"
+                        >
+                            <HelpCircle size={18} className="md:w-5 md:h-5" />
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex gap-2 bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <button
-                            onClick={() => setViewMode('grid')}
-                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                        >
-                            <LayoutGrid size={18} /> GRID
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (tieneAccesoGrafo) {
-                                    setViewMode('graph');
-                                } else {
-                                    setMostrarLimiteGrafoModal(true);
-                                }
-                            }}
-                            className={`px-4 py-2 rounded-lg text-sm font-black flex items-center gap-2 transition-all relative ${viewMode === 'graph' ? 'bg-white dark:bg-slate-600 text-sky-600 dark:text-sky-300 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                        >
-                            <Network size={18} /> GRAFO
-                            {!tieneAccesoGrafo && (
-                                <Crown size={14} className="text-amber-500" />
-                            )}
-                        </button>
-                    </div>
-
+            {/* Action Bar - Always Visible */}
+            <div className="shrink-0 px-1 z-10">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <button
-                        onClick={() => setShowHelpModal(true)}
-                        className="w-10 h-10 bg-slate-800 dark:bg-slate-700 text-white rounded-xl flex items-center justify-center hover:bg-slate-700 dark:hover:bg-slate-600 transition-all shadow-lg shadow-slate-200 dark:shadow-none"
-                        title="¿Cómo funciona?"
+                        onClick={() => setShowUploadModal(true)}
+                        className="w-full sm:w-auto px-4 py-2.5 bg-sky-500 text-white hover:bg-sky-600 rounded-xl font-black transition-all flex items-center justify-center gap-2 text-xs md:text-sm shadow-lg shadow-sky-100 dark:shadow-none uppercase tracking-widest active:scale-95"
                     >
-                        <HelpCircle size={22} />
+                        <UploadCloud size={16} className="md:w-[18px]" />
+                        <span className="truncate">Auto-Completar</span>
                     </button>
+
+                    <div className="flex-1 flex gap-2">
+                        {/* Scroll Down Button for Grid Mode */}
+                        {viewMode === 'grid' && (
+                            <button
+                                onClick={() => {
+                                    if (scrollContainerRef.current) {
+                                        scrollContainerRef.current.scrollTo({
+                                            top: scrollContainerRef.current.scrollHeight,
+                                            behavior: 'smooth'
+                                        });
+                                    }
+                                }}
+                                className="px-4 py-2.5 bg-white/60 dark:bg-slate-800/40 text-sky-500 dark:text-sky-400 border border-white/40 dark:border-slate-700/50 rounded-xl font-black flex items-center justify-center gap-2 shadow-sm active:scale-95 hover:bg-white dark:hover:bg-slate-700 transition-all"
+                            >
+                                <ArrowDown size={16} className="md:w-[18px]" />
+                                <span className="hidden sm:inline text-xs uppercase tracking-wider">Ir Abajo</span>
+                            </button>
+                        )}
+
+                        <div className="flex-1 flex items-center justify-center sm:justify-end gap-2 px-4 py-2.5 bg-white/60 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] md:text-xs border border-white/40 dark:border-slate-700/50 font-black shadow-sm uppercase tracking-wider min-w-0">
+                            <Info size={14} className="text-sky-500 shrink-0" />
+                            <span className="truncate">{aprobados.length} <span className="text-slate-400 font-medium">/ {pensum.length}</span> Cursos</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Action Bar */}
-            <div className="flex gap-4 px-2 shrink-0">
-                <button
-                    onClick={() => setShowUploadModal(true)}
-                    className="px-5 py-2.5 bg-sky-500 text-white hover:bg-sky-600 rounded-xl font-black transition-all flex items-center gap-2 text-sm shadow-lg shadow-sky-100 uppercase tracking-wide"
-                >
-                    <UploadCloud size={18} />
-                    Auto-Completar con OCR
-                </button>
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 rounded-xl text-xs border border-slate-200 dark:border-slate-700 font-black shadow-sm ml-auto uppercase tracking-wider">
-                    <Info size={16} className="text-sky-500" />
-                    <span>Progreso: {aprobados.length} / {pensum.length} cursos</span>
-                </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="flex-1 bg-white/50 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-soft-blue dark:border-slate-700/50 shadow-[inset_0_0_30px_rgba(0,0,0,0.02)] overflow-hidden relative">
+            {/* Main Content Area - Scrollable Independent */}
+            <div className="flex-1 bg-white/50 dark:bg-slate-800/60 backdrop-blur-xl rounded-t-3xl border-t border-x border-soft-blue dark:border-slate-700/50 shadow-[inset_0_0_30px_rgba(0,0,0,0.02)] overflow-hidden relative flex flex-col">
                 {viewMode === 'grid' ? (
-                    <div className="absolute inset-0 overflow-y-auto p-6 md:p-8 custom-scrollbar pb-24">
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div
+                        ref={scrollContainerRef}
+                        className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative"
+                    >
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 md:gap-8 pb-[30vh]">
                             {pensumPorSemestre.map((sem) => (
-                                <div key={sem.nombre} className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-8 rounded-[2rem] border border-white/40 dark:border-slate-700/50 relative overflow-hidden transition-all hover:shadow-xl group">
-                                    <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.05] transition-opacity font-black text-[12rem] text-slate-900 dark:text-slate-100 select-none pointer-events-none">
+                                <div key={sem.nombre} className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-white/40 dark:border-slate-700/50 relative overflow-hidden transition-all hover:shadow-xl group">
+                                    <div className="absolute top-[-20px] right-[-20px] opacity-[0.03] group-hover:opacity-[0.05] transition-opacity font-black text-[8rem] md:text-[12rem] text-slate-900 dark:text-slate-100 select-none pointer-events-none">
                                         {sem.numero}
                                     </div>
 
-                                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-4 relative z-10 uppercase tracking-widest">
-                                        <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white shadow-lg border border-sky-300">
+                                    <h3 className="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 md:gap-4 relative z-10 uppercase tracking-widest">
+                                        <span className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white shadow-lg border border-sky-300 text-sm md:text-base">
                                             {sem.numero}
                                         </span>
                                         {sem.nombre} Semestre
                                     </h3>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 relative z-10">
                                         {sem.cursos.map((curso) => {
                                             const aprobado = aprobados.includes(curso.codigo);
                                             const permitido = puedeLlevar(curso);
@@ -515,7 +544,7 @@ const PensumPage = () => {
                                                     key={curso.codigo}
                                                     onClick={() => (permitido ? toggleAprobado(curso.codigo) : null)}
                                                     className={`
-                                                        p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm
+                                                        p-4 rounded-xl md:rounded-2xl border-2 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-sm
                                                         ${aprobado
                                                             ? "bg-emerald-50/80 border-emerald-200 shadow-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:shadow-none"
                                                             : permitido
@@ -524,17 +553,17 @@ const PensumPage = () => {
                                                         }
                                                     `}
                                                 >
-                                                    <div className="flex justify-between items-start mb-3">
-                                                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider ${aprobado ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400'}`}>
+                                                    <div className="flex justify-between items-start mb-2.5">
+                                                        <span className={`text-[9px] md:text-[10px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg uppercase tracking-wider ${aprobado ? 'bg-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400'}`}>
                                                             {curso.codigo}
                                                         </span>
-                                                        {aprobado && <CheckCircle2 size={18} className="text-emerald-500 dark:text-emerald-400" />}
-                                                        {!permitido && <AlertTriangle size={16} className="text-rose-400 dark:text-rose-500" />}
+                                                        {aprobado && <CheckCircle2 size={16} className="md:w-[18px] text-emerald-500 dark:text-emerald-400" />}
+                                                        {!permitido && <AlertTriangle size={14} className="md:w-4 text-rose-400 dark:text-rose-500" />}
                                                     </div>
-                                                    <h4 className={`font-black text-sm leading-tight mb-3 ${aprobado ? 'text-emerald-900 dark:text-emerald-100' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                    <h4 className={`font-black text-xs md:text-sm leading-tight mb-2 md:mb-3 line-clamp-2 ${aprobado ? 'text-emerald-900 dark:text-emerald-100' : 'text-slate-800 dark:text-slate-200'}`}>
                                                         {curso.nombre_completo}
                                                     </h4>
-                                                    <div className="text-[10px] text-slate-400 dark:text-slate-400 font-black flex items-center gap-1.5 uppercase tracking-tighter">
+                                                    <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-400 font-bold flex items-center gap-1 uppercase tracking-tighter">
                                                         <Award size={12} className="text-sky-400 dark:text-sky-500" /> {curso.creditos} Créditos
                                                     </div>
                                                 </div>
@@ -543,16 +572,16 @@ const PensumPage = () => {
                                     </div>
                                 </div>
                             ))}
-                        </div>
 
-                        <div className="fixed bottom-10 left-0 right-0 flex justify-center z-20 pointer-events-none">
-                            <div className="pointer-events-auto p-1.5 bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl">
+                            {/* Save Button Area - Inside Scrollable Container */}
+                            <div className="flex justify-center pt-8 pb-12">
                                 <button
+                                    ref={bottomRef}
                                     onClick={guardarAprobadosBatch}
-                                    className="bg-slate-900 text-white px-10 py-4 rounded-xl font-black hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-lg uppercase tracking-widest text-sm"
+                                    className="bg-sky-500 text-white px-8 py-4 rounded-2xl font-black hover:bg-sky-600 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-xl shadow-sky-200 dark:shadow-none uppercase tracking-widest text-sm"
                                 >
                                     <Save size={20} />
-                                    Guardar Cambios
+                                    Guardar Progreso
                                 </button>
                             </div>
                         </div>

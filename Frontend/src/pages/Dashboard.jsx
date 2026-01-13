@@ -13,16 +13,16 @@ import HorarioVisualizer from "../components/HorarioVisualizer";
 import API_URL from "../api/apiConfig";
 
 const StatCard = ({ title, value, subtitle, icon: Icon, bgClass, iconClass, subtitleClass }) => (
-  <div className={`backdrop-blur-xl border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden ${bgClass}`}>
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 ${iconClass}`}>
-        <Icon size={24} className="text-slate-700 dark:text-current" />
+  <div className={`backdrop-blur-xl border rounded-2xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 group relative overflow-hidden ${bgClass}`}>
+    <div className="flex justify-between items-start mb-3 md:mb-4">
+      <div className={`p-2.5 md:p-3 rounded-xl bg-white/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 ${iconClass}`}>
+        <Icon size={20} className="md:w-6 md:h-6 text-slate-700 dark:text-current" />
       </div>
-      {subtitle && <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${subtitleClass}`}>{subtitle}</span>}
+      {subtitle && <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${subtitleClass}`}>{subtitle}</span>}
     </div>
     <div>
-      <h3 className="text-3xl font-black text-slate-800 dark:text-slate-100 mb-1 tracking-tight group-hover:scale-105 transition-transform origin-left">{value}</h3>
-      <p className="text-slate-600 dark:text-slate-400 font-bold text-sm">{title}</p>
+      <h3 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mb-0.5 md:mb-1 tracking-tight group-hover:scale-105 transition-transform origin-left truncate">{value}</h3>
+      <p className="text-slate-600 dark:text-slate-400 font-bold text-xs md:text-sm">{title}</p>
     </div>
   </div>
 );
@@ -259,18 +259,18 @@ const Dashboard = () => {
     <div className="space-y-8 animate-fadeIn">
       {/* Header Section */}
       {/* Header Section */}
-      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/40 dark:border-slate-700/50 rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-100">
             Hola, {userData.nombre.split(" ")[0]} 👋
           </h1>
-          <p className="text-slate-600 dark:text-slate-300 mt-1 font-medium">
-            Aquí tienes el resumen de tu progreso académico actual.
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-300 mt-1 font-medium italic opacity-80">
+            "{userData.carrera}"
           </p>
         </div>
-        <div className="text-right hidden md:block">
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-bold bg-white/50 dark:bg-slate-900/50 px-3 py-1 rounded-lg">Ciclo 2026 - Semestre 1</p>
-          <p className="text-xs text-slate-400 font-mono mt-1 font-bold tracking-wider">{userData.carne}</p>
+        <div className="w-full md:w-auto flex flex-row md:flex-col justify-between items-center md:items-end gap-2 border-t md:border-t-0 pt-4 md:pt-0 border-slate-200 dark:border-slate-700">
+          <p className="text-[10px] md:text-sm text-slate-500 dark:text-slate-400 font-bold bg-slate-100 dark:bg-slate-900/50 px-2.5 py-1 md:px-3 rounded-lg">Ciclo 2026-1</p>
+          <p className="text-[10px] text-slate-400 font-mono font-bold tracking-wider">{userData.carne}</p>
         </div>
       </div>
 
@@ -335,15 +335,15 @@ const Dashboard = () => {
       </div>
 
       {/* Schedule Section */}
-      <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-soft-blue dark:border-slate-700 rounded-2xl p-8 shadow-inner transition-colors duration-300">
+      <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-soft-blue dark:border-slate-700 rounded-2xl p-5 md:p-8 shadow-inner transition-colors duration-300 overflow-hidden">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-pastel-blue-dark" />
-            Mi Horario Guardado
+          <h2 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-sky-500" />
+            <span className="truncate">Mi Horario</span>
           </h2>
           {horarioGuardado && (
-            <Link to="/horarios" className="text-sm font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors">
-              Ver completo <ChevronRight size={16} />
+            <Link to="/horarios" className="shrink-0 text-xs md:text-sm font-bold text-sky-600 dark:text-sky-400 hover:text-sky-700 flex items-center gap-1 transition-colors px-3 py-1.5 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
+              Ver todo <ChevronRight size={14} className="md:w-4 md:h-4" />
             </Link>
           )}
         </div>
@@ -391,17 +391,17 @@ const Dashboard = () => {
             )}
           </>
         ) : (
-          <div className="text-center py-12 px-6 border border-dashed border-soft-blue/50 rounded-xl">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-slate-300" />
+          <div className="text-center py-8 md:py-12 px-4 md:px-6 border border-dashed border-sky-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <Calendar className="w-6 h-6 md:w-8 md:h-8 text-slate-300" />
             </div>
-            <h3 className="text-lg font-medium text-slate-700 mb-2">No tienes un horario guardado</h3>
-            <p className="text-slate-500 max-w-md mx-auto mb-6">
-              Genera tu horario ideal utilizando nuestro asistente inteligente o créalo manualmente.
+            <h3 className="text-base md:text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">No hay horario guardado</h3>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">
+              Genera tu horario ideal utilizando nuestro asistente inteligente.
             </p>
             <Link
               to="/horarios"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-800 dark:bg-sky-600 text-white text-sm rounded-xl font-bold hover:bg-slate-700 dark:hover:bg-sky-500 transition-all hover:shadow-lg active:scale-95"
             >
               Ir a Horarios
             </Link>

@@ -137,6 +137,7 @@ const InitialRegistration = ({ usuarioData, setUsuarioData, handleGuardarUsuario
                                     onBlur={handleBlur}
                                     value={localData.fechaNacimiento || ""}
                                 />
+
                             ) : (
                                 <input
                                     name={field === "carné" ? "carne" : "nombre"}

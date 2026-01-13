@@ -398,29 +398,29 @@ const OptimizadorPromedio = () => {
 
       {/* Header Section */}
       {/* Header Section */}
-      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-white/40 dark:border-slate-700/50 relative overflow-hidden group">
+      <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-xl border border-white/40 dark:border-slate-700/50 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 dark:bg-slate-700/20 rounded-bl-full -mr-16 -mt-16 z-0" />
-        <div className="relative z-10 flex items-center gap-6">
-          <div className="p-4 bg-white/20 dark:bg-slate-700/40 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 dark:border-slate-600/50">
-            <Target size={40} className="text-sky-500 dark:text-sky-400" strokeWidth={1.5} />
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-4 md:gap-6 text-center md:text-left">
+          <div className="p-3 md:p-4 bg-white/20 dark:bg-slate-700/40 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 dark:border-slate-600/50">
+            <Target size={32} className="text-sky-500 dark:text-sky-400 md:w-10 md:h-10" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">Optimizador de Promedio</h1>
-            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">Define tu meta académica y nosotros calculamos la estrategia perfecta.</p>
+            <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-1 md:mb-2">Optimizador de Promedio</h1>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-lg">Define tu meta académica y nosotros calculamos la estrategia perfecta.</p>
           </div>
-          <button
-            onClick={() => setMostrarAyuda(true)}
-            className="ml-auto p-3 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-all active:scale-95 border border-slate-200 dark:border-slate-600"
-            title="¿Cómo funciona?"
-          >
-            <HelpCircle size={24} />
-          </button>
         </div>
+        <button
+          onClick={() => setMostrarAyuda(true)}
+          className="absolute top-4 right-4 p-2 md:p-3 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-all active:scale-95 border border-slate-200 dark:border-slate-600 z-20"
+          title="¿Cómo funciona?"
+        >
+          <HelpCircle size={20} className="md:w-[24px] md:h-[24px]" />
+        </button>
       </div>
 
       {/* Navigation Tabs */}
       {/* Navigation Tabs */}
-      <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl w-fit border border-slate-200/50 dark:border-slate-700/50">
+      <div className="flex p-1 bg-slate-100/80 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl w-full md:w-fit border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto">
         {[
           { id: "calculadora", label: "Calculadora de Notas", icon: Calculator },
           { id: "escenarios", label: "Simulador de Escenarios", icon: Sparkles },
@@ -428,36 +428,36 @@ const OptimizadorPromedio = () => {
           <button
             key={tab.id}
             onClick={() => setVistaActiva(tab.id)}
-            className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold transition-all text-sm uppercase tracking-wider ${vistaActiva === tab.id
-              ? "bg-white dark:bg-white text-slate-900 dark:text-slate-900 shadow-lg dark:shadow-none ring-1 ring-slate-200 dark:ring-slate-400 transform scale-105"
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 md:gap-3 px-4 py-3 md:px-8 md:py-4 rounded-xl font-bold transition-all text-xs md:text-sm uppercase tracking-wider whitespace-nowrap ${vistaActiva === tab.id
+              ? "bg-white dark:bg-white text-slate-900 dark:text-slate-900 shadow-lg dark:shadow-none ring-1 ring-slate-200 dark:ring-slate-400 transform scale-100 md:scale-105"
               : "text-slate-500 dark:text-slate-200 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
               }`}
           >
-            <tab.icon size={18} className={vistaActiva === tab.id ? "text-emerald-500 dark:text-emerald-400" : ""} />
+            <tab.icon size={16} className={`${vistaActiva === tab.id ? "text-emerald-500 dark:text-emerald-400" : ""} md:w-[18px] md:h-[18px]`} />
             {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
         {/* Left Column: Input (8/12) */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-6 md:space-y-8">
 
 
 
           {/* Cursos Actuales & Meta */}
-          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-8 border border-white/40 dark:border-slate-700/50 shadow-lg relative overflow-hidden">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 border border-white/40 dark:border-slate-700/50 shadow-lg relative overflow-hidden">
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
-                <PlusCircle className="text-emerald-500" size={28} />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+              <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 md:gap-3">
+                <PlusCircle className="text-emerald-500 md:w-[28px] md:h-[28px]" size={24} />
                 Cursos Actuales & Meta
               </h2>
 
               {/* BOTÓN MÁGICO DE IMPORTAR */}
               <button
                 onClick={cargarDesdeHorario}
-                className="flex items-center gap-2 px-5 py-2.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 rounded-xl hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all font-bold text-xs border border-sky-100 dark:border-sky-800 hover:shadow-sm"
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 rounded-xl hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all font-bold text-xs border border-sky-100 dark:border-sky-800 hover:shadow-sm"
                 title="Importar cursos de tu Horario Guardado"
               >
                 <Download size={16} />
@@ -465,7 +465,7 @@ const OptimizadorPromedio = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-6 md:mb-8">
               {/* Search */}
               <div className="space-y-3">
                 <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">Agregar Curso Manualmente</p>
@@ -546,18 +546,18 @@ const OptimizadorPromedio = () => {
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
               <button
                 onClick={vistaActiva === "calculadora" ? calcularNotasNecesarias : simularEscenarios}
                 disabled={loading}
-                className="flex-1 bg-sky-600 dark:bg-sky-500 text-white py-3.5 rounded-xl font-black text-sm hover:bg-sky-700 dark:hover:bg-sky-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-sky-200 dark:shadow-sky-900/30 hover:-translate-y-1 active:scale-95 group uppercase tracking-wider"
+                className="flex-1 bg-sky-600 dark:bg-sky-500 text-white py-3 md:py-3.5 rounded-xl font-black text-sm hover:bg-sky-700 dark:hover:bg-sky-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-sky-200 dark:shadow-sky-900/30 hover:-translate-y-1 active:scale-95 group uppercase tracking-wider"
               >
                 {loading ? <Loader2 className="animate-spin" size={18} /> : (vistaActiva === "calculadora" ? <Calculator size={18} className="group-hover:rotate-12 transition-transform" /> : <Sparkles size={18} className="group-hover:scale-110 transition-transform" />)}
                 {vistaActiva === "calculadora" ? "Calcular Notas" : "Simular Escenarios"}
               </button>
               <button
                 onClick={limpiarTodo}
-                className="px-8 bg-white dark:bg-slate-700/50 border-2 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 rounded-2xl transition-all shadow-sm"
+                className="px-8 py-3 md:py-0 bg-white dark:bg-slate-700/50 border-2 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 dark:hover:border-red-800 rounded-2xl transition-all shadow-sm flex items-center justify-center"
                 title="Limpiar todo"
               >
                 <Trash2 size={24} />
@@ -567,17 +567,17 @@ const OptimizadorPromedio = () => {
 
           {/* Visualization Charts */}
           {(resultado || escenarios) && (
-            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-8 border border-white/40 dark:border-slate-700/50 shadow-xl animate-fadeIn">
-              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-3">
-                <TrendingUp className="text-emerald-500" size={28} />
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 border border-white/40 dark:border-slate-700/50 shadow-xl animate-fadeIn">
+              <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 md:mb-8 flex items-center gap-2 md:gap-3">
+                <TrendingUp className="text-emerald-500 md:w-[28px] md:h-[28px]" size={24} />
                 Análisis Proyectado
               </h2>
-              <div className="h-[360px] w-full">
+              <div className="h-[250px] md:h-[360px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   {vistaActiva === "calculadora" && graficoNotas ? (
                     <BarChart data={graficoNotas}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="curso" tick={{ fontSize: 11, fontWeight: 800, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
+                      <XAxis dataKey="curso" tick={{ fontSize: 10, fontWeight: 800, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} interval={0} />
                       <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b', fontWeight: 700 }} axisLine={false} tickLine={false} />
                       <Tooltip
                         cursor={{ fill: '#f8fafc' }}
@@ -610,14 +610,14 @@ const OptimizadorPromedio = () => {
         <div className="lg:col-span-4 space-y-8">
           {/* Promedio Actual Card */}
           {promedioActual && (
-            <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-3xl p-8 shadow-xl shadow-sky-200 relative overflow-hidden group text-white">
+            <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-xl shadow-sky-200 relative overflow-hidden group text-white">
               <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors" />
-              <h3 className="text-[10px] font-black text-sky-100 uppercase tracking-[0.2em] mb-6 relative">Promedio de Cierre</h3>
-              <div className="flex items-baseline gap-1 relative mb-6">
-                <span className="text-7xl font-black tracking-tighter">{Math.round(parseFloat(promedioActual.promedio))}</span>
-                <span className="text-2xl font-bold text-sky-200">%</span>
+              <h3 className="text-[9px] md:text-[10px] font-black text-sky-100 uppercase tracking-[0.2em] mb-4 md:mb-6 relative">Promedio de Cierre</h3>
+              <div className="flex items-baseline gap-1 relative mb-4 md:mb-6">
+                <span className="text-5xl md:text-7xl font-black tracking-tighter">{Math.round(parseFloat(promedioActual.promedio))}</span>
+                <span className="text-xl md:text-2xl font-bold text-sky-200">%</span>
               </div>
-              <div className="flex gap-4 border-t border-white/20 pt-6">
+              <div className="flex gap-2 md:gap-4 border-t border-white/20 pt-4 md:pt-6">
                 <div className="flex-1">
                   <p className="text-[9px] font-black text-sky-100 uppercase tracking-widest">CRÉDITOS</p>
                   <p className="text-xl font-black">{promedioActual.creditos_totales || "0"}</p>
@@ -637,8 +637,8 @@ const OptimizadorPromedio = () => {
           )}
 
           {/* Results Breakdown */}
-          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-8 border border-white/40 dark:border-slate-700/50 shadow-xl">
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+          <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 border border-white/40 dark:border-slate-700/50 shadow-xl">
+            <h2 className="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100 mb-4 md:mb-6 flex items-center gap-2">
               <TrendingUp className="text-emerald-500" size={24} />
               Resultados
             </h2>
@@ -777,60 +777,58 @@ const OptimizadorPromedio = () => {
       {/* Help Modal */}
       {mostrarAyuda && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl p-8 max-w-3xl w-full shadow-2xl relative border border-white/50 dark:border-slate-700/50 animate-scaleIn">
+          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl md:rounded-3xl p-4 md:p-8 max-w-3xl w-full shadow-2xl relative border border-white/50 dark:border-slate-700/50 animate-scaleIn overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setMostrarAyuda(false)}
-              className="absolute top-6 right-6 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all"
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all z-10"
             >
               <X size={24} />
             </button>
 
-            <div className="mb-8">
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                <Info className="text-emerald-500" size={32} />
+            <div className="mb-6 md:mb-8 pr-8">
+              <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                <Info className="text-emerald-500 shrink-0" size={32} />
                 Guía de Funcionalidades
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Aprende a sacar el máximo provecho de nuestras herramientas de predicción.</p>
+              <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-medium mt-2">Aprende a sacar el máximo provecho de nuestras herramientas de predicción.</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
               {/* Calculadora de Notas */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
                 <div className="w-12 h-12 bg-white dark:bg-slate-700/50 rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-600">
                   <Calculator className="text-sky-500 dark:text-sky-400" size={24} />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Calculadora de Notas</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-4">
-                  Define una <strong>meta de promedio</strong> exacta y el sistema calculará qué nota mínima necesitas en cada curso actual para lograrla.
+                <h3 className="text-lg font-black text-slate-800 dark:text-white mb-2">Calculadora de Notas</h3>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                  Define un promedio objetivo global (ej. 85 pts) y el sistema calculará exactamente cuánto necesitas sacar en cada curso actual para lograrlo, considerando los créditos.
                 </p>
-                <div className="bg-sky-50 dark:bg-sky-900/20 p-3 rounded-xl border border-sky-100 dark:border-sky-800/30">
-                  <p className="text-xs text-sky-800 dark:text-sky-300 font-bold">
-                    💡 <span className="underline decoration-sky-300 decoration-2 underline-offset-2">Tip:</span> Úsalo al inicio del semestre para planificar tu esfuerzo.
-                  </p>
+                <div className="flex gap-2 text-xs font-bold text-sky-600 dark:text-sky-400">
+                  <span className="bg-sky-100 dark:bg-sky-900/30 px-2 py-1 rounded">Inputs: Meta %</span>
+                  <span className="bg-sky-100 dark:bg-sky-900/30 px-2 py-1 rounded">Output: Notas/Curso</span>
                 </div>
               </div>
 
-              {/* Simulador de Escenarios */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
+              {/* Simulador */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
                 <div className="w-12 h-12 bg-white dark:bg-slate-700/50 rounded-xl flex items-center justify-center shadow-sm mb-4 border border-slate-100 dark:border-slate-600">
-                  <Sparkles className="text-blue-500 dark:text-blue-400" size={24} />
+                  <Sparkles className="text-amber-500" size={24} />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Simulador de Escenarios</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mb-4">
-                  Proyecta tu promedio final en <strong>4 situaciones hipotéticas</strong>, desde aprobar con la mínima hasta un rendimiento perfecto.
+                <h3 className="text-lg font-black text-slate-800 dark:text-white mb-2">Simulador de Escenarios</h3>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                  Proyecta tu promedio final bajo diferentes supuestos de rendimiento (Pesimista, Realista, Optimista, Perfecto) sin necesidad de ingresar una meta específica.
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                  <p className="text-xs text-blue-800 dark:text-blue-300 font-bold">
-                    🔮 <span className="underline decoration-blue-300 decoration-2 underline-offset-2">Tip:</span> Ideal para conocer tus límites superior e inferior rápidamente.
-                  </p>
+                <div className="flex gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+                  <span className="bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded">Automático</span>
+                  <span className="bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded">4 Proyecciones</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+            <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end">
               <button
                 onClick={() => setMostrarAyuda(false)}
-                className="px-6 py-3 bg-slate-900 dark:bg-indigo-600 text-white font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all hover:-translate-y-1 shadow-lg"
+                className="w-full md:w-auto px-6 py-3 bg-slate-900 dark:bg-indigo-600 text-white font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all hover:-translate-y-1 shadow-lg"
               >
                 ¡Entendido!
               </button>

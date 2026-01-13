@@ -57,6 +57,7 @@ const ChatbotAcademico = () => {
         return { current: 0, limit: 5 };
     });
     const [limiteAlcanzado, setLimiteAlcanzado] = useState(false);
+    const [mostrarMenuMovil, setMostrarMenuMovil] = useState(false);
     const mensajesContainerRef = useRef(null);
 
     const obtenerUsuarioActivo = () => {
@@ -294,42 +295,49 @@ const ChatbotAcademico = () => {
     ];
 
     return (
-        <div className="animate-fadeIn w-full max-w-[1600px] mx-auto h-[calc(100vh-140px)] min-h-[600px] grid grid-cols-1 lg:grid-cols-4 gap-6 p-4">
+        <div className="animate-fadeIn w-full max-w-[1600px] mx-auto h-[calc(100dvh-110px)] lg:h-[calc(100vh-140px)] min-h-[500px] grid grid-cols-1 lg:grid-cols-4 gap-6 p-2 md:p-4">
 
             {/* --- COLUMN 1: Main Chat Area (3/4 width on large screens) --- */}
-            <div className="lg:col-span-3 flex flex-col h-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl overflow-hidden relative transition-all duration-300">
+            <div className="lg:col-span-3 flex flex-col h-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl overflow-hidden relative transition-all duration-300">
 
                 {/* Chat Header */}
-                <div className="p-5 border-b border-white/40 dark:border-slate-700/50 flex items-center justify-between bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-sky-500 rounded-2xl text-white shadow-lg shadow-sky-500/30">
-                            <Bot size={24} />
+                <div className="p-3 md:p-5 border-b border-white/40 dark:border-slate-700/50 flex items-center justify-between bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 md:p-3 bg-sky-500 rounded-xl md:rounded-2xl text-white shadow-lg shadow-sky-500/30">
+                            <Bot size={20} className="md:w-6 md:h-6" />
                         </div>
-                        <div>
-                            <h1 className="text-xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-                                Asistente Académico
-                                <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] rounded-full font-bold uppercase tracking-wider border border-emerald-200 dark:border-emerald-800">Online</span>
+                        <div className="flex flex-col">
+                            <h1 className="text-base md:text-xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                                Asistente
+                                <span className="hidden sm:inline"> Académico</span>
+                                <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[9px] md:text-[10px] rounded-full font-bold uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 shadow-sm">Online</span>
                             </h1>
-                            <div className="flex items-center gap-2">
-                                <p className="text-slate-500 dark:text-slate-400 font-medium text-xs">Resuelvo tus dudas sobre el pensum</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <p className="hidden xs:block text-slate-500 dark:text-slate-400 font-medium text-[10px] md:text-xs">Resuelvo tus dudas del pensum</p>
                                 {usageInfo.limit < 100 && (
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${usageInfo.current >= usageInfo.limit ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'}`}>
-                                        {usageInfo.current}/{usageInfo.limit} hoy
+                                    <span className={`text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${usageInfo.current >= usageInfo.limit ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'}`}>
+                                        {usageInfo.current}/{usageInfo.limit}
                                     </span>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                         {mensajes.length > 1 && (
                             <button
                                 onClick={() => setMostrarModalLimpiar(true)}
-                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all"
                                 title="Limpiar Chat"
                             >
                                 <Trash2 size={20} />
                             </button>
                         )}
+                        <button
+                            onClick={() => setMostrarMenuMovil(!mostrarMenuMovil)}
+                            className="lg:hidden p-2 text-sky-600 bg-sky-50 dark:bg-sky-900/20 rounded-xl border border-sky-100 dark:border-sky-800/50"
+                        >
+                            <Sparkles size={20} />
+                        </button>
                     </div>
                 </div>
 
@@ -343,7 +351,7 @@ const ChatbotAcademico = () => {
                                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shadow-sm shrink-0 ${esBot ? 'bg-sky-500 text-white' : 'bg-slate-800 dark:bg-slate-700 text-white'}`}>
                                     {esBot ? <Bot size={18} /> : <User size={18} />}
                                 </div>
-                                <div className={`max-w-[85%] md:max-w-[75%] px-5 py-3.5 rounded-2xl relative group shadow-sm text-sm md:text-base leading-relaxed ${esBot
+                                <div className={`max-w-[85%] md:max-w-[75%] px-4 py-2.5 md:px-5 md:py-3.5 rounded-2xl relative group shadow-sm text-sm md:text-base leading-relaxed ${esBot
                                     ? 'bg-white dark:!bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-tl-none'
                                     : 'bg-sky-600 dark:bg-sky-600 text-white rounded-tr-none shadow-sky-200/50 dark:shadow-none'
                                     }`}>
@@ -384,8 +392,8 @@ const ChatbotAcademico = () => {
                 </div>
 
                 {/* Input Container */}
-                <div className="p-4 md:p-6 bg-white dark:!bg-slate-800 border-t border-slate-100 dark:border-slate-700">
-                    <form onSubmit={enviarMensaje} className="relative flex gap-3 max-w-4xl mx-auto">
+                <div className="p-3 md:p-6 bg-white dark:!bg-slate-800 border-t border-slate-100 dark:border-slate-700">
+                    <form onSubmit={enviarMensaje} className="relative flex gap-2 md:gap-3 max-w-4xl mx-auto">
                         <input
                             type="text"
                             value={inputMensaje}
@@ -393,16 +401,16 @@ const ChatbotAcademico = () => {
                                 setInputMensaje(e.target.value);
                                 setCharCount(e.target.value.length);
                             }}
-                            placeholder="Escribe tu pregunta sobre cursos o requisitos..."
-                            className="flex-1 pl-6 pr-4 py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900 focus:border-sky-400 dark:focus:border-sky-500 outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all shadow-inner"
+                            placeholder="Escribe tu pregunta..."
+                            className="flex-1 pl-4 md:pl-6 pr-4 py-3 md:py-4 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900 focus:border-sky-400 dark:focus:border-sky-500 outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all shadow-inner text-sm md:text-base"
                             disabled={cargando}
                         />
                         <button
                             type="submit"
                             disabled={cargando || !inputMensaje.trim()}
-                            className="px-6 md:px-8 bg-sky-600 dark:bg-sky-500 text-white rounded-2xl font-bold hover:bg-sky-700 dark:hover:bg-sky-600 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-sky-200 dark:shadow-sky-900/30 active:scale-95 group"
+                            className="px-4 md:px-8 bg-sky-600 dark:bg-sky-500 text-white rounded-xl md:rounded-2xl font-bold hover:bg-sky-700 dark:hover:bg-sky-600 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-sky-200 dark:shadow-sky-900/30 active:scale-95 group"
                         >
-                            {cargando ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} className="group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
+                            {cargando ? <Loader2 size={20} className="md:w-6 md:h-6 animate-spin" /> : <Send size={20} className="md:w-6 md:h-6 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />}
                         </button>
                     </form>
                     <div className="flex justify-between items-center max-w-4xl mx-auto mt-2 px-2">
@@ -431,7 +439,25 @@ const ChatbotAcademico = () => {
             </div>
 
             {/* --- COLUMN 2: Widgets & Info (1/4 width on large screens) --- */}
-            <div className="lg:col-span-1 flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar pb-4">
+            <div className={`
+                ${mostrarMenuMovil ? 'fixed inset-0 z-50 bg-slate-50 dark:bg-slate-900 p-6 flex' : 'hidden'}
+                lg:col-span-1 lg:flex lg:static lg:bg-transparent lg:p-0 lg:shadow-none lg:border-none lg:z-0
+                flex-col gap-4 md:gap-6 h-full overflow-y-auto custom-scrollbar pb-4
+            `}>
+
+                {/* Mobile Header for Widgets */}
+                <div className="lg:hidden flex items-center justify-between mb-2">
+                    <h3 className="font-black text-xl text-slate-800 dark:text-white flex items-center gap-2">
+                        <Sparkles size={24} className="text-sky-500" />
+                        Herramientas
+                    </h3>
+                    <button
+                        onClick={() => setMostrarMenuMovil(false)}
+                        className="p-2 bg-white dark:bg-slate-800 text-slate-400 rounded-full shadow-sm border border-slate-200 dark:border-slate-700"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
 
                 {/* Widget 1: Suggestions */}
                 {/* Widget 1: Suggestions */}
@@ -444,7 +470,10 @@ const ChatbotAcademico = () => {
                         {preguntasSugeridas.map((pregunta, idx) => (
                             <button
                                 key={idx}
-                                onClick={() => sugerirPregunta(pregunta)}
+                                onClick={() => {
+                                    sugerirPregunta(pregunta);
+                                    setMostrarMenuMovil(false);
+                                }}
                                 className="text-left px-3 py-2 text-xs bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600/50 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-sky-50 dark:hover:bg-sky-900/30 hover:text-sky-700 dark:hover:text-sky-300 hover:border-sky-200 dark:hover:border-sky-800 transition-all font-medium active:scale-98"
                             >
                                 {pregunta}

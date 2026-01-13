@@ -65,7 +65,7 @@ class ChatbotAcademico:
                     'hey', 'qué tal', 'saludos', 'hola bot', 'hi'
                 ],
                 'responses': [
-                    '👋 ¡Hola! Soy tu asistente académico de SIOA. ¿En qué puedo ayudarte?',
+                    '👋 ¡Hola! Soy tu asistente académico de KAI. ¿En qué puedo ayudarte?',
                     '😊 ¡Bienvenido! Puedo ayudarte con información sobre cursos, prerrequisitos y más. ¿Qué necesitas?',
                     '🎓 ¡Hola! Estoy aquí para resolver tus dudas académicas. ¿Qué deseas consultar?'
                 ]
@@ -1027,7 +1027,7 @@ if __name__ == "__main__":
     chatbot = crear_chatbot()
     
     print("\n" + "="*60)
-    print("CHATBOT ACADÉMICO SIOA - DEMO")
+    print("CHATBOT ACADÉMICO KAI - DEMO")
     print("="*60)
     print("Escribe 'salir' para terminar\n")
     

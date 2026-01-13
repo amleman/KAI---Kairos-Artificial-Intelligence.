@@ -203,11 +203,11 @@ const Perfil = () => {
     }
 
     return (
-        <div className="animate-fadeIn space-y-8 pb-12">
+        <div className="animate-fadeIn space-y-4 md:space-y-8 pb-12 p-2 md:p-4 max-w-[1600px] mx-auto">
             {/* Profile Header Card */}
-            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+            <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl border border-white/40 dark:border-slate-700/50 shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
                 {/* Banner */}
-                <div className="h-64 bg-slate-800 relative overflow-hidden">
+                <div className="h-40 md:h-64 bg-slate-800 relative overflow-hidden">
                     {formData.foto_banner ? (
                         <img src={formData.foto_banner.startsWith('http') ? formData.foto_banner : `${API_URL}${formData.foto_banner}`} alt="Banner" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700" />
                     ) : (
@@ -216,48 +216,48 @@ const Perfil = () => {
                     {editando && (
                         <button
                             onClick={() => fileInputBanner.current.click()}
-                            className="absolute top-6 right-6 bg-black/50 backdrop-blur-md text-white p-3 rounded-2xl hover:bg-black/70 transition-all shadow-lg hover:scale-105"
+                            className="absolute top-4 right-4 md:top-6 md:right-6 bg-black/50 backdrop-blur-md text-white p-2 md:p-3 rounded-xl md:rounded-2xl hover:bg-black/70 transition-all shadow-lg hover:scale-105"
                         >
-                            <Camera size={20} />
+                            <Camera size={18} className="md:w-5 md:h-5" />
                         </button>
                     )}
                     <input type="file" ref={fileInputBanner} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'banner')} />
                 </div>
 
-                <div className="px-10 pb-10">
-                    <div className="flex flex-col md:flex-row items-center md:items-end -mt-20 relative z-10 gap-8">
+                <div className="px-4 pb-6 md:px-10 md:pb-10">
+                    <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 md:-mt-20 relative z-10 gap-4 md:gap-8">
                         {/* Avatar */}
                         <div className="relative group/avatar">
-                            <div className="w-44 h-44 rounded-full border-[6px] border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center transition-transform hover:scale-105 duration-500">
+                            <div className="w-32 h-32 md:w-44 md:h-44 rounded-full border-[4px] md:border-[6px] border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center transition-transform hover:scale-105 duration-500">
                                 {formData.foto_perfil ? (
                                     <img src={formData.foto_perfil.startsWith('http') ? formData.foto_perfil : `${API_URL}${formData.foto_perfil}`} alt="Perfil" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-sky-50 flex items-center justify-center text-sky-400">
-                                        <User size={80} strokeWidth={1} />
+                                        <User size={60} className="md:w-20 md:h-20" strokeWidth={1} />
                                     </div>
                                 )}
                             </div>
                             {editando && (
                                 <button
                                     onClick={() => fileInputPerfil.current.click()}
-                                    className="absolute bottom-2 right-2 bg-slate-900 text-white p-3 rounded-full shadow-xl hover:scale-110 transition-all border-4 border-white"
+                                    className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-slate-900 text-white p-2 md:p-3 rounded-full shadow-xl hover:scale-110 transition-all border-2 md:border-4 border-white"
                                 >
-                                    <Camera size={20} />
+                                    <Camera size={16} className="md:w-5 md:h-5" />
                                 </button>
                             )}
                             <input type="file" ref={fileInputPerfil} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, 'perfil')} />
                         </div>
 
                         {/* Name & Title */}
-                        <div className="flex-1 text-center md:text-left mb-2">
-                            <h1 className="text-4xl lg:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tighter mb-2">
+                        <div className="flex-1 text-center md:text-left mb-2 w-full">
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-slate-100 tracking-tighter mb-1 md:mb-2 truncate">
                                 {formData.nombre || 'Usuario'}
                             </h1>
-                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4">
-                                <span className="text-xl font-bold text-slate-500 dark:text-slate-400">@{usuario?.usuario}</span>
+                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 justify-center md:justify-start">
+                                <span className="text-base md:text-xl font-bold text-slate-500 dark:text-slate-400">@{usuario?.usuario}</span>
                                 <div className="hidden md:block w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                                <div className="bg-slate-100 dark:bg-slate-700/50 px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-600">
-                                    <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{formData.carrera}</span>
+                                <div className="bg-slate-100 dark:bg-slate-700/50 px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-600 max-w-full">
+                                    <span className="text-[10px] md:text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest truncate block max-w-[200px] md:max-w-none">{formData.carrera}</span>
                                 </div>
                             </div>
                         </div>
@@ -265,13 +265,13 @@ const Perfil = () => {
                         {/* Actions */}
                         <div className="md:mb-4 w-full md:w-auto">
                             {editando ? (
-                                <div className="flex gap-3 justify-center">
-                                    <button onClick={() => setEditando(false)} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl border border-slate-200 font-bold hover:bg-slate-200 transition-all">Cancelar</button>
-                                    <button onClick={handleGuardar} disabled={guardando} className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-1">{guardando ? 'Guardando...' : 'Guardar Cambios'}</button>
+                                <div className="flex gap-2 md:gap-3 justify-center">
+                                    <button onClick={() => setEditando(false)} className="flex-1 md:flex-none px-4 py-2.5 md:px-6 md:py-3 bg-slate-100 text-slate-600 rounded-xl border border-slate-200 font-bold hover:bg-slate-200 transition-all text-sm md:text-base">Cancelar</button>
+                                    <button onClick={handleGuardar} disabled={guardando} className="flex-1 md:flex-none px-6 py-2.5 md:px-8 md:py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all hover:-translate-y-1 text-sm md:text-base">{guardando ? 'Guardando...' : 'Guardar'}</button>
                                 </div>
                             ) : (
-                                <button onClick={() => setEditando(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-sky-500 text-white rounded-xl font-bold hover:bg-sky-600 shadow-xl shadow-sky-200 hover:-translate-y-1 transition-all group/btn">
-                                    <Edit3 size={20} className="group-hover/btn:rotate-12 transition-transform" />
+                                <button onClick={() => setEditando(true)} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-sky-500 text-white rounded-xl font-bold hover:bg-sky-600 shadow-xl shadow-sky-200 hover:-translate-y-1 transition-all group/btn text-sm md:text-base">
+                                    <Edit3 size={18} className="md:w-5 md:h-5 group-hover/btn:rotate-12 transition-transform" />
                                     Editar Perfil
                                 </button>
                             )}
@@ -280,16 +280,16 @@ const Perfil = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8">
                 {/* Information Column (8/12) */}
-                <div className="lg:col-span-8 space-y-8">
+                <div className="lg:col-span-8 space-y-4 md:space-y-8">
                     {/* Personal Info */}
-                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-10 border border-white/40 dark:border-slate-700/50 shadow-lg relative overflow-hidden hover:shadow-xl transition-shadow duration-500">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 dark:bg-slate-700/20 rounded-bl-full -mr-16 -mt-16 z-0" />
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-8 flex items-center gap-3 relative z-10">
-                            <Shield className="text-slate-900 dark:text-slate-100" /> Información Personal
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-5 md:p-10 border border-white/40 dark:border-slate-700/50 shadow-lg relative overflow-hidden hover:shadow-xl transition-shadow duration-500">
+                        <div className="absolute top-0 right-0 w-40 h-40 md:w-64 md:h-64 bg-slate-50 dark:bg-slate-700/20 rounded-bl-full -mr-10 -mt-10 md:-mr-16 md:-mt-16 z-0" />
+                        <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 mb-6 md:mb-8 flex items-center gap-2 md:gap-3 relative z-10">
+                            <Shield className="text-slate-900 dark:text-slate-100 w-5 h-5 md:w-6 md:h-6" /> Información Personal
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 relative z-10">
                             {[
                                 { label: 'Nombre Completo', icon: User, name: 'nombre', value: formData.nombre, color: 'text-sky-500' },
                                 { label: 'Carné / ID', icon: TrendingUp, name: 'carne', value: formData.carne, disabled: true, color: 'text-emerald-500' },
@@ -297,16 +297,16 @@ const Perfil = () => {
                                 { label: 'Fecha de Nacimiento', icon: Calendar, name: 'fecha_nacimiento', value: formData.fecha_nacimiento, type: 'date', color: 'text-rose-500' },
                             ].map((field) => (
                                 <div key={field.name} className="space-y-2 group/input">
-                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">{field.label}</label>
+                                    <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">{field.label}</label>
                                     <div className="relative">
-                                        <field.icon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${editando && !field.disabled ? "text-slate-800" : field.color}`} size={20} />
+                                        <field.icon className={`absolute left-4 md:left-5 top-1/2 -translate-y-1/2 transition-colors ${editando && !field.disabled ? "text-slate-800" : field.color}`} size={18} className="md:w-5 md:h-5" />
                                         <input
                                             type={field.type || "text"}
                                             name={field.name}
                                             value={field.value}
                                             onChange={handleChange}
                                             disabled={field.disabled || !editando}
-                                            className={`w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all ${editando && !field.disabled
+                                            className={`w-full pl-11 md:pl-14 pr-4 md:pr-6 py-3 md:py-4 rounded-xl font-bold transition-all text-sm md:text-base ${editando && !field.disabled
                                                 ? "bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-500 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:border-slate-900 dark:focus:border-slate-400 focus:ring-0 shadow-inner"
                                                 : "bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default"
                                                 }`}
@@ -315,16 +315,16 @@ const Perfil = () => {
                                 </div>
                             ))}
                             <div className="md:col-span-2 space-y-2 group/input">
-                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">Carrera</label>
+                                <label className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 group-hover/input:text-slate-600 transition-colors">Carrera</label>
                                 <div className="relative">
-                                    <Book className="absolute left-5 top-1/2 -translate-y-1/2 text-amber-500" size={20} />
+                                    <Book className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-amber-500" size={18} className="md:w-5 md:h-5" />
                                     <input
                                         type="text"
                                         name="carrera"
                                         value={formData.carrera}
                                         onChange={handleChange}
                                         disabled={true}
-                                        className="w-full pl-14 pr-6 py-4 rounded-xl font-bold transition-all bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default shadow-sm"
+                                        className="w-full pl-11 md:pl-14 pr-4 md:pr-6 py-3 md:py-4 rounded-xl font-bold transition-all bg-slate-50 dark:bg-slate-700/30 border-transparent text-slate-500 dark:text-slate-400 cursor-default shadow-sm text-sm md:text-base"
                                     />
                                 </div>
                             </div>
@@ -332,18 +332,18 @@ const Perfil = () => {
                     </div>
 
                     {/* Radar Chart */}
-                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-3xl p-10 border border-white/40 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow duration-500">
-                        <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
-                                <Brain className="text-emerald-600" /> Análisis de Competencias
+                    <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-5 md:p-10 border border-white/40 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow duration-500">
+                        <div className="flex justify-between items-center mb-6 md:mb-10">
+                            <h2 className="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 md:gap-3">
+                                <Brain className="text-emerald-600 w-5 h-5 md:w-6 md:h-6" /> Análisis
                             </h2>
-                            <div className="flex items-center gap-2 px-4 py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
-                                <Zap size={14} className="text-emerald-600" />
-                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">AI Powered</span>
+                            <div className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 bg-emerald-50 rounded-full border border-emerald-100">
+                                <Zap size={12} className="text-emerald-600 md:w-3.5 md:h-3.5" />
+                                <span className="text-[9px] md:text-[10px] font-black text-emerald-700 uppercase tracking-tighter">AI Powered</span>
                             </div>
                         </div>
-                        <div className="flex flex-col xl:flex-row items-center gap-12">
-                            <div className="flex-1 w-full h-[320px]">
+                        <div className="flex flex-col xl:flex-row items-center gap-8 md:gap-12">
+                            <div className="flex-1 w-full h-[260px] md:h-[320px]">
                                 {radarData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
@@ -385,7 +385,7 @@ const Perfil = () => {
                 </div>
 
                 {/* Vertical Sidebar Column (4/12) */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-4 space-y-4 md:space-y-8">
                     {/* Plan / Subscription Card - MOVED TO TOP */}
                     {/* Plan / Subscription Card - COMPACT */}
                     <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-white/40 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-shadow duration-500 relative overflow-hidden">
