@@ -25,6 +25,8 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# Others
+guion_video_marketing.txt
 
 # Carpetas
 
