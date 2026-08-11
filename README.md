@@ -357,9 +357,8 @@ Frontend corriendo en `http://localhost:5173`
 
 ## 🤝 Contribuciones
 
-Este proyecto fue desarrollado como trabajo de graduación de Ingeniería en Sistemas de la USAC. Si eres estudiante de la facultad y quieres contribuir:
+Este proyecto fue desarrollado como trabajo independiente de la facultad de Ingeniería de la USAC. Si eres estudiante de la facultad y quieres contribuir:
 
-- 🐛 Reporta bugs en [Issues](https://github.com/tu-usuario/kai/issues)
 - 💡 Sugiere nuevas features
 - 📚 Ayuda a mejorar la documentación
 - 🎨 Propone mejoras de diseño
@@ -372,14 +371,6 @@ Este proyecto fue desarrollado con fines educativos y de ayuda social para la co
 
 ---
 
-## 🙏 Agradecimientos
-
-- **Facultad de Ingeniería USAC**: Por inspirar este proyecto ante la necesidad real de los estudiantes
-- **Comunidad estudiantil**: Por sus pruebas, feedback y sugerencias durante el desarrollo
-- **Google Cloud**: Por los créditos educativos para el despliegue en producción
-
----
-
 ## 📧 Contacto
 
 **¿Preguntas o sugerencias?**
@@ -387,7 +378,7 @@ Este proyecto fue desarrollado con fines educativos y de ayuda social para la co
 - 🌐 Demo: [kaiusac.netlify.app](https://kaiusac.netlify.app)
 - 📖 Documentación Backend: [Backend/](./Backend/)
 - 📖 Documentación Frontend: [Frontend/](./Frontend/)
-- 🐛 Issues: [GitHub Issues](https://github.com/tu-usuario/kai/issues)
+- 🌐 Correo: martin1aleman@proton.me 
 
 ---
 
