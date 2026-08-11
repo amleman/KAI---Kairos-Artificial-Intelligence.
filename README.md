@@ -8,25 +8,273 @@
 ![Google Cloud](https://img.shields.io/badge/Google_Cloud-Cloud_Run%20%7C%20Cloud_SQL-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)
 ![Deployed](https://img.shields.io/badge/Live-kaiusac.netlify.app-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)
 
-### 🎓 Tu Asistente Académico Inteligente para la USAC
+### 🎓 Your Intelligent Academic Assistant for University
 
-**Plataforma web con IA que automatiza la planificación académica universitaria: genera horarios sin choques, analiza carga académica y predice notas necesarias para alcanzar tu promedio objetivo.**
+**AI-powered web platform that automates university academic planning: generates conflict-free schedules, analyzes academic workload, and predicts the grades needed to reach your GPA goals.**
 
-[🚀 Demo en Vivo](https://kaiusac.netlify.app) · [📖 Documentación Backend](./Backend/) · [📖 Documentación Frontend](./Frontend/) · [🐛 Reportar Bug](https://github.com/tu-usuario/kai/issues)
+[🚀 Live Demo](https://kaiusac.netlify.app) · [📖 Backend Docs](./Backend/) · [📖 Frontend Docs](./Frontend/)
 
 </div>
 
 ---
 
-## 💭 La Historia detrás de KAI
+<div align="center">
 
-### El Problema
+**[🇬🧷 English](#english) | [🇪🇸 Español](#español)**
+
+</div>
+
+---
+
+<a id="english"></a>
+## 🇬🧷 English Version
+
+### 💭 The Story Behind KAI
+
+#### The Problem
+
+At the Faculty of Engineering of USAC (Universidad de San Carlos de Guatemala), every semester thousands of students face the same chaos: **the official course page only shows a giant table with 1000+ sections from all majors**, with no smart filters, no schedule generator, no way to visualize if your academic load is balanced.
+
+Students spend **hours manually** cross-referencing schedules in Excel, asking senior classmates, risking enrolling in "suicide schedules" with 3 difficult courses that lead to dropout. There's no tool to help them make informed decisions about their semester.
+
+#### The Solution
+
+**KAI was born as a response to this problem.** It's not just a technical project: it's a **social help tool** designed by students, for students.
+
+Imagine telling the system: *"I want to take these 6 courses, I work Mondays 2-6pm, and I want my schedule to have no conflicts"*. KAI generates **5 optimal options** in seconds, considering prerequisites, course difficulty, and your availability.
+
+Or asking: *"What grades do I need in my current courses to finish with an 85 GPA?"*. The system calculates exactly what you need in each course.
+
+Or simply asking an academic chatbot: *"What are the prerequisites for Compilers?"* and getting an instant answer, without searching through 200-page PDFs.
+
+**That's KAI.** Your intelligent companion to survive and thrive in engineering.
+
+---
+
+### 🎯 What Does KAI Solve?
+
+| Student Problem | KAI Solution | Technology |
+|-----------------|--------------|------------|
+| "I don't know which courses I can take together without conflicts" | **Schedule Generator** that creates 5 conflict-free options | Genetic Algorithms |
+| "I don't know if my course load is too difficult this semester" | **Academic Load Traffic Light** that classifies courses in Green/Yellow/Red | K-Means Clustering |
+| "I don't know what grades I need to reach my target GPA" | **GPA Optimizer** that calculates required grades course by course | Linear Optimization (SciPy) |
+| "I don't remember the prerequisites for this course" | **Academic Chatbot** that answers questions about the curriculum | TF-IDF + NLP |
+| "I don't know how much progress I've made in my major" | **Dashboard** with credits, GPA, progress, and next class | Interactive Visualization |
+
+---
+
+### ✨ Key Features
+
+#### 🧬 3 AI Engines
+
+**1. Academic Load Traffic Light (K-Means Clustering)**
+
+Automatically classifies each course in the curriculum into 3 difficulty levels using 4 features: credits, semester, prerequisites, and semantic keyword analysis. Alerts you if you're building a "suicide schedule".
+
+```
+Result: {
+  "traffic_light": "yellow",
+  "message": "Heavy Load: 2 difficult and several medium courses",
+  "courses_by_level": {1: 2, 2: 2, 3: 1}
+}
+```
+
+**2. Schedule Generator (Genetic Algorithms)**
+
+Evolutionary engine that generates optimal schedule combinations without conflicts. Evolves a population of 70 individuals over 30 generations with:
+- **Chromosome**: Array of packages (Theory + Lab) per course
+- **Fitness**: Score based on courses taken, strategic weight, user profile (relax/normal/tryhard)
+- **Selection**: Elitism (top 15 survive) + crossover + mutation
+- **Constraints**: 0 schedule conflicts, course limit based on GPA
+
+Integrates financial opportunity cost analysis: if you leave a critical course out, it shows how many months it could delay your graduation.
+
+**3. GPA Optimizer (Goal Seeking)**
+
+Calculates the minimum grades needed in current courses to reach a weighted target GPA. Uses constrained optimization (SciPy SLSQP):
+- **Objective function**: Minimize variance between grades (equitable distribution)
+- **Constraint**: Weighted sum ≥ required points
+- **Bounds**: Grades between 61 (pass) and 100
+- **Scenarios**: Pessimistic (61), Realistic (75), Optimistic (90), Perfect (100)
+
+#### 🤖 Academic Chatbot (Local NLP)
+
+Conversational assistant based on intents + TF-IDF + cosine similarity that operates 100% locally without external APIs:
+- Intent detection (15+ intents: prerequisites, credits, search, semester, etc.)
+- Entity extraction (course code or name)
+- Personalized context (user's approved courses history)
+- Multi-major support (10 engineering majors at USAC)
+
+#### 📊 Interactive Visualizations
+
+- **Recharts Charts**: Pie, Bar, Line, Radar, RadialBar charts
+- **SVG Force Graph**: Custom physics simulation (300 ticks) to visualize curriculum dependencies
+- **Three.js 3D Particles**: Landing page with animated canvas
+- **Weekly Calendar**: Absolute positioning by minutes (Mon-Sat)
+
+#### 🎨 Glassmorphism Design
+
+Modern design system with:
+- Cards with `backdrop-blur-xl` and semi-transparent borders
+- Full dark mode
+- Animations with Framer Motion
+- Mobile-first responsive
+
+#### 🔐 Security
+
+- XSS/SQLi validation on client and server
+- SHA-256 password hashing
+- Input sanitization
+- CORS configured
+- Rate limiting by plan (free/daily/premium)
+
+---
+
+### 🔥 Real Use Cases
+
+**Case 1: Student who works**
+
+*"I work Mondays 2-6pm. I want to take 6 courses without conflicting with my job."*
+
+**KAI:**
+1. Filters all sections that conflict with your work schedule
+2. Runs genetic algorithm with work constraint
+3. Generates 5 optimal options in seconds
+4. Shows financial analysis: if you leave a critical course, it tells you how many months it delays your graduation
+
+**Case 2: Student who wants to improve GPA**
+
+*"I have a 78 GPA. What do I need in my 4 current courses to finish with 85?"*
+
+**KAI:**
+1. Calculates your current weighted GPA
+2. Determines points needed to reach 85
+3. Uses linear optimization to distribute grades equitably
+4. Tells you: "You need 87 in Physics 2, 84 in Algebra, 86 in Programming 3, 85 in Ethics"
+5. Simulates scenarios: Pessimistic (61), Realistic (75), Optimistic (90), Perfect (100)
+
+**Case 3: Student who doesn't know what courses to take**
+
+*"I don't know if I can take Compilers, Networks, and Operating Systems together."*
+
+**KAI:**
+1. Verifies prerequisites for all 3 courses
+2. Classifies difficulty with K-Means: Compilers (Red), Networks (Yellow), Operating Systems (Red)
+3. Analyzes combination: "🔴 Heavy Load: 2 difficult courses and 1 medium. Requires a lot of discipline."
+4. Suggests: "Consider moving one of the Red courses to next semester."
+
+**Case 4: Student asking the chatbot**
+
+*"What are the prerequisites for Artificial Intelligence?"*
+
+**KAI (Chatbot):**
+1. Detects intent: `prerequisites`
+2. Extracts entity: `Artificial Intelligence` (code 0771)
+3. Searches knowledge base: "Programming 2, Data Structures, Logic"
+4. Responds: "📚 Artificial Intelligence (0771)\n📋 Prerequisites:\n  - 0147: Programming 2\n  - 0150: Data Structures\n  - 0112: Logic"
+
+---
+
+### 🏁 Quick Installation
+
+**Backend**
+
+```bash
+cd Backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python inicializar_db.py
+python main.py
+```
+
+Backend running at `http://localhost:8000`
+
+**Frontend**
+
+```bash
+cd Frontend
+npm install
+echo "VITE_API_URL=http://localhost:8000" > .env.local
+npm run dev
+```
+
+Frontend running at `http://localhost:5173`
+
+**Database**
+- **Development**: SQLite (automatic, `usuarios.db` file)
+- **Production**: PostgreSQL (Cloud SQL, configured with `DATABASE_URL`)
+
+---
+
+### 🎓 Subscription Model
+
+| Feature | Free | Day Pass (Q10/24h) | Premium (Q25/mo) |
+|---------|------|-------------------|-------------------|
+| AI Chatbot | 5/day | Unlimited | Unlimited |
+| Manual Generator | 3/semester | Unlimited | Unlimited |
+| AI Generator | No | Unlimited | Unlimited |
+| OCR (image scanning) | 1/month | Unlimited | Unlimited |
+| Curriculum Graph View | No | Yes | Yes |
+| Scenario Simulator | No | Yes | Yes |
+| PDF Export | No | Yes | Yes |
+
+---
+
+### 🌟 Highlights for Recruiters
+
+**Software Engineering**
+- **Full-Stack Architecture**: SPA Frontend + REST API Backend + integrated AI
+- **Cloud Native**: Deployed on Google Cloud Run (serverless, auto-scaling, containerized)
+- **CI/CD**: Frontend automatically deployed from GitHub to Netlify
+- **Dual Database**: SQLite (dev) / PostgreSQL (prod) with adapter pattern
+- **Security**: XSS/SQLi validation on client and server, password hashing, CORS, sanitization
+
+**Artificial Intelligence & Machine Learning**
+- **3 AI Engines**: K-Means Clustering, Genetic Algorithms, Linear Optimization
+- **Local NLP**: Chatbot with TF-IDF + cosine similarity (no external APIs)
+- **OCR**: Text extraction from images with Tesseract
+- **Predictive Analysis**: Goal seeking for grade prediction
+- **Force Simulation**: Interactive graph with custom physics (Coulomb + Hooke)
+
+**User Experience**
+- **Modern Design**: Glassmorphism, dark mode, fluid animations
+- **Responsive**: Mobile-first with adaptive layouts
+- **Data Visualization**: 6 types of interactive charts + 3D
+- **Performance**: Lazy loading, AI model caching, optimized polling
+- **Accessibility**: Validated forms, visual feedback, accessible modals
+
+**Scalability & Production**
+- **Serverless**: Auto-scaling from 0 to 3 instances based on demand
+- **Multi-tenant**: Support for multiple users with isolated data
+- **Rate Limiting**: Usage control by plan (free/daily/premium)
+- **Scalable Storage**: Google Cloud Storage for static files
+- **Monitoring**: Structured logs, global error handling
+
+---
+
+<div align="center">
+
+*Made with 💙 for USAC engineering students*
+
+*If this project helped you, consider giving it a ⭐*
+
+</div>
+
+---
+
+<a id="español"></a>
+## 🇪🇸 Versión en Español
+
+### 💭 La Historia detrás de KAI
+
+#### El Problema
 
 En la Facultad de Ingeniería de la USAC, cada semestre miles de estudiantes enfrentan el mismo caos: **la página oficial de cursos solo muestra una tabla gigante con +1000 secciones de todas las carreras**, sin filtros inteligentes, sin generador de horarios, sin forma de visualizar si tu carga académica es balanceada.
 
 Los estudiantes pasan **horas manualmente** cruzando horarios en Excel, preguntando a compañeros mayores, arriesgándose a inscribir "horarios suicidas" con 3 cursos difíciles que los llevan al abandono. No hay herramienta que les ayude a tomar decisiones informadas sobre su semestre.
 
-### La Solución
+#### La Solución
 
 **KAI nació como respuesta a este problema.** No es solo un proyecto técnico: es una herramienta de **ayuda social** diseñada por estudiantes, para estudiantes.
 
@@ -40,7 +288,7 @@ O simplemente preguntar a un chatbot académico: *"¿Qué prerrequisitos tiene C
 
 ---
 
-## 🎯 ¿Qué Resuelve KAI?
+### 🎯 ¿Qué Resuelve KAI?
 
 | Problema del Estudiante | Solución KAI | Tecnología |
 |-------------------------|--------------|------------|
@@ -52,67 +300,32 @@ O simplemente preguntar a un chatbot académico: *"¿Qué prerrequisitos tiene C
 
 ---
 
-## ✨ Características Principales
+### 🔥 Casos de Uso Reales
 
-### 🧬 3 Motores de Inteligencia Artificial
+**Caso 1: Estudiante que trabaja**
 
-#### 1. Semáforo de Carga Académica (K-Means Clustering)
-Clasifica automáticamente cada curso del pensum en 3 niveles de dificultad usando 4 features: créditos, semestre, prerrequisitos y análisis semántico de palabras clave. Te alerta si estás armando un "horario suicida".
+*"Trabajo los lunes de 2-6pm. Quiero llevar 6 cursos sin que se choquen con mi trabajo."*
 
-```
-Resultado: {
-  "semaforo": "amarillo",
-  "mensaje": "Carga Pesada: 2 difíciles y varios medios",
-  "cursos_por_nivel": {1: 2, 2: 2, 3: 1}
-}
-```
+**KAI:**
+1. Filtra todas las secciones que conflicten con tu horario laboral
+2. Ejecuta algoritmo genético con restricción de trabajo
+3. Genera 5 opciones óptimas en segundos
+4. Muestra análisis financiero: si dejas un curso crítico, te dice cuántos meses retrasa tu graduación
 
-#### 2. Generador de Horarios (Algoritmos Genéticos)
-Motor evolutivo que genera combinaciones óptimas de horarios sin choques. Evoluciona una población de 70 individuos durante 30 generaciones con:
-- **Cromosoma**: Array de paquetes (Teoría + Lab) por curso
-- **Fitness**: Score basado en cursos tomados, peso estratégico, perfil de usuario (relax/normal/tryhard)
-- **Selección**: Elitismo (top 15 sobreviven) + cruza + mutación
-- **Restricciones**: 0 choques horarios, límite de cursos por promedio
+**Caso 2: Estudiante que quiere mejorar promedio**
 
-Integra análisis financiero de costo de oportunidad: si dejas un curso crítico fuera, te muestra cuántos meses podría retrasar tu graduación.
+*"Tengo 78 de promedio. ¿Qué necesito sacar en mis 4 cursos actuales para cerrar con 85?"*
 
-#### 3. Optimizador de Promedio (Goal Seeking)
-Calcula las notas mínimas necesarias en cursos actuales para alcanzar un promedio objetivo ponderado. Usa optimización con restricciones (SciPy SLSQP):
-- **Función objetivo**: Minimizar varianza entre notas (distribución equitativa)
-- **Restricción**: Suma ponderada ≥ puntos necesarios
-- **Bounds**: Notas entre 61 (aprobar) y 100
-- **Escenarios**: Pesimista (61), Realista (75), Optimista (90), Perfecto (100)
-
-### 🤖 Chatbot Académico (NLP Local)
-Asistente conversacional basado en intents + TF-IDF + cosine similarity que opera 100% local sin APIs externas:
-- Detección de intención (15+ intents: prerrequisitos, créditos, búsqueda, semestre, etc.)
-- Extracción de entidades (código o nombre de curso)
-- Contexto personalizado (historial de aprobados del usuario)
-- Soporte multi-carrera (10 carreras de ingeniería USAC)
-
-### 📊 Visualizaciones Interactivas
-- **Gráficos Recharts**: Pie, Bar, Line, Radar, RadialBar charts
-- **Grafo de Fuerza SVG**: Simulación física custom (300 ticks) para visualizar dependencias del pensum
-- **Three.js 3D Particles**: Landing page con canvas animado
-- **Calendario Semanal**: Posicionamiento absoluto por minutos (Lun-Sáb)
-
-### 🎨 Diseño Glassmorphism
-Sistema de diseño moderno con:
-- Tarjetas con `backdrop-blur-xl` y bordes semi-transparentes
-- Dark mode completo
-- Animaciones con Framer Motion
-- Responsive mobile-first
-
-### 🔐 Seguridad
-- Validación XSS/SQLi en cliente y servidor
-- Hash SHA-256 de passwords
-- Sanitización de inputs
-- CORS configurado
-- Rate limiting por plan (free/daily/premium)
+**KAI:**
+1. Calcula tu promedio actual ponderado
+2. Determina puntos necesarios para alcanzar 85
+3. Usa optimización lineal para distribuir notas equitativamente
+4. Te dice: "Necesitas 87 en Física 2, 84 en Álgebra, 86 en Programación 3, 85 en Ética"
+5. Simula escenarios: Pesimista (61), Realista (75), Optimista (90), Perfecto (100)
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+### 🏗️ System Architecture / Arquitectura del Sistema
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -132,260 +345,125 @@ Sistema de diseño moderno con:
 │  └──────────────────────────────────────────────────────┘  │
 │                          │                                    │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │           3 Motores de Inteligencia Artificial        │  │
+│  │           3 AI Engines / Motores de IA                │  │
 │  │                                                       │  │
 │  │  • K-Means Clustering (scikit-learn)                 │  │
-│  │  • Algoritmos Genéticos (custom)                     │  │
+│  │  • Genetic Algorithms / Algoritmos Genéticos (custom)│  │
 │  │  • Linear Optimization (SciPy SLSQP)                 │  │
 │  │  • TF-IDF + Cosine Similarity (NLP)                  │  │
 │  └──────────────────────────────────────────────────────┘  │
 │                          │                                    │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │                    Data Layer                         │  │
-│  │  • PostgreSQL (Cloud SQL) - Usuarios, cursos, planes │  │
-│  │  • Google Cloud Storage - Fotos de perfil            │  │
-│  │  • CSV Files - +1000 cursos de 10 carreras USAC      │  │
+│  │  • PostgreSQL (Cloud SQL) - Users, courses, plans    │  │
+│  │  • Google Cloud Storage - Profile photos             │  │
+│  │  • CSV Files - 1000+ courses from 10 USAC majors     │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Stack Tecnológico
+### 🛠️ Tech Stack / Stack Tecnológico
 
-### Backend
-| Categoría | Tecnología | Propósito |
-|-----------|-----------|-----------|
-| **Framework** | Python 3.11 + Flask 3.1 | API REST, Blueprints |
+| Category | Technology | Purpose |
+|----------|-----------|---------|
+| **Framework** | Python 3.11 + Flask 3.1 | REST API, Blueprints |
+| **Frontend** | React 19 + Vite 7 + SWC | SPA with HMR |
 | **Machine Learning** | scikit-learn | K-Means Clustering, TF-IDF |
-| **Optimización** | SciPy | Linear Optimization (SLSQP) |
-| **Data Science** | Pandas + NumPy | Manipulación de datasets |
-| **NLP** | NLTK + difflib | Tokenización, fuzzy matching |
-| **OCR** | Tesseract + Pillow | Extracción de texto de imágenes |
-| **Base de Datos** | PostgreSQL (Cloud SQL) | Persistencia en producción |
-| **Storage** | Google Cloud Storage | Imágenes de perfil |
-| **Deploy** | Docker + Cloud Run | Containerización serverless |
-| **Servidor** | Gunicorn | WSGI server (1 worker, 8 threads) |
-
-### Frontend
-| Categoría | Tecnología | Propósito |
-|-----------|-----------|-----------|
-| **Framework** | React 19 | UI component-based |
-| **Build Tool** | Vite 7 + SWC | Dev server HMR + build |
+| **Optimization** | SciPy | Linear Optimization (SLSQP) |
+| **Data Science** | Pandas + NumPy | Dataset manipulation |
 | **CSS** | TailwindCSS 3.4 | Utility-first + dark mode |
-| **Animaciones** | Framer Motion 12 | Transiciones, gestos |
-| **Routing** | React Router DOM 7 | SPA routing + protected routes |
-| **Gráficos 2D** | Recharts 3 | Pie, Bar, Line, Radar charts |
-| **Gráficos 3D** | Three.js + R3F | Partículas 3D landing |
-| **PDF Export** | jsPDF + html2canvas | Descarga de horarios |
-| **CSV Parsing** | PapaParse | Lectura de pensums |
-| **Iconos** | Lucide React | Iconografía tree-shakable |
-| **Deploy** | Netlify | CI/CD desde GitHub |
+| **Animations** | Framer Motion 12 | Transitions, gestures |
+| **2D Charts** | Recharts 3 | Pie, Bar, Line, Radar |
+| **3D Graphics** | Three.js + R3F | Landing page particles |
+| **Database** | PostgreSQL (Cloud SQL) | Production persistence |
+| **Storage** | Google Cloud Storage | Profile images |
+| **Deploy** | Docker + Cloud Run + Netlify | Serverless + CI/CD |
 
 ---
 
-## 🚀 Impacto y Arquitectura de Producción
+### 📦 Project Structure / Estructura del Proyecto
 
-- **Lanzamiento:** Enero - Febrero 2026
-- **Tráficos y Registros:** +80 usuarios registrados en las primeras 48 horas tras el despliegue.
-- **Backend:** Google Cloud Run (Serverless, Containerized con gcloud, auto-scaling de 0 a 3 instancias).
-- **Frontend:** Netlify (Desplegado desde repositorio GitHub).
+```
+KAI - Kairos Artificial Intelligence/
+│
+├── Backend/                              # Flask REST API + AI
+│   ├── main.py                          # Flask entry point
+│   ├── routers/                         # 6 Blueprints (auth, courses, schedules, academic, chatbot, plan)
+│   ├── clustering_semaforo.py           # AI: K-Means difficulty classifier
+│   ├── optimizador_promedio.py          # AI: Goal Seeking with SciPy
+│   ├── motor_generador.py               # GA: Automatic schedule generator
+│   ├── motor_custom.py                  # GA: Custom schedule generator
+│   ├── chatbot_academico.py             # NLP: Chatbot with TF-IDF + intents
+│   ├── Data/                            # Datasets (10 curriculum CSVs + course offerings)
+│   └── Dockerfile                       # Cloud Run deployment
+│
+├── Frontend/                             # React SPA + Vite
+│   ├── src/
+│   │   ├── pages/                       # 14 pages (Dashboard, Traffic Light, Optimizer, Chatbot, etc.)
+│   │   ├── components/                  # ~30 components (UI, landing, dashboard, modals)
+│   │   └── App.jsx                      # Router + protected routes
+│   └── tailwind.config.js               # Custom theme (pastel palette, dark mode)
+│
+└── README.md                            # This file
+```
+
+---
+
+### 🚀 Production Impact / Impacto en Producción
+
+- **Launch:** January - February 2026
+- **Traffic & Registrations:** +80 registered users in the first 48 hours after deployment
+- **Backend:** Google Cloud Run (Serverless, Containerized with gcloud, auto-scaling from 0 to 3 instances)
+- **Frontend:** Netlify (Deployed from GitHub repository)
 
 <details>
-<summary>📊 Ver métricas de registro y evidencia de infraestructura</summary>
+<summary>📊 View registration metrics and infrastructure evidence / Ver métricas de registro y evidencia de infraestructura</summary>
 
-### Crecimiento de Registros (Enero 2026)
-![Gráfica de Registros](./assets/Grafica_de_registros.png)
+**Registration Growth (January 2026) / Crecimiento de Registros (Enero 2026)**
 
-### Despliegue en Google Cloud Run
-![Screenshot de Cloud Run](./assets/Cloud_Run_Prubeas.png)
+![Registration Chart](./assets/Grafica_de_registros.png)
+
+**Google Cloud Run Deployment / Despliegue en Google Cloud Run**
+
+![Cloud Run Screenshot](./assets/Cloud_Run_Prubeas.png)
 
 </details>
 
 ---
 
-## 📦 Estructura del Proyecto
+### 🤝 Contributions / Contribuciones
 
-```
-KAI - Kairos Artificial Intelligence/
-│
-├── Backend/                              # API REST Flask + IA
-│   ├── main.py                          # Entry point Flask
-│   ├── config.py                        # Config global, DB adapter, singletons IA
-│   ├── routers/                         # 6 Blueprints (auth, courses, schedules, academic, chatbot, plan)
-│   ├── clustering_semaforo.py           # IA: K-Means para clasificar dificultad
-│   ├── optimizador_promedio.py          # IA: Goal Seeking con SciPy
-│   ├── motor_generador.py               # AG: Generador de horarios automáticos
-│   ├── motor_custom.py                  # AG: Generador de horarios personalizados
-│   ├── chatbot_academico.py             # NLP: Chatbot con TF-IDF + intents
-│   ├── analisis_competencias.py         # NLP: Clasificación de competencias
-│   ├── financiero.py                    # Análisis de costo de oportunidad
-│   ├── storage.py                       # Google Cloud Storage con fallback local
-│   ├── Data/                            # Datasets (10 pensums CSV + oferta cursos)
-│   ├── Dockerfile                       # Deploy en Cloud Run
-│   └── requirements.txt                 # Dependencias Python
-│
-├── Frontend/                             # SPA React + Vite
-│   ├── src/
-│   │   ├── pages/                       # 14 páginas (Dashboard, Semáforo, Optimizador, Chatbot, etc.)
-│   │   ├── components/                  # ~30 componentes (UI, landing, dashboard, modals)
-│   │   ├── api/                         # API config (env-aware)
-│   │   └── App.jsx                      # Router + rutas protegidas
-│   ├── package.json                     # Dependencias Node.js
-│   ├── tailwind.config.js               # Tema custom (pastel palette, dark mode)
-│   └── vite.config.js                   # Vite + SWC
-│
-└── README.md                            # Este archivo
-```
+This project was developed as independent work from the Faculty of Engineering at USAC. If you're a faculty student and want to contribute:
+
+- 💡 Suggest new features
+- 📚 Help improve documentation
+- 🎨 Propose design improvements
 
 ---
 
-## 🔥 Casos de Uso Reales
+### 📄 License / Licencia
 
-### Caso 1: Estudiante que trabaja
-*"Trabajo los lunes de 2-6pm. Quiero llevar 6 cursos sin que se choquen con mi trabajo."*
-
-**KAI:**
-1. Filtra todas las secciones que conflicten con tu horario laboral
-2. Ejecuta algoritmo genético con restricción de trabajo
-3. Genera 5 opciones óptimas en segundos
-4. Muestra análisis financiero: si dejas un curso crítico, te dice cuántos meses retrasa tu graduación
-
-### Caso 2: Estudiante que quiere mejorar promedio
-*"Tengo 78 de promedio. ¿Qué necesito sacar en mis 4 cursos actuales para cerrar con 85?"*
-
-**KAI:**
-1. Calcula tu promedio actual ponderado
-2. Determina puntos necesarios para alcanzar 85
-3. Usa optimización lineal para distribuir notas equitativamente
-4. Te dice: "Necesitas 87 en Física 2, 84 en Álgebra, 86 en Programación 3, 85 en Ética"
-5. Simula escenarios: Pesimista (61), Realista (75), Optimista (90), Perfecto (100)
-
-### Caso 3: Estudiante que no sabe qué cursos llevar
-*"No sé si puedo llevar Compiladores, Redes y Sistemas Operativos juntos."*
-
-**KAI:**
-1. Verifica prerrequisitos de los 3 cursos
-2. Clasifica dificultad con K-Means: Compiladores (Rojo), Redes (Amarillo), Sistemas Operativos (Rojo)
-3. Analiza combinación: "🔴 Carga Pesada: 2 cursos difíciles y 1 medio. Requiere mucha disciplina."
-4. Sugiere: "Considera mover uno de los cursos Rojos al próximo semestre."
-
-### Caso 4: Estudiante que pregunta al chatbot
-*"¿Qué prerrequisitos tiene Inteligencia Artificial?"*
-
-**KAI (Chatbot):**
-1. Detecta intent: `prerrequisitos`
-2. Extrae entidad: `Inteligencia Artificial` (código 0771)
-3. Busca en base de conocimiento: "Programación 2, Estructuras de Datos, Lógica"
-4. Responde: "📚 Inteligencia Artificial (0771)\n📋 Prerrequisitos:\n  - 0147: Programación 2\n  - 0150: Estructuras de Datos\n  - 0112: Lógica"
+This project was developed for educational purposes and social help for the student community of the Faculty of Engineering - USAC.
 
 ---
 
-## 🏁 Instalación Rápida
+### 📧 Contact / Contacto
 
-### Backend
-```bash
-cd Backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python inicializar_db.py
-python main.py
-```
-Backend corriendo en `http://localhost:8000`
-
-### Frontend
-```bash
-cd Frontend
-npm install
-echo "VITE_API_URL=http://localhost:8000" > .env.local
-npm run dev
-```
-Frontend corriendo en `http://localhost:5173`
-
-### Base de Datos
-- **Desarrollo**: SQLite (automático, archivo `usuarios.db`)
-- **Producción**: PostgreSQL (Cloud SQL, configurado con `DATABASE_URL`)
-
----
-
-## 🎓 Modelo de Suscripción
-
-| Feature | Free | Day Pass (Q10/24h) | Premium (Q25/mes) |
-|---------|------|-------------------|-------------------|
-| Chatbot IA | 5/día | Ilimitado | Ilimitado |
-| Generador Manual | 3/semestre | Ilimitado | Ilimitado |
-| Generador IA | No | Ilimitado | Ilimitado |
-| OCR (escaneo imágenes) | 1/mes | Ilimitado | Ilimitado |
-| Vista Pensum Grafo | No | Si | Si |
-| Simulador Escenarios | No | Si | Si |
-| Exportar PDF | No | Si | Si |
-
----
-
-## 🌟 Características Destacadas para Reclutadores
-
-### Ingeniería de Software
-- **Arquitectura Full-Stack**: Frontend SPA + Backend REST API + IA integrada
-- **Cloud Native**: Deploy en Google Cloud Run (serverless, auto-scaling, containerizado)
-- **CI/CD**: Frontend desplegado automáticamente desde GitHub a Netlify
-- **Base de Datos Dual**: SQLite (dev) / PostgreSQL (prod) con adapter pattern
-- **Seguridad**: Validación XSS/SQLi en cliente y servidor, hash de passwords, CORS, sanitización
-
-### Inteligencia Artificial y Machine Learning
-- **3 Motores de IA**: K-Means Clustering, Algoritmos Genéticos, Optimización Lineal
-- **NLP Local**: Chatbot con TF-IDF + cosine similarity (sin APIs externas)
-- **OCR**: Extracción de texto de imágenes con Tesseract
-- **Análisis Predictivo**: Goal seeking para predicción de notas
-- **Simulación de Fuerza**: Grafo interactivo con física custom (Coulomb + Hooke)
-
-### Experiencia de Usuario
-- **Diseño Moderno**: Glassmorphism, dark mode, animaciones fluidas
-- **Responsive**: Mobile-first con layouts adaptativos
-- **Visualización de Datos**: 6 tipos de gráficos interactivos + 3D
-- **Performance**: Lazy loading, caching de modelos IA, polling optimizado
-- **Accesibilidad**: Formularios validados, feedback visual, modales accesibles
-
-### Escalabilidad y Producción
-- **Serverless**: Auto-scaling de 0 a 3 instancias según demanda
-- **Multi-tenant**: Soporte para múltiples usuarios con datos aislados
-- **Rate Limiting**: Control de uso por plan (free/daily/premium)
-- **Storage Escalable**: Google Cloud Storage para archivos estáticos
-- **Monitoreo**: Logs estructurados, manejo de errores global
-
----
-
-## 🤝 Contribuciones
-
-Este proyecto fue desarrollado como trabajo independiente de la facultad de Ingeniería de la USAC. Si eres estudiante de la facultad y quieres contribuir:
-
-- 💡 Sugiere nuevas features
-- 📚 Ayuda a mejorar la documentación
-- 🎨 Propone mejoras de diseño
-
----
-
-## 📄 Licencia
-
-Este proyecto fue desarrollado con fines educativos y de ayuda social para la comunidad estudiantil de la Facultad de Ingeniería - USAC.
-
----
-
-## 📧 Contacto
-
-**¿Preguntas o sugerencias?**
+**Questions or suggestions?**
 
 - 🌐 Demo: [kaiusac.netlify.app](https://kaiusac.netlify.app)
-- 📖 Documentación Backend: [Backend/](./Backend/)
-- 📖 Documentación Frontend: [Frontend/](./Frontend/)
-- 🌐 Correo: martin1aleman@proton.me 
+- 📖 Backend Documentation: [Backend/](./Backend/)
+- 📖 Frontend Documentation: [Frontend/](./Frontend/)
+- 📧 Email: martin1aleman@proton.me
 
 ---
 
 <div align="center">
 
-**Hecho con 💙 por estudiantes, para estudiantes de la USAC**
+**Made with 💙 by students, for USAC students**
 
-*Si este proyecto te ayudó, considera darle una ⭐ al repositorio*
+*If this project helped you, consider giving it a ⭐*
 
 </div>
